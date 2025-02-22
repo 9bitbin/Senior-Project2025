@@ -1,0 +1,93 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Centering container */
+.container {
+    width: 100%;
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #f4f4f4;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form styling */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* Social Media Icons */
+.media-icons {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.icon {
+    font-size: 24px;
+    margin: 0 10px;
+    color: #444;
+    cursor: pointer;
+}
+
+.icon:hover {
+    color: #007bff;
+}
+
+/* Toggle text */
+#toggleText {
+    margin-top: 10px;
+}
+
+#toggleText a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+#toggleText a:hover {
+    text-decoration: underline;
+}
+
+/* Logout Button */
+#logoutBtn {
+    background: red;
+}
+
+#logoutBtn:hover {
+    background: darkred;
+}
