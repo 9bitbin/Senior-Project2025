@@ -1,3 +1,5 @@
+
+
 const container = document.getElementById('container');
 const signupTogBtn = document.getElementById('signupTogBtn');
 const loginTogBtn = document.getElementById('loginTogBtn');
@@ -10,6 +12,8 @@ signupTogBtn.addEventListener('click', ()=>{
 loginTogBtn.addEventListener('click', ()=>{
         container.classList.remove("active");
 });
+
+
 
 loginBtn.addEventListener("click", ()=>{
     window.location.href = "home.html";
