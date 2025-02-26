@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Himal Shrestha">
+    <title>Insights</title>
+
+    <!-- Linking External CSS -->
+    <link rel="stylesheet" href="home.css">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        .insight-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .chart-placeholder {
+            width: 80%;
+            height: 300px;
+            background-color: #f3f3f3;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h2>Insights</h2>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <ul>
+                <li><a href="home.html">🏠 Home</a></li>
+                <li><a href="profile.html">👤 Profile</a></li>
+                <li><a href="log.html">📝 Log</a></li>
+                <li><a href="suggestions.html">💡 Suggestions</a></li>
+                <li><a href="insight.html">📊 Insight</a></li>
+                <li><a href="feed.html">📰 Feed</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content insight-container">
+            <h3>Your Progress Overview</h3>
+            <div class="chart-placeholder">[Insight Charts & Data Visualization Coming Soon]</div>
+        </div>
+    </div>
+    
+    <button class="logout-btn" onclick="window.location.href='login.html';">Logout</button>
+</body>
+</html>
+
