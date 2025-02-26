@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Himal Shrestha">
+    <title>Weight Goal</title>
+
+    <!-- Linking External CSS -->
+    <link rel="stylesheet" href="home.css">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <h2>Weight Goal</h2>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <ul>
+                <li><a href="profile.html">Basic 👌</a></li>
+                <li><a href="preference.html">Preference 🏷️</a></li>
+                <li><a href="goal.html">Goal 🥅</a></li>
+                <li><a href="budget.html">Budget 💵</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h3>Set Your Weight Goal</h3>
+            <form id="goalForm">
+                <label for="weightGoal">Target Weight (kg):</label>
+                <input type="number" id="weightGoal" placeholder="Enter your target weight" required>
+                
+                <button type="submit">Save Goal</button>
+            </form>
+        </div>
+    </div>
+    
+    <button class="logout-btn" onclick="window.location.href='login.html';">Logout</button>
+
+    <!-- JavaScript to handle goal submission -->
+    <script>
+        document.getElementById("goalForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let weightGoal = document.getElementById("weightGoal").value;
+            alert("Weight goal saved: " + weightGoal + " kg");
+            // You can later replace the alert with saving the goal to a database or local storage
+        });
+    </script>
+</body>
+</html>
