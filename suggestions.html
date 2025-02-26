@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Himal Shrestha">
+    <title>Suggestions</title>
+
+    <!-- Linking External CSS -->
+    <link rel="stylesheet" href="home.css">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <h2>Suggestions</h2>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <ul>
+                <li><a href="home.html">🏠 Home</a></li>
+                <li><a href="profile.html">👤 Profile</a></li>
+                <li><a href="log.html">📝 Log</a></li>
+                <li><a href="suggestions.html">💡 Suggestions</a></li>
+                <li><a href="insight.html">📊 Insight</a></li>
+                <li><a href="feed.html">📰 Feed</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h3>Submit a Suggestion</h3>
+            <form id="suggestionForm">
+                <label for="suggestion">Your Suggestion:</label>
+                <textarea id="suggestion" placeholder="Enter your suggestion..." required></textarea>
+                
+                <button type="submit">Submit</button>
+            </form>
+
+            <h3>Previous Suggestions</h3>
+            <ul id="suggestionList">
+                <!-- Submitted suggestions will appear here -->
+            </ul>
+        </div>
+    </div>
+    
+    <button class="logout-btn" onclick="window.location.href='login.html';">Logout</button>
+
+    <!-- JavaScript for handling suggestions -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let suggestionList = document.getElementById("suggestionList");
+            let suggestions = JSON.parse(localStorage.getItem("suggestions")) || [];
+            
+            function renderSuggestions() {
+                suggestionList.innerHTML = "";
+                suggestions.forEach((suggestion, index) => {
+                    let listItem = document.createElement("li");
+                    listItem.innerHTML = `${suggestion} <button onclick="deleteSuggestion(${index})">❌</button>`;
+                    suggestionList.appendChild(listItem);
+                });
+            }
+            
+            function saveSuggestion(suggestion) {
+                suggestions.push(suggestion);
+                localStorage.setItem("suggestions", JSON.stringify(suggestions));
+                renderSuggestions();
+            }
+            
+            document.getElementById("suggestionForm").addEventListener("submit", function(event) {
+                event.preventDefault();
+                let suggestion = document.getElementById("suggestion").value;
+                if (suggestion) {
+                    saveSuggestion(suggestion);
+                    document.getElementById("suggestionForm").reset();
+                }
+            });
+            
+            window.deleteSuggestion = function(index) {
+                suggestions.splice(index, 1);
+                localStorage.setItem("suggestions", JSON.stringify(suggestions));
+                renderSuggestions();
+            };
+            
+            renderSuggestions();
+        });
+    </script>
+</body>
+</html>
