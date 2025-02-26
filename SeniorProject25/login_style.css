@@ -8,6 +8,8 @@
 .nav-container{
     width: 100%;
     padding: 10px 10%;
+    display: flex;
+    justify-content: flex-start;
 }
 
 nav{
@@ -68,7 +70,7 @@ nav ul li a:hover::before{
 
 body{
     background: #fdf5dd;
-    display: flex;
+    display:flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
