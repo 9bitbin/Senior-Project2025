@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Himal Shrestha">
+    <title>Budget Tracker</title>
+
+    <!-- Linking External CSS -->
+    <link rel="stylesheet" href="home.css">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        .over-budget { color: red; }
+        .under-budget { color: green; }
+        .budget-container { max-width: 600px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .delete-btn { color: red; cursor: pointer; border: none; background: none; }
+    </style>
+</head>
+<body>
+    <h2>Budget Tracker</h2>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <ul>
+                <li><a href="profile.html">Basic</a></li>
+                <li><a href="preference.html">Preference</a></li>
+                <li><a href="goal.html">Goal</a></li>
+                <li><a href="budget.html">Budget</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content budget-container">
+            <h3>Set Your Budget Goal</h3>
+            <label for="budgetGoal">Monthly Budget ($):</label>
+            <input type="number" id="budgetGoal" placeholder="Enter your budget goal" required>
+            
+            <h3>Expenses</h3>
+            <form id="budgetForm">
+                <input type="text" id="item" placeholder="Item" required>
+                <input type="number" id="cost" placeholder="Cost ($)" required>
+                <button type="submit">Add Item</button>
+            </form>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Cost ($)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="budgetList">
+                    <!-- Budget items will appear here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <button class="logout-btn" onclick="window.location.href='login.html';">Logout</button>
+
+    <!-- JavaScript to Handle Budgeting -->
+    <script>
+        document.getElementById("budgetForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            let item = document.getElementById("item").value;
+            let cost = parseFloat(document.getElementById("cost").value);
+            let budgetGoal = parseFloat(document.getElementById("budgetGoal").value) || 0;
+            let budgetList = document.getElementById("budgetList");
+
+            let row = document.createElement("tr");
+            let costClass = cost > budgetGoal ? "over-budget" : "under-budget";
+
+            row.innerHTML = `
+                <td>${item}</td>
+                <td class="${costClass}">${cost.toFixed(2)}</td>
+                <td><button class="delete-btn" onclick="deleteItem(this)">❌</button></td>
+            `;
+            budgetList.appendChild(row);
+
+            document.getElementById("budgetForm").reset();
+        });
+        
+        function deleteItem(button) {
+            button.parentElement.parentElement.remove();
+        }
+    </script>
+</body>
+</html>
