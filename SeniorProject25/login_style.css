@@ -221,7 +221,7 @@ body{
 .toggle{
     background-color:white;
     height: 100%;
-    background: radial-gradient(circle, rgb(107, 140, 248), rgb(255, 0, 234));
+    background: radial-gradient(circle, rgb(14, 238, 115), rgb(14, 238, 163));
     color: white;
     position: relative;
     left: -100%;
