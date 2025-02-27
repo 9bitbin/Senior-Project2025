@@ -1,93 +1,132 @@
-/* Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
+/* ======= RETRO THEME STYLES ======= */
 
-/* Centering container */
-.container {
-    width: 100%;
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 20px;
-    background: #f4f4f4;
-    border-radius: 8px;
+/* Importing a pixel/arcade-style font */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+body {
+    background-color: #1a1a2e;
+    color: #00ffcc;
+    font-family: 'Press Start 2P', cursive;
     text-align: center;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
 }
 
-/* Form styling */
-form {
-    display: flex;
-    flex-direction: column;
+/* Headers */
+h1, h2, h3 {
+    color: #ffcc00;
+    text-shadow: 2px 2px 5px #ff6600;
 }
 
-h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
-}
-
-input {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-button {
-    padding: 10px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background: #0056b3;
-}
-
-/* Social Media Icons */
-.media-icons {
-    display: flex;
-    justify-content: center;
-    margin: 10px 0;
-}
-
-.icon {
-    font-size: 24px;
-    margin: 0 10px;
-    color: #444;
-    cursor: pointer;
-}
-
-.icon:hover {
-    color: #007bff;
-}
-
-/* Toggle text */
-#toggleText {
-    margin-top: 10px;
-}
-
-#toggleText a {
-    color: #007bff;
+/* Links */
+a {
+    color: #ff00ff;
     text-decoration: none;
+    font-weight: bold;
+}
+a:hover {
+    color: #00ffff;
+    text-shadow: 0px 0px 10px #00ffff;
 }
 
-#toggleText a:hover {
-    text-decoration: underline;
+/* Navigation Menu */
+nav ul {
+    list-style-type: none;
+    padding: 0;
 }
 
-/* Logout Button */
-#logoutBtn {
-    background: red;
+nav ul li {
+    display: inline;
+    margin: 10px;
 }
 
-#logoutBtn:hover {
-    background: darkred;
+nav ul li a {
+    background: #222;
+    padding: 10px 20px;
+    border: 2px solid #ff00ff;
+    border-radius: 5px;
+    box-shadow: 2px 2px 10px #ff00ff;
 }
+
+/* Retro Container */
+.container {
+    background: #111133;
+    padding: 20px;
+    margin: 20px auto;
+    border: 4px solid #ffcc00;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #ff6600;
+    width: 80%;
+    max-width: 600px;
+}
+
+/* Buttons */
+button {
+    background: #ff00ff;
+    color: #fff;
+    border: 2px solid #ffcc00;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+    box-shadow: 3px 3px 0px #ff6600;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Shake Animation on Hover */
+button:hover {
+    background: #ffcc00;
+    color: #000;
+    border: 2px solid #ff00ff;
+    box-shadow: 3px 3px 10px #ff00ff;
+    animation: shake 0.2s ease-in-out infinite;
+}
+
+/* Shake Keyframes */
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    50% { transform: translateX(2px); }
+    75% { transform: translateX(-2px); }
+    100% { transform: translateX(2px); }
+}
+
+/* Inputs */
+input, select {
+    background: #222;
+    color: #00ffcc;
+    font-family: 'Press Start 2P', cursive;
+    border: 2px solid #ff00ff;
+    padding: 10px;
+    width: 80%;
+    margin: 10px 0;
+    text-align: center;
+}
+
+/* List Styles */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    background: #333366;
+    margin: 5px;
+    padding: 10px;
+    border: 2px solid #00ffff;
+    box-shadow: 2px 2px 10px #00ffff;
+}
+
+ul li:hover {
+    background: #00ffff;
+    color: #000;
+    box-shadow: 2px 2px 20px #ffcc00;
+}
+
+/* Footer */
+footer {
+    margin-top: 50px;
+    font-size: 12px;
+    color: #ff00ff;
+    text-shadow: 1px 1px 5px #ff6600;
+}
+

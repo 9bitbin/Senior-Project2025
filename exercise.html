@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise & Workouts</title>
+    <link rel="stylesheet" href="retro-style.css">
+</head>
+<body>
+    <h1>Exercise Recommendations</h1>
+    <label for="exercise-type">Select Workout Type:</label>
+    <select id="exercise-type">
+        <option value="cardio">Cardio</option>
+        <option value="strength">Strength</option>
+        <option value="stretching">Stretching</option>
+        <option value="yoga">Yoga</option>
+    </select>
+    <button id="fetch-exercise">Get Exercises</button>
+
+    <div id="exercise-results">
+        <h3>Suggested Workouts</h3>
+        <ul id="exercise-list">
+            <li>Exercises will appear here...</li>
+        </ul>
+    </div>
+
+    <h2>Workout History</h2>
+    <ul id="workout-list">
+        <li>Loading logged workouts...</li>
+    </ul>
+
+    <a href="home.html">Back to Dashboard</a>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="exercise.js"></script>
+</body>
+</html>
