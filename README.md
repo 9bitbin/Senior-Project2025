@@ -1,5 +1,5 @@
 # 🏋️‍♂️ Senior-Project2025
-## >> Himal's Updated Branch (UpdatedApp) 
+## >> Himal's Updated Branch (UpdatedApp) inspired from Wali branch
 
 ### 🚀 Project Overview
 Himal is making updates and improvements to the **app version** by refining the **UI/UX, performance, and functionality**.  
