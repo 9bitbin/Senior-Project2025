@@ -41,7 +41,7 @@ async function calculateBMI() {
             method: "GET",
             headers: {
                 "x-rapidapi-host": "body-mass-index-bmi-calculator.p.rapidapi.com",
-                "x-rapidapi-key": "0570abbdb7mshe1118ff2fe8c38cp1fccbbjsna4483833bba4" // api key for rapid api
+                "x-rapidapi-key": "46cdaecfefmsh24ff0107327aabfp1a1205jsnc707911a448e" // api key for rapid api
             }
         });
 
