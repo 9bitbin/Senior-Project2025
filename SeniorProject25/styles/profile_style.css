@@ -178,3 +178,60 @@ header{
 .tooltip{
     align-items: start;
 }
+
+/*MAIN CONTENT*/
+.main-content{
+    flex: 1;
+    background: var(--box-shadow);
+    max-width: var(--box-shadow);
+    padding: 0 1rem;
+    margin: 0 auto ;
+}
+
+.tab-container{
+    width: 70%;
+    margin: 0 auto 3rem auto;
+    margin: 0 0.8rem 1rem var(--box-shadow);
+}
+
+.tab-filter-container{
+    padding: 2rem;
+    text-align: center;
+    background: hsl(205.71, 30.43%, 95.49%);
+}
+
+.filter-btn{
+    display: inline-flex;
+    padding: 0.8rem 2.5rem;
+    cursor: pointer;
+    border-radius: 2rem;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.filter-btn.active{
+    background: gray;
+    color: white;
+}
+
+.tab-filter-item-container{
+    background: white;
+    margin: 0 auot;
+    position: relative;
+    height: 30rem;
+    overflow: hidden;
+}
+
+.tab-item{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    padding: 0rem 3rem;
+    /*transform: translateY(100%);*/
+    background: whitesmoke;
+    transition: transform 0.5s ease-in-out;
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(29rem,1fr));
+    place-items: center start;
+}
