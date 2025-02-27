@@ -3,26 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Vidia - Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Welcome!</h1>
+    <h1>Welcome to Vidia</h1>
     <p id="user-info">Loading user info...</p>
+
+    <!-- 🔹 User Health Info Section -->
+    <div class="container">
+        <h2>Your Health Information</h2>
+        <p><strong>Weight:</strong> <span id="user-weight">Loading...</span> lbs</p>
+        <p><strong>Height:</strong> <span id="user-height">Loading...</span> inches</p>
+    </div>
+
+    <!-- 🔹 BMI Section -->
+    <div class="container">
+        <h2>Your BMI</h2>
+        <p><strong>BMI Value:</strong> <span id="bmi-value">Loading...</span></p>
+        <p><strong>Category:</strong> <span id="bmi-category">Loading...</span></p>
+        <p id="bmi-message"></p>
+    </div>
+
+    <!-- 🔹 Food Logging Section -->
+    <div class="container">
+        <h2>Food Logging</h2>
+        <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)">
+        <button id="fetch-nutrition">Get Nutrition Info</button>
+
+        <!-- 🔹 Display Nutrition Data -->
+        <div id="nutrition-results">
+            <h3>Nutrition Breakdown</h3>
+            <p><strong>Calories:</strong> <span id="calories">--</span> kcal</p>
+            <p><strong>Protein:</strong> <span id="protein">--</span> g</p>
+            <p><strong>Carbs:</strong> <span id="carbs">--</span> g</p>
+            <p><strong>Fat:</strong> <span id="fat">--</span> g</p>
+        </div>
+    </div>
+
+    <!-- 🔹 Logged Meals Section -->
+    <div class="container">
+        <h2>Meal History</h2>
+        <p><strong>Total Calories Today:</strong> <span id="total-calories">0</span> kcal</p>
+        <ul id="meal-list">
+            <li>Loading...</li>
+        </ul>
+    </div>
+
+    <!-- 🔹 Exercise Tracking Section -->
+    <div class="container">
+        <h2>Exercise Recommendations</h2>
+        <label for="exercise-type">Select Workout Type:</label>
+        <select id="exercise-type">
+            <option value="cardio">Cardio</option>
+            <option value="strength">Strength</option>
+            <option value="stretching">Stretching</option>
+            <option value="yoga">Yoga</option>
+        </select>
+        <button id="fetch-exercise">Get Exercises</button>
+
+        <!-- 🔹 Display Exercise Recommendations -->
+        <div id="exercise-results">
+            <h3>Suggested Workouts</h3>
+            <ul id="exercise-list">
+                <li>Exercises will appear here...</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 🔹 Workout History Section -->
+<div class="container">
+    <h2>Workout History</h2>
+    <ul id="workout-list">
+        <li>Loading logged workouts...</li>
+    </ul>
+</div>
+
+
     <button id="logoutBtn">Logout</button>
 
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="bmi.js"></script>
+    <script type="module" src="nutrition.js"></script>
+    <script type="module" src="exercise.js"></script>
     <script type="module">
-        import { auth } from "./firebase-config.js";
+        import { auth, db } from "./firebase-config.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
         const userInfo = document.getElementById("user-info");
         const logoutBtn = document.getElementById("logoutBtn");
+        const weightEl = document.getElementById("user-weight");
+        const heightEl = document.getElementById("user-height");
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userInfo.innerText = `Welcome, ${user.email}`;
+
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    weightEl.innerText = data.weight || "N/A";
+                    heightEl.innerText = data.height || "N/A";
+                } else {
+                    weightEl.innerText = "N/A";
+                    heightEl.innerText = "N/A";
+                }
             } else {
-                window.location.href = "index.html"; // Redirect to login if not authenticated
+                window.location.href = "index.html";
             }
         });
 

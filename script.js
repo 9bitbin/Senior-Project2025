@@ -1,5 +1,6 @@
-import { auth, provider } from "./firebase-config.js";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+import { auth, provider, db } from "./firebase-config.js";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
 const formTitle = document.getElementById("formTitle");
 const authBtn = document.getElementById("authBtn");
@@ -41,14 +42,15 @@ authBtn.addEventListener("click", async (e) => {
     const password = passwordField.value;
 
     try {
+        let userCredential;
         if (isSignUp) {
-            await createUserWithEmailAndPassword(auth, email, password);
-            alert("Signup successful! Please log in.");
-            toggleAuthMode(); // Switch to login mode after signup
+            userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            alert("Signup successful! Please complete your profile.");
+            window.location.href = "profile.html"; // Redirect new users to profile page
         } else {
-            await signInWithEmailAndPassword(auth, email, password);
-            alert("Login successful! Redirecting...");
-            window.location.href = "home.html"; // Redirect to home page
+            userCredential = await signInWithEmailAndPassword(auth, email, password);
+            alert("Login successful! Checking profile...");
+            checkUserProfile(userCredential.user.uid); // Check if the user has a profile
         }
     } catch (error) {
         alert("Error: " + error.message);
@@ -58,10 +60,23 @@ authBtn.addEventListener("click", async (e) => {
 // 🔹 Google Login
 googleLogin.addEventListener("click", async () => {
     try {
-        await signInWithPopup(auth, provider);
-        alert("Google login successful! Redirecting...");
-        window.location.href = "home.html";
+        const result = await signInWithPopup(auth, provider);
+        alert("Google login successful! Checking profile...");
+        checkUserProfile(result.user.uid); // Check if the user has a profile
     } catch (error) {
         alert("Error: " + error.message);
     }
 });
+
+// 🔹 Check if User Has a Profile in Firestore
+async function checkUserProfile(userId) {
+    const userDocRef = doc(db, "users", userId);
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+        window.location.href = "home.html"; // User has a profile → Go to dashboard
+    } else {
+        window.location.href = "profile.html"; // New user → Go to profile setup
+    }
+}
+
