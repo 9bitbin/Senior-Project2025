@@ -3,11 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="profile_style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>VIDIA - Profile</title>
 </head>
 <body>
-    User Profile Page
-    <button onclick="window.location.href='login.html';">Logout</button>
-    <button onclick="window.location.href='home.html';">Back to Home</button>
+    <header>
+        <div class="nav-bar-menu-icon">
+            <a href="" class="hamburger">
+                <i class="fa-solid fa-bars" id="menu-btn"></i>
+            </a>
+        </div>
+        <nav class="nav-bar">
+            <h1 class="logo">VIDIA</h1>
+            <ul>
+                <li>
+                    <a href="" class="icon"><i class="fa-solid fa-gear"></i></a>
+                </li>
+                <li>
+                    <a href="" class="icon"><i class="fa-solid fa-bell"></i></a>
+                </li>
+                <li>
+                    <a href="" class="icon"><i class="fa-solid fa-circle-user"></i></a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <div class="main-layout">
+        <div class="sidebar">
+            <div class="list">
+                <ul>
+                    <li>
+                        <a href="#" onclick="window.location.href='home.html';">
+                            <i class="fa-solid fa-house"></i>
+                            <span> <div class="nav-item">Home</div></span>
+                        </a>
+                        <span class="tooltip">Home</span>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i class="fa-solid fa-user"></i>
+                            <span> <div class="nav-item">Profile</div></span>
+                        </a>
+                        <span class="tooltip">Profile</span>
+                    </li>
+                    <li>
+                        <a href="#" onclick="window.location.href='log.html';">
+                            <i class="fa-solid fa-pen"></i>
+                            <span> <div class="nav-item">Log</div></span>
+                        </a>
+                        <span class="tooltip">Log</span>
+                    </li>
+                    <li>
+                        <a href="#" onclick="window.location.href='meal.html';">
+                            <i class="fa-solid fa-utensils"></i>
+                            <span> <div class="nav-item">Meals</div></span>
+                        </a>
+                        <span class="tooltip">Meals</span>
+                    </li>
+                    <li>
+                        <a href="#" onclick="window.location.href='track.html';">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            <span> <div class="nav-item">Tracking</div></span>
+                        </a>
+                        <span class="tooltip">Tracking</span>
+                    </li>
+                    <li>
+                        <a href="#" onclick="window.location.href='feed.html';">
+                            <i class="fa-solid fa-comment"></i>
+                            <span> <div class="nav-item">Feed</div></span>
+                        </a>
+                        <span class="tooltip">Feed</span>
+                    </li>
+                    <li>
+                        <a href="#" onclick="window.location.href='login.html';">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span> <div class="nav-item">Logout</div></span>
+                        </a>
+                        <span class="tooltip">Logout</span>
+                    </li>                    
+                </ul>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="container">
+                <h1>USER PROFILE CONTENT</h1>
+            </div>
+        </div>
+
+    </div>
+    
 </body>
+
+<script src="sidebar_script.js"></script>
 </html>

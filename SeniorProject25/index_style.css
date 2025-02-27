@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+body{
+    background-color: #fdf5dd;
+}
+
 .container{
     width: 100%;
     min-height: 100vh;
