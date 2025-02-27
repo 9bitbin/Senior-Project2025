@@ -66,7 +66,7 @@ Senior-Project2025/
 ## 🔧 **Setup & Installation**
 1️⃣ Clone the repository:  
 sh 
-git clone https://github.com/your-repo/Senior-Project2025.git
+[git clone https://github.com/your-repo/Senior-Project2025.git](https://github.com/9bitbin/Senior-Project2025)
 cd Senior-Project2025
 ##
 2️⃣ Open index.html in your browser or use Live Server in VS Code.
