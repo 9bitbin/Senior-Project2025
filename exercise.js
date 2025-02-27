@@ -75,10 +75,11 @@ fetchExerciseBtn.addEventListener("click", async () => {
     exercises.forEach(exercise => {
         const li = document.createElement("li");
         li.innerHTML = `
-            <strong>${exercise.name}</strong> 
-            <p>Muscle Group: ${exercise.target}</p>
-        
-        `;
+    <strong>${exercise.name}</strong> 
+    <p>Muscle Group: ${exercise.target}</p>
+    <img src="${exercise.gifUrl}" alt="${exercise.name}" width="150">
+`;
+
         exerciseListEl.appendChild(li);
     });
 
