@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
         signupAbBtn.addEventListener("click", (event) => {
             event.preventDefault(); 
             localStorage.setItem("signupClicked", "true"); 
-            window.location.href = "login.html"; 
+            window.location.href = "signup.html"; 
         });
     }
 });
