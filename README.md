@@ -4,7 +4,7 @@
 ### 🚀 Project Overview
 Himal is making updates and improvements to the **app version** by refining the **UI/UX, performance, and functionality**.  
 This project is a **modern 2025 fitness tracking app** with a **minimalist & futuristic design** featuring separate pages for key health sections.
-
+Himal looking at Wali's Branch.
 ---
 
 ## 📌 **Changelog (Latest Updates)**
