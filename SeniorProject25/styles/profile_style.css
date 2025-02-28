@@ -198,6 +198,8 @@ header{
     padding: 2rem;
     text-align: center;
     background: hsl(205.71, 30.43%, 95.49%);
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
 }
 
 .filter-btn{
@@ -228,10 +230,67 @@ header{
     height: 100%;
     position: absolute;
     padding: 0rem 3rem;
-    /*transform: translateY(100%);*/
     background: whitesmoke;
     transition: transform 0.5s ease-in-out;
     display: grid;
     grid-template-columns: repeat(auto-fit,minmax(29rem,1fr));
     place-items: center start;
 }
+
+.tab-item.selected_tab{
+    transform: translateY(0);
+    transition: transform 0.5s ease-in-out;
+    background: white;
+    animation: feadIn 0.6s ease-in-out;
+}
+
+.tab-item {
+    display: none;
+}
+
+.tab-item.selected_tab {
+    display: block;
+}
+
+/*TAB ITEM*/
+.tab-item {
+    display: none; /* Hide all tabs initially */
+    flex-direction: column;
+    gap: 1rem; /* Space between each field */
+    padding: 1rem;
+}
+
+.tab-item.selected_tab {
+    display: flex; /* Show only the active tab */
+}
+
+.tab-item label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+.tab-item input, 
+.tab-item select {
+    width: 70%; /* Makes inputs full-width */
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Styling for multi-select dropdowns */
+.tab-item select[multiple] {
+    height: 6rem; /* Adjust height for multiple selections */
+}
+
+/* Budget Radio Buttons - Stacked */
+.tab-item div {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+.tab-item input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
