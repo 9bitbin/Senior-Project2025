@@ -1,93 +1,95 @@
+// Import Firebase
 import { db, auth } from "./firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
 import { doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-// 🔹 Elements
+// 🔹 API Configuration (Calorieninjas API)
+const API_KEY = "l4ioC02Ockzgjkietj6YgQ==wWJ0gnTd3hZmLFuz";
+const API_URL = "https://api.calorieninjas.com/v1/nutrition?query=";
+
+// 🔹 Select Elements from home.html
 const foodInput = document.getElementById("food-input");
-const fetchBtn = document.getElementById("fetch-nutrition");
-const caloriesEl = document.getElementById("calories");
-const proteinEl = document.getElementById("protein");
-const carbsEl = document.getElementById("carbs");
-const fatEl = document.getElementById("fat");
-const mealListEl = document.getElementById("meal-list");
+const fetchNutritionBtn = document.getElementById("fetch-nutrition");
+const nutritionResults = document.getElementById("nutrition-results");
+const mealList = document.getElementById("meal-list");
 const totalCaloriesEl = document.getElementById("total-calories");
 
-// 🔹 API Key (Replace with your actual key)
-const API_KEY = "l4ioC02Ockzgjkietj6YgQ==wWJ0gnTd3hZmLFuz";
-
 // 🔹 Fetch Nutrition Data from API
-async function fetchNutritionData(foodQuery) {
-    const apiUrl = `https://api.calorieninjas.com/v1/nutrition?query=${encodeURIComponent(foodQuery)}`;
-
+async function fetchNutritionData(query) {
     try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(API_URL + encodeURIComponent(query), {
             method: "GET",
-            headers: {
-                "X-Api-Key": API_KEY
-            }
+            headers: { "X-Api-Key": API_KEY }
         });
 
         if (!response.ok) {
             throw new Error("Failed to fetch nutrition data.");
         }
 
-        const data = await response.json();
-        return data.items;
+        return await response.json();
     } catch (error) {
         console.error("Error fetching nutrition data:", error);
-        return [];
+        return null;
     }
 }
 
-// 🔹 Handle Button Click
-fetchBtn.addEventListener("click", async () => {
-    const foodQuery = foodInput.value.trim();
-    if (!foodQuery) {
+// 🔹 Handle Food Input & Fetch Nutrition Info
+fetchNutritionBtn.addEventListener("click", async () => {
+    const query = foodInput.value.trim();
+    if (!query) {
         alert("Please enter a food item.");
         return;
     }
 
-    const nutritionData = await fetchNutritionData(foodQuery);
-
-    if (nutritionData.length === 0) {
-        alert("No nutrition data found. Try a different food item.");
+    const data = await fetchNutritionData(query);
+    if (!data || data.items.length === 0) {
+        alert("No nutrition data found.");
         return;
     }
 
-    let totalCalories = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
+    const foodItem = data.items[0]; // Get first item from response
+    const meal = {
+        name: query,
+        calories: foodItem.calories,
+        protein: foodItem.protein_g,
+        carbs: foodItem.carbohydrates_total_g,
+        fat: foodItem.fat_total_g,
+        timestamp: new Date().toISOString().split("T")[0] // Store today's date
+    };
 
-    nutritionData.forEach(item => {
-        totalCalories += item.calories;
-        totalProtein += item.protein_g;
-        totalCarbs += item.carbohydrates_total_g;
-        totalFat += item.fat_total_g;
-    });
+    // Display Nutrition Data
+    nutritionResults.innerHTML = `
+        <h3>Nutrition Breakdown</h3>
+        <p><strong>Calories:</strong> ${meal.calories} kcal</p>
+        <p><strong>Protein:</strong> ${meal.protein} g</p>
+        <p><strong>Carbs:</strong> ${meal.carbs} g</p>
+        <p><strong>Fat:</strong> ${meal.fat} g</p>
+    `;
 
-    caloriesEl.innerText = totalCalories.toFixed(2);
-    proteinEl.innerText = totalProtein.toFixed(2);
-    carbsEl.innerText = totalCarbs.toFixed(2);
-    fatEl.innerText = totalFat.toFixed(2);
-
-    saveMealToFirestore(foodQuery, totalCalories, totalProtein, totalCarbs, totalFat);
+    // Save Meal to Firestore
+    saveMealToFirestore(meal);
 });
 
 // 🔹 Save Meal to Firestore
-async function saveMealToFirestore(foodQuery, calories, protein, carbs, fat) {
+async function saveMealToFirestore(meal) {
     const user = auth.currentUser;
     if (!user) return;
 
     const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    let meals = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
+
+    meals.push(meal); // Add new meal
+
     try {
-        await updateDoc(userDocRef, {
-            mealLogs: arrayUnion({ food: foodQuery, calories, protein, carbs, fat, timestamp: new Date().toISOString().split("T")[0] })
-        });
-        fetchLoggedMeals();
+        await updateDoc(userDocRef, { mealLogs: meals });
+        console.log("Meal logged successfully.");
+        fetchLoggedMeals(); // Refresh meal history
     } catch (error) {
         console.error("Error saving meal:", error);
     }
 }
 
-// 🔹 Fetch Logged Meals
+// 🔹 Fetch & Display Logged Meals
 async function fetchLoggedMeals() {
     const user = auth.currentUser;
     if (!user) return;
@@ -96,11 +98,58 @@ async function fetchLoggedMeals() {
     const userDoc = await getDoc(userDocRef);
 
     if (userDoc.exists()) {
-        const data = userDoc.data();
-        const meals = data.mealLogs || [];
-        mealListEl.innerHTML = meals.map(meal => `<li>${meal.food} - ${meal.calories} kcal</li>`).join("") || "<li>No meals logged today.</li>";
-        totalCaloriesEl.innerText = meals.reduce((sum, meal) => sum + meal.calories, 0).toFixed(2);
+        const meals = userDoc.data().mealLogs || [];
+        let totalCalories = 0;
+
+        mealList.innerHTML = meals.length > 0
+            ? meals.map((meal, index) => {
+                totalCalories += meal.calories;
+                return `
+                    <li>
+                        <strong>${meal.name}</strong>: ${meal.calories} kcal
+                        <button class="delete-meal" data-index="${index}">Delete</button>
+                    </li>
+                `;
+            }).join("")
+            : "<li>No meals logged yet.</li>";
+
+        totalCaloriesEl.innerText = totalCalories;
+
+        // Attach event listeners for delete buttons
+        document.querySelectorAll(".delete-meal").forEach(button => {
+            button.addEventListener("click", async (event) => {
+                const mealIndex = event.target.dataset.index;
+                await deleteMealFromFirestore(mealIndex);
+            });
+        });
     }
 }
 
-onAuthStateChanged(auth, fetchLoggedMeals);
+// 🔹 Delete Meal from Firestore
+async function deleteMealFromFirestore(index) {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    let meals = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
+
+    meals.splice(index, 1); // Remove selected meal
+
+    try {
+        await updateDoc(userDocRef, { mealLogs: meals });
+        console.log("Meal deleted successfully.");
+        fetchLoggedMeals(); // Refresh meal history
+    } catch (error) {
+        console.error("Error deleting meal:", error);
+    }
+}
+
+// 🔹 Ensure User is Logged In & Fetch Meals
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        fetchLoggedMeals();
+    } else {
+        window.location.href = "index.html"; // Redirect to login if not logged in
+    }
+});
