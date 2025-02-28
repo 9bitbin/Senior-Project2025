@@ -18,15 +18,17 @@
     </div>
 
     <!-- 🔹 BMI Section -->
-<div class="container">
-    <h2>Your BMI</h2>
-    <p id="bmi-value">BMI Value: Calculating...</p>
-    <p id="bmi-category">Category: Calculating...</p>
-</div>
-
-    <!-- 🔹 Food Logging Section -->
     <div class="container">
-        <h2>Food Logging</h2>
+        <h2>Your BMI</h2>
+        <p id="bmi-value">BMI Value: Calculating...</p>
+        <p id="bmi-category">Category: Calculating...</p>
+    </div>
+
+    <!-- 🔹 Food Logging & Meal History (Merged for Simplicity) -->
+    <div class="container">
+        <h2>Food Logging & Meal History</h2>
+
+        <!-- 🔹 Food Input -->
         <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)">
         <button id="fetch-nutrition">Get Nutrition Info</button>
 
@@ -38,12 +40,16 @@
             <p><strong>Carbs:</strong> <span id="carbs">--</span> g</p>
             <p><strong>Fat:</strong> <span id="fat">--</span> g</p>
         </div>
-    </div>
 
-    <!-- 🔹 Logged Meals Section -->
-    <div class="container">
-        <h2>Meal History</h2>
-        <p><strong>Total Calories Today:</strong> <span id="total-calories">0</span> kcal</p>
+        <!-- 🔹 Date-Based Meal Filtering -->
+        <label for="meal-date">Filter by Date:</label>
+        <input type="date" id="meal-date">
+        <button id="filter-meals">Filter Meals</button>
+        <button id="reset-meals">Reset</button>
+
+        <!-- 🔹 Meal History List -->
+        <h3>Meal History</h3>
+        <p><strong>Total Calories:</strong> <span id="total-calories">0</span> kcal</p>
         <ul id="meal-list">
             <li>Loading...</li>
         </ul>
@@ -71,14 +77,14 @@
     </div>
 
     <!-- 🔹 Workout History Section -->
-<div class="container">
-    <h2>Workout History</h2>
-    <ul id="workout-list">
-        <li>Loading logged workouts...</li>
-    </ul>
-</div>
+    <div class="container">
+        <h2>Workout History</h2>
+        <ul id="workout-list">
+            <li>Loading logged workouts...</li>
+        </ul>
+    </div>
 
-
+    <!-- 🔹 Logout Button -->
     <button id="logoutBtn">Logout</button>
 
     <script type="module" src="firebase-config.js"></script>
@@ -125,3 +131,4 @@
     </script>
 </body>
 </html>
+
