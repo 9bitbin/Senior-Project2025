@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/signup_style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script type="module" src="viewmodels/signup.js" defer></script>
+    <script type="module" src="viewmodels/login.js" defer></script>
     <title>VIDIA - Get Started</title>
 </head>
 <body>
@@ -32,8 +34,8 @@
                     <a href="#" class="icon"><i class="fa-brands fa-linkedin"></i></a>
                 </div>
                 <span>or login with your email account:</span>
-                <input type="text" placeholder="username">
-                <input type="password" placeholder="password">
+                <input type="text" placeholder="username" id="login_username">
+                <input type="password" placeholder="password" id="login_password">
                 <a href="#" class="forget-password">Forget your password?</a>
                 <button id="loginBtn" type="button">Login</button>            
             </form>
@@ -48,10 +50,10 @@
                     <a href="#" class="icon"><i class="fa-brands fa-linkedin"></i></a>
                 </div>
                 <span>or sign up with an email account:</span>
-                <input type="text" placeholder="username">
-                <input type="email" placeholder="email">
-                <input type="password" placeholder="password">
-                <input type="password" placeholder="confirm password">
+                <input type="text" placeholder="username" id="signup_username">
+                <input type="email" placeholder="email" id="signup_email">
+                <input type="password" placeholder="password" id="signup_password">
+                <input type="password" placeholder="confirm password" id="signup_confirmpassword">
                 <button id="signupBtn">Sign Up</button>            
             </form>
         </div>
