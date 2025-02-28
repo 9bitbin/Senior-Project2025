@@ -24,7 +24,7 @@
         <p id="bmi-category">Category: Calculating...</p>
     </div>
 
-    <!-- 🔹 Food Logging & Meal History (Merged for Simplicity) -->
+    <!-- 🔹 Food Logging & Meal History -->
     <div class="container">
         <h2>Food Logging & Meal History</h2>
 
@@ -41,9 +41,13 @@
             <p><strong>Fat:</strong> <span id="fat">--</span> g</p>
         </div>
 
-        <!-- 🔹 Date-Based Meal Filtering -->
-        <label for="meal-date">Filter by Date:</label>
-        <input type="date" id="meal-date">
+        <!-- 🔹 Date Range Filtering -->
+        <label for="start-date">Start Date:</label>
+        <input type="date" id="start-date">
+        
+        <label for="end-date">End Date:</label>
+        <input type="date" id="end-date">
+        
         <button id="filter-meals">Filter Meals</button>
         <button id="reset-meals">Reset</button>
 
@@ -131,4 +135,5 @@
     </script>
 </body>
 </html>
+
 

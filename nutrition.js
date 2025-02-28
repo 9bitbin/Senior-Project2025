@@ -12,7 +12,8 @@ const fetchNutritionBtn = document.getElementById("fetch-nutrition");
 const nutritionResults = document.getElementById("nutrition-results");
 const mealList = document.getElementById("meal-list");
 const totalCaloriesEl = document.getElementById("total-calories");
-const mealDateInput = document.getElementById("meal-date");
+const startDateInput = document.getElementById("start-date");
+const endDateInput = document.getElementById("end-date");
 const filterMealsBtn = document.getElementById("filter-meals");
 const resetMealsBtn = document.getElementById("reset-meals");
 
@@ -49,28 +50,21 @@ fetchNutritionBtn.addEventListener("click", async () => {
         return;
     }
 
-    const foodItem = data.items[0]; // Get first item from response
-    const today = new Date().toISOString().split("T")[0]; // Store date in YYYY-MM-DD format
+    const foodItem = data.items[0];
+    const now = new Date().toLocaleString("en-US", { 
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hour12: true
+    });
 
     const meal = {
         name: query,
         calories: foodItem.calories || 0,
-        protein: foodItem.protein_g !== undefined ? foodItem.protein_g : 0,
-        carbs: foodItem.carbohydrates_total_g !== undefined ? foodItem.carbohydrates_total_g : 0,
-        fat: foodItem.fat_total_g !== undefined ? foodItem.fat_total_g : 0,
-        timestamp: today // Store today's date
+        protein: foodItem.protein_g || 0,
+        carbs: foodItem.carbohydrates_total_g || 0,
+        fat: foodItem.fat_total_g || 0,
+        timestamp: now
     };
 
-    // Display Nutrition Data
-    nutritionResults.innerHTML = `
-        <h3>Nutrition Breakdown</h3>
-        <p><strong>Calories:</strong> ${meal.calories} kcal</p>
-        <p><strong>Protein:</strong> ${meal.protein} g</p>
-        <p><strong>Carbs:</strong> ${meal.carbs} g</p>
-        <p><strong>Fat:</strong> ${meal.fat} g</p>
-    `;
-
-    // Save Meal to Firestore
     saveMealToFirestore(meal);
 });
 
@@ -83,18 +77,18 @@ async function saveMealToFirestore(meal) {
     const userDoc = await getDoc(userDocRef);
     let meals = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
 
-    meals.push(meal); // Add new meal
+    meals.push(meal);
 
     try {
         await updateDoc(userDocRef, { mealLogs: meals });
-        fetchLoggedMeals(); // Refresh meal history
+        fetchLoggedMeals();
     } catch (error) {
         console.error("Error saving meal:", error);
     }
 }
 
-// 🔹 Fetch & Display Logged Meals (Fixed Undefined Issue)
-async function fetchLoggedMeals(selectedDate = null) {
+// 🔹 Fetch & Display Meals (Supports Date Range Filtering)
+async function fetchLoggedMeals(startDate = null, endDate = null) {
     const user = auth.currentUser;
     if (!user) return;
 
@@ -105,51 +99,39 @@ async function fetchLoggedMeals(selectedDate = null) {
         let meals = userDoc.data().mealLogs || [];
         let totalCalories = 0;
 
-        // 🔹 Ensure all meals have valid fields
-        meals = meals.map(meal => ({
-            name: meal.name || "Unknown Food",
-            calories: meal.calories || 0,
-            protein: meal.protein !== undefined ? meal.protein : 0,
-            carbs: meal.carbs !== undefined ? meal.carbs : 0,
-            fat: meal.fat !== undefined ? meal.fat : 0,
-            timestamp: meal.timestamp || "0000-00-00" // Default if missing
-        }));
+        if (startDate && endDate) {
+            meals = meals.filter(meal => {
+                const mealDate = new Date(meal.timestamp);
+                return mealDate >= new Date(startDate) && mealDate <= new Date(endDate);
+            });
+        }
 
-        // 🔹 Filter meals based on the selected date
-        const filteredMeals = selectedDate && selectedDate !== "0000-00-00"
-            ? meals.filter(meal => meal.timestamp === selectedDate)
-            : meals;
-
-        // 🔹 Display meals or show a message if none exist
-        mealList.innerHTML = filteredMeals.length > 0
-            ? filteredMeals.map(meal => {
+        mealList.innerHTML = meals.length > 0
+            ? meals.map(meal => {
                 totalCalories += meal.calories;
                 return `
                     <li>
                         <strong>${meal.name}</strong>: ${meal.calories} kcal
                         <br>Protein: ${meal.protein} g, Carbs: ${meal.carbs} g, Fat: ${meal.fat} g
+                        <br><em>Logged on: ${meal.timestamp}</em>
                     </li>`;
             }).join("")
-            : "<li>No meals logged for this date.</li>";
+            : "<li>No meals logged for this date range.</li>";
 
         totalCaloriesEl.innerText = totalCalories;
     }
 }
 
-// 🔹 Filter Meals by Date
+// 🔹 Filter Meals by Date Range
 filterMealsBtn.addEventListener("click", () => {
-    const selectedDate = mealDateInput.value;
-    if (!selectedDate) {
-        alert("Please select a date.");
-        return;
-    }
-    fetchLoggedMeals(selectedDate);
+    fetchLoggedMeals(startDateInput.value, endDateInput.value);
 });
 
 // 🔹 Reset Meal Filter
 resetMealsBtn.addEventListener("click", () => {
-    mealDateInput.value = ""; // Clear date input
-    fetchLoggedMeals(); // Show all meals
+    startDateInput.value = "";
+    endDateInput.value = "";
+    fetchLoggedMeals();
 });
 
 // 🔹 Ensure User is Logged In & Fetch Meals
@@ -160,3 +142,4 @@ auth.onAuthStateChanged((user) => {
         window.location.href = "index.html"; 
     }
 });
+
