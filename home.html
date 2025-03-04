@@ -27,12 +27,9 @@
     <!-- 🔹 Food Logging & Meal History -->
     <div class="container">
         <h2>Food Logging & Meal History</h2>
-
-        <!-- 🔹 Food Input -->
         <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)">
         <button id="fetch-nutrition">Get Nutrition Info</button>
 
-        <!-- 🔹 Display Nutrition Data -->
         <div id="nutrition-results">
             <h3>Nutrition Breakdown</h3>
             <p><strong>Calories:</strong> <span id="calories">--</span> kcal</p>
@@ -41,17 +38,13 @@
             <p><strong>Fat:</strong> <span id="fat">--</span> g</p>
         </div>
 
-        <!-- 🔹 Date Range Filtering -->
         <label for="start-date">Start Date:</label>
         <input type="date" id="start-date">
-        
         <label for="end-date">End Date:</label>
         <input type="date" id="end-date">
-        
         <button id="filter-meals">Filter Meals</button>
         <button id="reset-meals">Reset</button>
 
-        <!-- 🔹 Meal History List -->
         <h3>Meal History</h3>
         <p><strong>Average Daily Calories:</strong> <span id="average-calories">Calculating...</span> kcal</p>
         <p><strong>Total Calories:</strong> <span id="total-calories">0</span> kcal</p>
@@ -61,11 +54,10 @@
     </div>
 
     <!-- 🔹 Weekly & Monthly Calorie Trend -->
-<div class="container">
-    <h2>Calorie Trends</h2>
-    <canvas id="calorieChart"></canvas>
-</div>
-
+    <div class="container">
+        <h2>Calorie Trends</h2>
+        <canvas id="calorieChart"></canvas>
+    </div>
 
     <!-- 🔹 Exercise Tracking Section -->
     <div class="container">
@@ -79,7 +71,6 @@
         </select>
         <button id="fetch-exercise">Get Exercises</button>
 
-        <!-- 🔹 Display Exercise Recommendations -->
         <div id="exercise-results">
             <h3>Suggested Workouts</h3>
             <ul id="exercise-list">
@@ -88,11 +79,37 @@
         </div>
     </div>
 
+    <!-- 🔹 Workout Tracking Section -->
+    <div class="container">
+        <h2>Workout Tracking</h2>
+        <label for="workout-type">Workout Type:</label>
+        <select id="workout-type">
+            <option value="cardio">Cardio</option>
+            <option value="strength">Strength</option>
+            <option value="stretching">Stretching</option>
+            <option value="yoga">Yoga</option>
+        </select>
+        <label for="workout-duration">Duration (minutes):</label>
+        <input type="number" id="workout-duration" min="1">
+        <button id="get-calories">Get Estimated Calories</button>
+        <p><strong>Estimated Calories Burned:</strong> <span id="estimated-calories">--</span> kcal</p>
+        <button id="log-workout">Log Workout</button>
+    </div>
+
     <!-- 🔹 Workout History Section -->
     <div class="container">
         <h2>Workout History</h2>
+        <label for="workout-start-date">Start Date:</label>
+        <input type="date" id="workout-start-date">
+        <label for="workout-end-date">End Date:</label>
+        <input type="date" id="workout-end-date">
+        <button id="filter-workouts">Filter Workouts</button>
+        <button id="reset-workouts">Reset</button>
+
+        <h3>Workout Logs</h3>
+        <p><strong>Total Calories Burned:</strong> <span id="total-workout-calories">0</span> kcal</p>
         <ul id="workout-list">
-            <li>Loading logged workouts...</li>
+            <li>Loading...</li>
         </ul>
     </div>
 
@@ -104,6 +121,7 @@
     <script type="module" src="bmi.js"></script>
     <script type="module" src="nutrition.js"></script>
     <script type="module" src="exercise.js"></script>
+    <script type="module" src="workout.js"></script>
     <script type="module">
         import { auth, db } from "./firebase-config.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
