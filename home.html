@@ -53,11 +53,19 @@
 
         <!-- 🔹 Meal History List -->
         <h3>Meal History</h3>
+        <p><strong>Average Daily Calories:</strong> <span id="average-calories">Calculating...</span> kcal</p>
         <p><strong>Total Calories:</strong> <span id="total-calories">0</span> kcal</p>
         <ul id="meal-list">
             <li>Loading...</li>
         </ul>
     </div>
+
+    <!-- 🔹 Weekly & Monthly Calorie Trend -->
+<div class="container">
+    <h2>Calorie Trends</h2>
+    <canvas id="calorieChart"></canvas>
+</div>
+
 
     <!-- 🔹 Exercise Tracking Section -->
     <div class="container">
@@ -92,6 +100,7 @@
     <button id="logoutBtn">Logout</button>
 
     <script type="module" src="firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="bmi.js"></script>
     <script type="module" src="nutrition.js"></script>
     <script type="module" src="exercise.js"></script>
