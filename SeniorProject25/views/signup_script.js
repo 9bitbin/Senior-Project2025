@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("container");
         const signupTogBtn = document.getElementById("signupTogBtn");
         const loginTogBtn = document.getElementById("loginTogBtn");
-        const loginBtn = document.getElementById("loginBtn");
     
         // Ensure the container exists before trying to modify it
         if (container && localStorage.getItem("signupClicked") === "true") {
@@ -19,12 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (loginTogBtn) {
             loginTogBtn.addEventListener("click", () => {
                 container.classList.remove("active");
-            });
-        }
-    
-        if (loginBtn) {
-            loginBtn.addEventListener("click", () => {
-                window.location.href = "home.html"; 
             });
         }
     });
