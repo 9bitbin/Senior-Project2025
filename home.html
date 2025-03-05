@@ -53,6 +53,96 @@
         </ul>
     </div>
 
+    <!-- 🔹 Macronutrient Goal Setting -->
+<div class="container">
+    <h2>Macronutrient Goal Setting</h2>
+    <label>Protein Goal (g):</label>
+    <input type="number" id="protein-goal" placeholder="Enter protein goal">
+    
+    <label>Carbs Goal (g):</label>
+    <input type="number" id="carbs-goal" placeholder="Enter carbs goal">
+    
+    <label>Fat Goal (g):</label>
+    <input type="number" id="fat-goal" placeholder="Enter fat goal">
+
+    <button id="set-goals">Set Goals</button>
+    <button id="update-goals">Update Goals</button>
+    <button id="reset-goals">Reset Goals</button>
+</div>
+
+<!-- 🔹 Macronutrient Progress Tracking -->
+<div class="container">
+    <h2>Macronutrient Progress</h2>
+    <p><strong>Protein:</strong> <span id="protein-progress">0</span> / <span id="protein-goal-display">0</span> g</p>
+    <p><strong>Carbs:</strong> <span id="carbs-progress">0</span> / <span id="carbs-goal-display">0</span> g</p>
+    <p><strong>Fat:</strong> <span id="fat-progress">0</span> / <span id="fat-goal-display">0</span> g</p>
+</div>
+
+<!-- 🔹 Macronutrient Progress Chart -->
+<div class="container">
+    <h2>Macronutrient Progress Chart</h2>
+    <canvas id="macroChart"></canvas>
+</div>
+
+
+   <!-- Meal Budget Tracking -->
+<div class="container">
+    <h2>Meal Budget Tracking</h2>
+    <label>Set Budget ($):</label>
+    <input type="number" id="budget-amount" placeholder="Enter budget">
+    
+    <label>Budget Period:</label>
+    <select id="budget-period">
+        <option value="Daily">Daily</option>
+        <option value="Weekly">Weekly</option>
+        <option value="Monthly">Monthly</option>
+    </select>
+    <button id="set-budget">Set Budget</button>
+
+    <label>Log Meal Cost ($):</label>
+    <input type="number" id="meal-cost" placeholder="Enter meal cost">
+    <button id="log-meal-cost">Log Cost</button>
+
+    <!-- Budget Overview -->
+    <h3>Budget Overview</h3>
+    <p><strong>Budget:</strong> $<span id="budget-value">0</span></p>
+    <p><strong>Total Spent:</strong> $<span id="total-spent">0</span></p>
+    <p><strong>Remaining Budget:</strong> $<span id="remaining-budget">0</span></p>
+    <p id="budget-alert" style="color: red;"></p>
+</div>
+
+<!-- Meal Budget History -->
+<div class="container">
+    <h2>Spending History</h2>
+
+    <!-- 🔹 Date Range Filtering -->
+    <label for="budget-start-date">Start Date:</label>
+    <input type="date" id="budget-start-date">
+    
+    <label for="budget-end-date">End Date:</label>
+    <input type="date" id="budget-end-date">
+    
+    <button id="filter-budget">Filter Budget</button>
+    <button id="reset-budget">Reset</button>
+
+    <!-- 🔹 Spending History List -->
+    <h3>Meal Expenses</h3>
+    <ul id="budget-history-list">
+        <li>Loading...</li>
+    </ul>
+</div>
+
+<!-- 🔹 Budget Trend Chart Section -->
+<div class="container">
+    <h2>Meal Budget Trends</h2>
+    <canvas id="budgetChart"></canvas>
+</div>
+
+
+
+
+
+
     <!-- 🔹 Weekly & Monthly Calorie Trend -->
     <div class="container">
         <h2>Calorie Trends</h2>
@@ -122,6 +212,8 @@
     <script type="module" src="nutrition.js"></script>
     <script type="module" src="exercise.js"></script>
     <script type="module" src="workout.js"></script>
+    <script type="module" src="budget.js"></script>
+
     <script type="module">
         import { auth, db } from "./firebase-config.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
