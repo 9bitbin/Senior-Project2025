@@ -53,5 +53,18 @@ reset.addEventListener("click",function(event){
   event.preventDefault()
 
   const email = document.getElementById("email").value;
+ 
+  sendPasswordResetEmail(auth, email)
+  .then(() => {
+    // Password reset email sent!
+    // ..
 
+    alert("email sent")
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    alert(errorMessage)
+    // ..
+  });
 })
