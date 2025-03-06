@@ -1,49 +1,36 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+// Import Firebase Authentication
+import { app, auth } from "../models/database.js"; // Use existing Firebase instance
 import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { save } from "../models/database.js"; // Import Firestore save function
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// Attach signup event listener
+document.getElementById("signupBtn").addEventListener("click", async function (event) {
+    event.preventDefault(); // Prevent page reload
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyA6oRNKYzLUlvrRBcr24vRLy4JMQJCHUYI",
-  authDomain: "vidia-application.firebaseapp.com",
-  projectId: "vidia-application",
-  storageBucket: "vidia-application.firebasestorage.app",
-  messagingSenderId: "128760641576",
-  appId: "1:128760641576:web:4afb7d5daabf7967ab1d1d",
-  measurementId: "G-030V44ZV1H"
-};
+    // Inputs
+    const username = document.getElementById("signup_username").value.trim();
+    const email = document.getElementById("signup_email").value.trim();
+    const password = document.getElementById("signup_password").value.trim();
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth();
+    if (!username || !email || !password) {
+        alert("Please fill in all fields.");
+        return;
+    }
 
-// Sign up buttonm
-const signup = document.getElementById('signupBtn');
-signup.addEventListener("click",function(event){
-    event.preventDefault();
+    try {
+        // Firebase Authentication: Create User
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-    // Inputs : Sign up
-    const email = document.getElementById('signup_email').value
-    const password = document.getElementById('signup_password').value
+        console.log("User registered in Firebase Authentication:", user);
 
-    createUserWithEmailAndPassword(auth, email, password)
-  .then((userCredential) => {
-    // Signed up 
-    const user = userCredential.user;
-    window.location.href = "profile.html";
-    // ...
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    alert("Error :(")
-    // ..
-  });
-})
+        // Firestore: Save Username (Using UID as the document ID)
+        await save(user.uid, username);
 
+        // Redirect to profile page after successful signup
+        window.location.href = "profile.html";
+    } catch (error) {
+        console.error("Signup Error:", error);
+        alert(error.message);
+    }
+});
