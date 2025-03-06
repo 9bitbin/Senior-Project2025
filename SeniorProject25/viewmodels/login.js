@@ -25,25 +25,25 @@ const auth = getAuth();
 
 // Login buttonm
 const login = document.getElementById('loginBtn');
-signup.addEventListener("click",function(event){
+login.addEventListener("click",function(event){
     event.preventDefault();
 
     // Inputs : Login
     const email = document.getElementById('login_email').value
     const password = document.getElementById('login_password').value
 
-    signInWithEmailAndPassword (auth, email, password)
-  .then((userCredential) => {
-    // Logged in 
-    const user = userCredential.user;
-    window.location.href = "home.html";
-    // ...
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    alert("Error :(")
-    // ..
-  });
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      // Logged in 
+      const user = userCredential.user;
+      window.location.href = "home.html";
+      // ...
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      alert("Error :(")
+      // ..
+    });
 })
 
