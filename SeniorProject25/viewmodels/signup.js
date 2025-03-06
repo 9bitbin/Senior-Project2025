@@ -11,7 +11,11 @@ document.getElementById("signupBtn").addEventListener("click", async function (e
     const username = document.getElementById("signup_username").value.trim();
     const email = document.getElementById("signup_email").value.trim();
     const password = document.getElementById("signup_password").value.trim();
-
+    const confirmpass = document.getElementById("signup_confirmpassword").value.trim();
+if(password !=confirmpass ){
+    alert("Passwords Do Not Match!");
+    return;
+}
     if (!username || !email || !password) {
         alert("Please fill in all fields.");
         return;
