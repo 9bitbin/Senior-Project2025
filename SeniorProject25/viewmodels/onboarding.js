@@ -1,4 +1,6 @@
-// Grab all relevant elements
+// =============================
+// 🔥 Grab All Relevant Elements
+// =============================
 const sections = document.querySelectorAll('.onboarding-section');
 const nextButtons = document.querySelectorAll('.next-btn');
 const startButton = document.querySelector('.circle-arrow-btn');
@@ -8,7 +10,7 @@ const optionButtons = document.querySelectorAll('.option-btn');
 let currentSectionIndex = 0;
 
 // =============================
-// Scroll Handling
+// 🔥 Scroll Handling
 // =============================
 
 function scrollToSection(index) {
@@ -25,27 +27,31 @@ nextButtons.forEach((button, index) => {
     });
 });
 
-// Optional: Lock scroll position after each section scroll (prevents accidental overscroll)
-document.querySelector('.onboarding-container').addEventListener('scroll', () => {
-    clearTimeout(window.snapTimeout);
-    window.snapTimeout = setTimeout(() => {
-        scrollToSection(currentSectionIndex);
-    }, 150); // Slight debounce
-});
+// Prevent accidental overscroll after transition
+const onboardingContainer = document.querySelector('.onboarding-container');
+if (onboardingContainer) {
+    onboardingContainer.addEventListener('scroll', () => {
+        clearTimeout(window.snapTimeout);
+        window.snapTimeout = setTimeout(() => {
+            scrollToSection(currentSectionIndex);
+        }, 150); // Slight debounce
+    });
+}
 
 // =============================
-// Gender Selection Logic
+// 🔥 Gender Selection Logic
 // =============================
 
 genderButtons.forEach(button => {
     button.addEventListener('click', () => {
+        // Remove "selected" from all, then add to the clicked one
         genderButtons.forEach(btn => btn.classList.remove('selected'));
         button.classList.add('selected');
     });
 });
 
 // =============================
-// Multi-select (Health Condition & Diet Type)
+// 🔥 Multi-select (Health Condition & Diet Type)
 // =============================
 
 optionButtons.forEach(button => {
@@ -55,13 +61,14 @@ optionButtons.forEach(button => {
 });
 
 // =============================
-// Final Navigation to Profile Page
+// 🔥 Final Navigation to Profile Page
 // =============================
 
 if (startButton) {
     startButton.addEventListener('click', () => {
-        window.location.href = 'profile.html';  // Update to your real profile URL if needed
+        console.log("✅ Redirecting to profile.html..."); // Debugging
+        window.location.href = 'profile.html'; // Ensure this URL is correct
     });
+} else {
+    console.error("❌ Error: Start button not found!");
 }
-
-// Optional: Handle case where the button might not exist (helpful if reused across pages)
