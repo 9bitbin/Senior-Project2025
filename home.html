@@ -17,12 +17,71 @@
         <p><strong>Height:</strong> <span id="user-height">Loading...</span> inches</p>
     </div>
 
+    <!-- 🔹 Dashboard Overview Section -->
+<div class="container">
+    <h2>📊 Health & Finance Overview</h2>
+    
+    <!-- 🔹 Calories Chart -->
+    <div class="chart-container">
+        <h3>Calories: Intake vs. Burned</h3>
+        <canvas id="caloriesChart"></canvas>
+    </div>
+
+    <!-- 🔹 Macronutrient Breakdown -->
+    <div class="chart-container">
+        <h3>Macronutrient Breakdown</h3>
+        <canvas id="macroChart"></canvas>
+    </div>
+
+    <!-- 🔹 Workout Summary -->
+    <div class="chart-container">
+        <h3>Weekly Workout Summary</h3>
+        <canvas id="workoutChart"></canvas>
+    </div>
+
+    <!-- 🔹 Budget Trends -->
+    <div class="chart-container">
+        <h3>Spending vs. Budget</h3>
+        <canvas id="budgetChart"></canvas>
+    </div>
+</div>
+
+
+
     <!-- 🔹 BMI Section -->
     <div class="container">
         <h2>Your BMI</h2>
         <p id="bmi-value">BMI Value: Calculating...</p>
         <p id="bmi-category">Category: Calculating...</p>
     </div>
+
+    <!-- 🔹 Share Your Progress Section -->
+<div class="container">
+    <h2>📢 Share Your Progress</h2>
+    <textarea id="postContent" placeholder="Write about your meal, workout, or achievement..."></textarea>
+    
+    <label for="postType">Select Type:</label>
+    <select id="postType">
+        <option value="meal">🍽️ Meal</option>
+        <option value="workout">💪 Workout</option>
+        <option value="achievement">🏆 Achievement</option>
+    </select>
+
+    <label>
+        <input type="checkbox" id="anonymousCheck"> Share Anonymously
+    </label>
+
+    <button id="sharePostBtn">📤 Share</button>
+</div>
+
+<!-- 🔹 Community Feed Section -->
+<div class="container">
+    <h2>🌍 Community Feed</h2>
+    <div id="communityFeed">Loading posts...</div>
+</div>
+
+
+
 
     <!-- 🔹 Food Logging & Meal History -->
     <div class="container">
@@ -52,6 +111,22 @@
             <li>Loading...</li>
         </ul>
     </div>
+
+    <div id="recipe-section">
+        <h2>Find Recipes</h2>
+        <input type="text" id="recipeInput" placeholder="Enter a dish (e.g., Chicken)">
+        <button id="getRecipeBtn">Get Recipes</button>
+        <button id="getRandomRecipeBtn">Surprise Me!</button>
+        <div id="recipeResults"></div> <!-- Results will be shown here -->
+    </div>
+
+    <div id="saved-recipes-section">
+        <h2>Saved Recipes</h2>
+        <div id="savedRecipes"></div>
+    </div>
+    
+    
+    
 
 
 
@@ -111,15 +186,6 @@
 
 
 
-
-
-
-    <!-- 🔹 Weekly & Monthly Calorie Trend -->
-    <div class="container">
-        <h2>Calorie Trends</h2>
-        <canvas id="calorieChart"></canvas>
-    </div>
-
     <!-- 🔹 Exercise Tracking Section -->
     <div class="container">
         <h2>Exercise Recommendations</h2>
@@ -177,6 +243,9 @@
     <!-- 🔹 Logout Button -->
     <button id="logoutBtn">Logout</button>
 
+
+    
+
     <script type="module" src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="bmi.js"></script>
@@ -184,7 +253,12 @@
     <script type="module" src="exercise.js"></script>
     <script type="module" src="workout.js"></script>
     <script type="module" src="budget.js"></script>
-    <script type="module" src="goal.js"></script>
+    <script type="module" src="recipe.js"></script>
+    <script type="module" src="community.js"></script>
+    <script type="module" src="dashboard.js"></script>
+
+    
+
 
     <script type="module">
         import { auth, db } from "./firebase-config.js";
@@ -224,6 +298,7 @@
             });
         });
     </script>
+    
 </body>
 </html>
 

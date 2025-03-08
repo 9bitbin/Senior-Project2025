@@ -100,3 +100,488 @@ button:hover {
     max-width: 100%;
     height: 300px !important;
 }
+
+#recipe-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+#recipeInput {
+    width: 80%;
+    padding: 8px;
+    margin-right: 5px;
+}
+
+#getRecipeBtn {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.recipe-card {
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 10px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#recipe-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+#recipeInput {
+    width: 80%;
+    padding: 8px;
+    margin-right: 5px;
+}
+
+#getRecipeBtn {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.recipe-card {
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 10px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.post {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.comments-section {
+    margin-top: 10px;
+}
+
+.comments-section input {
+    width: 80%;
+    padding: 5px;
+}
+
+.comments-section button {
+    padding: 5px;
+    cursor: pointer;
+}
+
+/* 🔹 General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+/* 🔹 Containers */
+.container {
+    background: white;
+    padding: 20px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    text-align: left;
+}
+
+/* 🔹 Community Feed Card */
+.post {
+    background: #ffffff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 🔹 Profile Section */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+}
+
+/* 🔹 Post Header */
+.post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.post p {
+    margin: 5px 0;
+}
+
+/* 🔹 Buttons */
+button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin-top: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* 🔹 Like Button */
+.like-btn {
+    background: #ffcc00;
+    color: black;
+}
+
+.like-btn:hover {
+    background: #e6b800;
+}
+
+/* 🔹 Comment Section */
+.comments-section {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+}
+
+.comments-section input {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* 🔹 General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    background: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 🔹 Community Feed */
+.post {
+    background: #ffffff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    position: relative;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.post h4 {
+    margin: 5px 0;
+}
+
+/* 🔹 Color-Coded Post Types */
+.post[data-type="MEAL"] {
+    border-left: 5px solid #ff9800;
+}
+
+.post[data-type="WORKOUT"] {
+    border-left: 5px solid #4caf50;
+}
+
+.post[data-type="ACHIEVEMENT"] {
+    border-left: 5px solid #2196f3;
+}
+
+/* 🔹 Like & Comment Buttons */
+.like-btn, .comment-btn {
+    background: #ffcc00;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 5px;
+    transition: background 0.3s;
+}
+
+.like-btn:hover {
+    background: #ffb300;
+}
+
+.comment-btn {
+    background: #007bff;
+    color: white;
+}
+
+.comment-btn:hover {
+    background: #0056b3;
+}
+
+/* 🔹 Comment Section */
+.comments-section {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.comments-section input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* 🔹 Delete Button */
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+}
+
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* 🔹 General Layout */
+body {
+    background-color: #f4f4f4;
+    color: #333;
+    text-align: center;
+    padding: 20px;
+}
+
+/* 🔹 Containers */
+.container {
+    max-width: 600px;
+    background: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 🔹 Community Feed */
+#communityFeed {
+    margin-top: 20px;
+}
+
+/* 🔹 Individual Post */
+.post {
+    background: #ffffff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    position: relative;
+    border-left: 5px solid #ddd;
+    transition: transform 0.2s;
+}
+
+.post:hover {
+    transform: scale(1.02);
+}
+
+/* 🔹 Profile & Post Header */
+.post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+}
+
+.post h4 {
+    margin: 5px 0;
+}
+
+/* 🔹 Color-Coded Post Types */
+.post[data-type="MEAL"] {
+    border-left: 5px solid #ff9800;
+}
+
+.post[data-type="WORKOUT"] {
+    border-left: 5px solid #4caf50;
+}
+
+.post[data-type="ACHIEVEMENT"] {
+    border-left: 5px solid #2196f3;
+}
+
+/* 🔹 Like & Comment Buttons */
+.like-btn, .comment-btn, .delete-btn {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: background 0.3s ease;
+}
+
+.like-btn {
+    background: #ffcc00;
+    color: black;
+}
+
+.like-btn:hover {
+    background: #ffb300;
+}
+
+.comment-btn {
+    background: #007bff;
+    color: white;
+}
+
+.comment-btn:hover {
+    background: #0056b3;
+}
+
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+    float: right;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+}
+
+/* 🔹 Comment Section */
+.comments-section {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.comments-section input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* 🔹 Share Post Section */
+#postContent {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: none;
+}
+
+#sharePostBtn {
+    width: 100%;
+    margin-top: 10px;
+    background: #007bff;
+    color: white;
+}
+
+#sharePostBtn:hover {
+    background: #0056b3;
+}
+
+/* 🔹 Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+    }
+
+    .post {
+        width: 100%;
+    }
+}
+.chart-container {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.chart-container canvas {
+    max-width: 100%;
+    height: 300px !important;
+}
