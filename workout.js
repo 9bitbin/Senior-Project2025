@@ -2,9 +2,9 @@
 import { db, auth } from "./firebase-config.js";
 import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-// 🔹 API Configuration (ExerciseDB or Custom)
+// 🔹 Calories Burned Per Minute (Adjustable Values)
 const CALORIE_BURN_RATES = {
-    cardio: 10, // Calories burned per minute (adjust values based on intensity)
+    cardio: 10,
     strength: 8,
     stretching: 4,
     yoga: 5
@@ -17,6 +17,7 @@ const getCaloriesBtn = document.getElementById("get-calories");
 const logWorkoutBtn = document.getElementById("log-workout");
 const estimatedCaloriesEl = document.getElementById("estimated-calories");
 const workoutListEl = document.getElementById("workout-list");
+const totalCaloriesEl = document.getElementById("total-workout-calories");
 const startDateInput = document.getElementById("workout-start-date");
 const endDateInput = document.getElementById("workout-end-date");
 const filterWorkoutsBtn = document.getElementById("filter-workouts");
@@ -24,8 +25,8 @@ const resetWorkoutsBtn = document.getElementById("reset-workouts");
 
 // 🔹 Function to Estimate Calories Burned
 function estimateCaloriesBurned(workoutType, duration) {
-    if (!CALORIE_BURN_RATES[workoutType]) return 0;
-    return duration * CALORIE_BURN_RATES[workoutType]; // Estimated Calories
+    if (!CALORIE_BURN_RATES[workoutType] || isNaN(duration)) return 0;
+    return duration * CALORIE_BURN_RATES[workoutType];
 }
 
 // 🔹 Handle "Get Estimated Calories" Button
@@ -34,12 +35,14 @@ getCaloriesBtn.addEventListener("click", () => {
     const duration = parseInt(durationEl.value);
 
     if (isNaN(duration) || duration <= 0) {
-        alert("Please enter a valid duration in minutes.");
+        alert("❌ Please enter a valid duration in minutes.");
         return;
     }
 
     const estimatedCalories = estimateCaloriesBurned(workoutType, duration);
-    estimatedCaloriesEl.innerText = `${estimatedCalories} kcal`;
+    estimatedCaloriesEl.innerText = `${estimatedCalories} kcal`; // Ensures it's set once
+
+
 });
 
 // 🔹 Handle "Log Workout" Button
@@ -48,15 +51,12 @@ logWorkoutBtn.addEventListener("click", async () => {
     const duration = parseInt(durationEl.value);
 
     if (isNaN(duration) || duration <= 0) {
-        alert("Please enter a valid duration in minutes.");
+        alert("❌ Please enter a valid duration in minutes.");
         return;
     }
 
     const estimatedCalories = estimateCaloriesBurned(workoutType, duration);
-    const timestamp = new Date().toLocaleString("en-US", {
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", hour12: true
-    });
+    const timestamp = new Date().toISOString(); // 🔹 Using ISO format for consistency
 
     const workout = {
         type: workoutType,
@@ -81,10 +81,10 @@ async function saveWorkoutToFirestore(workout) {
 
     try {
         await updateDoc(userDocRef, { workoutLogs: workouts });
-        console.log("Workout logged successfully.");
+        console.log("✅ Workout logged successfully.");
         fetchLoggedWorkouts();
     } catch (error) {
-        console.error("Error saving workout:", error);
+        console.error("❌ Error saving workout:", error);
     }
 }
 
@@ -102,27 +102,36 @@ async function fetchLoggedWorkouts(startDate = null, endDate = null) {
 
         // 🔹 Filter Workouts by Date Range
         if (startDate && endDate) {
+            const start = new Date(startDate).toISOString().split("T")[0];
+            const end = new Date(endDate).toISOString().split("T")[0];
+
             workouts = workouts.filter(workout => {
                 const workoutDate = new Date(workout.timestamp).toISOString().split("T")[0];
-                return workoutDate >= startDate && workoutDate <= endDate;
+                return workoutDate >= start && workoutDate <= end;
             });
         }
 
         // 🔹 Display Workout History
         workoutListEl.innerHTML = workouts.length > 0
             ? workouts.map(workout => {
-                totalCaloriesBurned += workout.caloriesBurned;
+                const duration = workout.duration ? `${workout.duration} mins` : "Unknown mins";
+                const calories = workout.caloriesBurned ? `${workout.caloriesBurned} kcal` : "Unknown kcal";
+                const timestamp = workout.timestamp || "Unknown Date";
+
+                totalCaloriesBurned += workout.caloriesBurned || 0; // Ensure valid number
+
                 return `
                     <li>
                         <strong>Workout Type:</strong> ${workout.type} <br>
-                        <strong>Duration:</strong> ${workout.duration} mins <br>
-                        <strong>Calories Burned:</strong> ${workout.caloriesBurned} kcal <br>
-                        <em>Logged on: ${workout.timestamp}</em>
+                        <strong>Duration:</strong> ${duration} <br>
+                        <strong>Calories Burned:</strong> ${calories} <br>
+                        <em>Logged on: ${timestamp}</em>
                     </li>`;
             }).join("")
             : "<li>No workouts logged for this date range.</li>";
 
-        document.getElementById("total-workout-calories").innerText = totalCaloriesBurned;
+        // 🔹 Ensure the total calories burned is always a number
+        totalCaloriesEl.innerText = isNaN(totalCaloriesBurned) ? "0 kcal" : `${totalCaloriesBurned} kcal`;
     }
 }
 
@@ -146,3 +155,4 @@ auth.onAuthStateChanged((user) => {
         window.location.href = "index.html";
     }
 });
+

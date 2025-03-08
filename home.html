@@ -53,36 +53,7 @@
         </ul>
     </div>
 
-    <!-- 🔹 Macronutrient Goal Setting -->
-<div class="container">
-    <h2>Macronutrient Goal Setting</h2>
-    <label>Protein Goal (g):</label>
-    <input type="number" id="protein-goal" placeholder="Enter protein goal">
-    
-    <label>Carbs Goal (g):</label>
-    <input type="number" id="carbs-goal" placeholder="Enter carbs goal">
-    
-    <label>Fat Goal (g):</label>
-    <input type="number" id="fat-goal" placeholder="Enter fat goal">
 
-    <button id="set-goals">Set Goals</button>
-    <button id="update-goals">Update Goals</button>
-    <button id="reset-goals">Reset Goals</button>
-</div>
-
-<!-- 🔹 Macronutrient Progress Tracking -->
-<div class="container">
-    <h2>Macronutrient Progress</h2>
-    <p><strong>Protein:</strong> <span id="protein-progress">0</span> / <span id="protein-goal-display">0</span> g</p>
-    <p><strong>Carbs:</strong> <span id="carbs-progress">0</span> / <span id="carbs-goal-display">0</span> g</p>
-    <p><strong>Fat:</strong> <span id="fat-progress">0</span> / <span id="fat-goal-display">0</span> g</p>
-</div>
-
-<!-- 🔹 Macronutrient Progress Chart -->
-<div class="container">
-    <h2>Macronutrient Progress Chart</h2>
-    <canvas id="macroChart"></canvas>
-</div>
 
 
    <!-- Meal Budget Tracking -->
@@ -213,6 +184,7 @@
     <script type="module" src="exercise.js"></script>
     <script type="module" src="workout.js"></script>
     <script type="module" src="budget.js"></script>
+    <script type="module" src="goal.js"></script>
 
     <script type="module">
         import { auth, db } from "./firebase-config.js";

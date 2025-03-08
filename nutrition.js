@@ -52,10 +52,7 @@ fetchNutritionBtn.addEventListener("click", async () => {
     }
 
     const foodItem = data.items[0];
-    const now = new Date().toLocaleString("en-US", { 
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", hour12: true
-    });
+    const now = new Date().toISOString();
 
     const meal = {
         name: query,
@@ -88,7 +85,7 @@ async function saveMealToFirestore(meal) {
     }
 }
 
-// 🔹 Fetch & Display Logged Meals (Now Includes Average Calories Calculation & Chart)
+// 🔹 Fetch & Display Logged Meals
 async function fetchLoggedMeals(startDate = null, endDate = null) {
     const user = auth.currentUser;
     if (!user) return;
@@ -99,36 +96,31 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
     if (userDoc.exists()) {
         let meals = userDoc.data().mealLogs || [];
         let totalCalories = 0;
-        let dailyCalories = {}; // Stores total calories per day
+        let dailyCalories = {};
 
         // 🔹 Filter meals by date range (if selected)
         if (startDate && endDate) {
             meals = meals.filter(meal => {
-                const mealDate = new Date(meal.timestamp).toISOString().split("T")[0]; // Extract YYYY-MM-DD
+                const mealDate = new Date(meal.timestamp).toISOString().split("T")[0];
                 return mealDate >= startDate && mealDate <= endDate;
             });
         }
 
-        // 🔹 Process meals & group by date
+        // 🔹 Process meals
         meals.forEach(meal => {
-            const mealDate = new Date(meal.timestamp).toISOString().split("T")[0]; // Ensure date format
+            totalCalories += meal.calories;
 
-            totalCalories += meal.calories; // Track total calories
+            const mealDate = new Date(meal.timestamp).toISOString().split("T")[0];
             if (!dailyCalories[mealDate]) {
                 dailyCalories[mealDate] = 0;
             }
             dailyCalories[mealDate] += meal.calories;
         });
 
-        // 🔹 Calculate average daily calories
-        const numDays = Object.keys(dailyCalories).length || 1; // Avoid division by zero
-        const averageCalories = Math.round(totalCalories / numDays);
-
-        // 🔹 Update the UI with the new data
-        averageCaloriesEl.innerText = averageCalories;
+        // 🔹 Update the UI
+        averageCaloriesEl.innerText = Math.round(totalCalories / (Object.keys(dailyCalories).length || 1));
         totalCaloriesEl.innerText = totalCalories;
 
-        // 🔹 Display meal history
         mealList.innerHTML = meals.length > 0
             ? meals.map(meal => `
                 <li>
@@ -138,87 +130,66 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
                 </li>`).join("")
             : "<li>No meals logged for this date range.</li>";
 
-        // 🔹 Generate the Calorie Chart
-        generateCalorieChart(meals);
+        generateCalorieChart(dailyCalories);
     }
 }
 
 // 🔹 Generate Calorie Trend Chart
-function generateCalorieChart(meals) {
-    const { last7Days } = calculateCalorieTrends(meals);
+function generateCalorieChart(dailyCalories) {
+    const chartCanvas = document.getElementById("calorieChart");
+    if (!chartCanvas) {
+        console.error("❌ ERROR: Calorie Chart canvas not found!");
+        return;
+    }
 
-    // 🔹 Extract Data for Chart
-    const labels = last7Days.map(entry => entry.date);
-    const data = last7Days.map(entry => entry.calories);
+    const ctx = chartCanvas.getContext("2d");
 
-    // 🔹 Get Chart Canvas
-    const ctx = document.getElementById("calorieChart").getContext("2d");
-
-    // 🔹 Destroy existing chart before creating a new one
     if (window.calorieChartInstance) {
         window.calorieChartInstance.destroy();
     }
 
-    // 🔹 Create New Chart
+    const sortedDates = Object.keys(dailyCalories).sort();
+    const calorieValues = sortedDates.map(date => dailyCalories[date]);
+
+    if (sortedDates.length === 0 || calorieValues.every(val => val === 0)) {
+        console.warn("⚠️ No calorie data available for the chart.");
+        chartCanvas.style.display = "none"; 
+        return;
+    } else {
+        chartCanvas.style.display = "block"; 
+    }
+
     window.calorieChartInstance = new Chart(ctx, {
         type: "bar",
         data: {
-            labels,
+            labels: sortedDates,
             datasets: [{
-                label: "Daily Calories (Last 7 Days)",
-                data,
+                label: "Daily Calorie Intake",
+                data: calorieValues,
                 backgroundColor: "rgba(54, 162, 235, 0.5)",
                 borderColor: "rgba(54, 162, 235, 1)",
                 borderWidth: 1
             }]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: false, 
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...calorieValues) + 50 
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false 
                 }
             }
         }
     });
 }
 
-// 🔹 Calculate Daily Calories for Chart
-function calculateCalorieTrends(meals) {
-    let dailyCalories = {};
-
-    meals.forEach(meal => {
-        const mealDate = new Date(meal.timestamp).toISOString().split("T")[0];
-
-        if (!dailyCalories[mealDate]) {
-            dailyCalories[mealDate] = 0;
-        }
-        dailyCalories[mealDate] += meal.calories;
-    });
-
-    let sortedDates = Object.keys(dailyCalories).sort();
-    let calorieData = sortedDates.map(date => ({
-        date,
-        calories: dailyCalories[date]
-    }));
-
-    let last7Days = calorieData.slice(-7);
-
-    return { last7Days };
-}
-
-// 🔹 Filter Meals by Date Range
-filterMealsBtn.addEventListener("click", () => {
-    fetchLoggedMeals(startDateInput.value, endDateInput.value);
-});
-
-// 🔹 Reset Meal Filter
-resetMealsBtn.addEventListener("click", () => {
-    startDateInput.value = "";
-    endDateInput.value = "";
-    fetchLoggedMeals();
-});
-
-// 🔹 Ensure User is Logged In & Fetch Meals
+// 🔹 Fetch Meals on Load
 auth.onAuthStateChanged((user) => {
     if (user) {
         fetchLoggedMeals();
@@ -226,3 +197,4 @@ auth.onAuthStateChanged((user) => {
         window.location.href = "index.html";
     }
 });
+

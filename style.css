@@ -91,3 +91,12 @@ button:hover {
 #logoutBtn:hover {
     background: darkred;
 }
+
+#calorieChart {
+    max-width: 100%;
+    height: 300px !important;
+}
+#macroChart {
+    max-width: 100%;
+    height: 300px !important;
+}
