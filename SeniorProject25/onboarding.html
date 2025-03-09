@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Profile Setup - VIDIA</title>
+    <link rel="stylesheet" href="styles/onboarding.css">
+</head>
+<body>
+
+<div class="onboarding-container">
+
+    <section class="onboarding-section">
+        <h2>Let's Set Up Your Profile</h2>
+
+        <div class="card">
+            <h3>Full Name</h3>
+            <div class="row">
+                <div>
+                    <label>First</label>
+                    <input type="text" placeholder="First Name">
+                </div>
+                <div>
+                    <label>Last</label>
+                    <input type="text" placeholder="Last Name">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Birthday</h3>
+            <input type="date">
+        </div>
+
+        <button class="next-btn">Next</button>
+    </section>
+
+    <section class="onboarding-section">
+        <div class="card">
+            <h3>Gender</h3>
+            <div class="gender-options">
+                <button class="gender-btn" data-gender="female">👩</button>
+                <button class="gender-btn" data-gender="male">👨</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Weight</h3>
+            <input type="text" placeholder="Enter your weight">
+        </div>
+
+        <div class="card">
+            <h3>Height</h3>
+            <input type="text" placeholder="Enter your height">
+        </div>
+
+        <button class="next-btn">Next</button>
+    </section>
+
+    <section class="onboarding-section">
+        <div class="card">
+            <h3>Health Condition</h3>
+            <div class="multi-select">
+                <button class="option-btn">Diabetic</button>
+                <button class="option-btn">Anemic</button>
+                <button class="option-btn">Hypertension</button>
+                <button class="option-btn">None</button>
+            </div>
+        </div>
+        <button class="next-btn">Next</button>
+    </section>
+
+    <section class="onboarding-section final-section">
+        <h3>Tell Us About Your Diet</h3>
+        <div class="card">
+            <h3>Diet Type</h3>
+            <div class="multi-select">
+                <button class="option-btn">Vegan</button>
+                <button class="option-btn">Vegetarian</button>
+                <button class="option-btn">Halal</button>
+                <button class="option-btn">Keto</button>
+                <button class="option-btn">Paleo</button>
+                <button class="option-btn">None</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Allergies or Restrictions</h3>
+            <div class="multi-select">
+                <button class="option-btn">Nuts</button>
+                <button class="option-btn">Shellfish</button>
+                <button class="option-btn">Gluten</button>
+                <button class="option-btn">Dairy</button>
+                <button class="option-btn">None</button>
+            </div>
+        </div>
+
+        <div class="final-cta">
+            <p class="ready-text">Great, Ready to Start!</p>
+            <button class="circle-arrow-btn" id="start-btn">
+                ➡️
+            </button>
+        </div>
+    </section>
+
+</div>
+
+<!-- ✅ Place script here to ensure HTML loads first -->
+<script src="viewmodels/onboarding.js" defer></script>
+
+</body>
+</html>

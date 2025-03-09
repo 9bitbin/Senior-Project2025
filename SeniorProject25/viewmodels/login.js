@@ -1,13 +1,9 @@
-// Import the functions you need from the SDKs you need
+// Import necessary Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
-import { getAuth, signInWithEmailAndPassword  } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase configuration (same as your existing one)
 const firebaseConfig = {
   apiKey: "AIzaSyA6oRNKYzLUlvrRBcr24vRLy4JMQJCHUYI",
   authDomain: "vidia-application.firebaseapp.com",
@@ -18,32 +14,54 @@ const firebaseConfig = {
   measurementId: "G-030V44ZV1H"
 };
 
-// Initialize Firebase
+// Initialize Firebase (you already had this)
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth();
 
-// Login buttonm
+// =====================================================
+// LOGIN FUNCTION (This part was already in your file)
+// =====================================================
 const login = document.getElementById('loginBtn');
-login.addEventListener("click",function(event){
+login.addEventListener("click", function(event) {
     event.preventDefault();
 
-    // Inputs : Login
-    const email = document.getElementById('login_email').value
-    const password = document.getElementById('login_password').value
+    const email = document.getElementById('login_email').value;
+    const password = document.getElementById('login_password').value;
 
-  signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      // Logged in 
-      const user = userCredential.user;
-      window.location.href = "home.html";
-      // ...
-    })
-    .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      alert("Error :(")
-      // ..
-    });
-})
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            // Redirect to home page after successful login
+            window.location.href = "home.html";
+        })
+        .catch((error) => {
+            alert("Login failed: " + error.message);
+        });
+});
 
+// =====================================================
+// PASSWORD RESET LOGIC (NEWLY ADDED BELOW)
+// =====================================================
+document.addEventListener("DOMContentLoaded", function() {
+    const forgotPasswordLink = document.querySelector('.forget-password');
+
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', function(event) {
+            event.preventDefault();  // Stop the link from navigating
+
+            const email = prompt("Please enter your email to reset password:");
+
+            if (email) {
+                sendPasswordResetEmail(auth, email)
+                    .then(() => {
+                        alert("Password reset email has been sent. Please check your email.");
+                    })
+                    .catch((error) => {
+                        alert("Error sending password reset email: " + error.message);
+                    });
+            } else {
+                alert("Email is required to reset your password.");
+            }
+        });
+    }
+});

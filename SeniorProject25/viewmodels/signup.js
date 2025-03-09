@@ -11,6 +11,12 @@ document.getElementById("signupBtn").addEventListener("click", async function (e
     const username = document.getElementById("signup_username").value.trim();
     const email = document.getElementById("signup_email").value.trim();
     const password = document.getElementById("signup_password").value.trim();
+    const confirmpass = document.getElementById("signup_confirmpassword").value.trim();
+
+    if (password !== confirmpass) {
+        alert("Passwords Do Not Match!");
+        return;
+    }
 
     if (!username || !email || !password) {
         alert("Please fill in all fields.");
@@ -27,8 +33,8 @@ document.getElementById("signupBtn").addEventListener("click", async function (e
         // Firestore: Save Username (Using UID as the document ID)
         await save(user.uid, username);
 
-        // Redirect to profile page after successful signup
-        window.location.href = "profile.html";
+        // ✅ Redirect to onboarding page instead of profile page
+        window.location.href = "onboarding.html";
     } catch (error) {
         console.error("Signup Error:", error);
         alert(error.message);
