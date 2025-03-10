@@ -10,7 +10,7 @@
 <body>
     <header>
         <div class="nav-bar-menu-icon">
-            <a href="" class="hamburger">
+            <a href="#" class="hamburger" aria-label="Menu" title="Open menu">
                 <i class="fa-solid fa-bars" id="menu-btn"></i>
             </a>
         </div>
@@ -18,17 +18,24 @@
             <h1 class="logo">VIDIA</h1>
             <ul>
                 <li>
-                    <a href="" class="icon"><i class="fa-solid fa-circle-user"></i></a>
+                    <a href="#" class="icon" aria-label="Profile" title="Go to profile">
+                        <i class="fa-solid fa-circle-user"></i>
+                    </a>
                 </li>
                 <li>
-                    <a href="" class="icon"><i class="fa-solid fa-bell"></i></a>
+                    <a href="#" class="icon" aria-label="Notifications" title="View notifications">
+                        <i class="fa-solid fa-bell"></i>
+                    </a>
                 </li>
                 <li>
-                    <a href="" class="icon"><i class="fa-solid fa-gear"></i></a>
+                    <a href="#" class="icon" aria-label="Settings" title="Settings">
+                        <i class="fa-solid fa-gear"></i>
+                    </a>
                 </li>
             </ul>
         </nav>
     </header>
+
     <div class="main-layout">
         <div class="sidebar">
             <div class="list">
@@ -36,92 +43,91 @@
                     <li>
                         <a href="#" onclick="window.location.href='home.html';">
                             <i class="fa-solid fa-house"></i>
-                            <span> <div class="nav-item">Home</div></span>
+                            <span><div class="nav-item">Home</div></span>
                         </a>
                         <span class="tooltip">Home</span>
                     </li>
                     <li>
                         <a href="#">
                             <i class="fa-solid fa-user"></i>
-                            <span> <div class="nav-item">Profile</div></span>
+                            <span><div class="nav-item">Profile</div></span>
                         </a>
                         <span class="tooltip">Profile</span>
                     </li>
                     <li>
                         <a href="#" onclick="window.location.href='log.html';">
                             <i class="fa-solid fa-pen"></i>
-                            <span> <div class="nav-item">Log</div></span>
+                            <span><div class="nav-item">Log</div></span>
                         </a>
                         <span class="tooltip">Log</span>
                     </li>
                     <li>
                         <a href="#" onclick="window.location.href='meal.html';">
                             <i class="fa-solid fa-utensils"></i>
-                            <span> <div class="nav-item">Meals</div></span>
+                            <span><div class="nav-item">Meals</div></span>
                         </a>
                         <span class="tooltip">Meals</span>
                     </li>
                     <li>
                         <a href="#" onclick="window.location.href='track.html';">
                             <i class="fa-solid fa-chart-simple"></i>
-                            <span> <div class="nav-item">Tracking</div></span>
+                            <span><div class="nav-item">Tracking</div></span>
                         </a>
                         <span class="tooltip">Tracking</span>
                     </li>
                     <li>
                         <a href="#" onclick="window.location.href='feed.html';">
                             <i class="fa-solid fa-comment"></i>
-                            <span> <div class="nav-item">Feed</div></span>
+                            <span><div class="nav-item">Feed</div></span>
                         </a>
                         <span class="tooltip">Feed</span>
                     </li>
                     <li>
                         <a href="#" onclick="window.location.href='signup.html';">
                             <i class="fa-solid fa-right-from-bracket"></i>
-                            <span> <div class="nav-item">Logout</div></span>
+                            <span><div class="nav-item">Logout</div></span>
                         </a>
                         <span class="tooltip">Logout</span>
                     </li>                    
                 </ul>
             </div>
         </div>
+
         <div class="main-content">
             <div class="header-container">
                 <header>
                     <h1 class="section-heading">My Profile</h1>
                 </header>
             </div>
+
             <div class="tab-container">
-                <div class="tab-filter-container">
-                    <li class="filter-btn active" data-tab="profile-sections">
-                        Basic
-                    </li>
-                    <li class="filter-btn" data-tab="profile-sections">
-                        Dietary
-                    </li>
-                    <li class="filter-btn" data-tab="profile-sections">
-                        Goal
-                    </li>
-                    <li class="filter-btn" data-tab="profile-sections">
-                        Budget
-                    </li>
-                </div>
+                <ul class="tab-filter-container">
+                    <li class="filter-btn active" data-tab="profile-sections">Basic</li>
+                    <li class="filter-btn" data-tab="profile-sections">Dietary</li>
+                    <li class="filter-btn" data-tab="profile-sections">Goal</li>
+                    <li class="filter-btn" data-tab="profile-sections">Budget</li>
+                </ul>
+
                 <div class="tab-filter-item-container">
                     <div class="tab-item selected_tab" data-tab="Basic">
                         <label for="birthday">Birthday</label>
                         <input type="date" id="birthday" name="birthday">
-                        <label for="gender">Gender</label>
-                        <select id="sex" name="sex">
+
+                        <label for="sex">Gender</label>
+                        <select id="sex" name="sex" title="Select your gender">
                             <option value="male">Male</option>
                             <option value="female">Female</option>
                             <option value="other">Other</option>
                         </select>
+
                         <label for="weight">Weight</label>
                         <input type="number" id="weight" name="weight" placeholder="Enter weight (lbs/kg)">
+
                         <label for="height">Height</label>
                         <input type="number" id="height" name="height" placeholder="Enter height (cm/in)">
+
                         <label for="health-condition">Health Condition</label>
-                        <select id="health-condition" name="health-condition" multiple>
+                        <select id="health-condition" name="health-condition" multiple title="Select your health conditions">
                             <option value="diabetes">Diabetes</option>
                             <option value="hypertension">Hypertension</option>
                             <option value="anemic">Anemic</option>
@@ -129,19 +135,21 @@
                             <option value="none">None</option>
                         </select>
                     </div>
+
                     <div class="tab-item" data-tab="Dietary">
                         <label for="diet-type">Diet Type</label>
-                        <select id="diet-type" name="diet-type">
+                        <select id="diet-type" name="diet-type" title="Select your diet type">
                             <option value="vegetarian">Vegetarian</option>
                             <option value="vegan">Vegan</option>
                             <option value="keto">Keto</option>
                             <option value="paleo">Paleo</option>
-                            <option value="paleo">Halal</option>
-                            <option value="paleo">Kosher</option>
+                            <option value="halal">Halal</option>
+                            <option value="kosher">Kosher</option>
                             <option value="none">None</option>
                         </select>
+
                         <label for="allergies">Allergies</label>
-                        <select id="allergies" name="allergies" multiple>
+                        <select id="allergies" name="allergies" multiple title="Select your allergies">
                             <option value="nuts">Nuts</option>
                             <option value="dairy">Dairy</option>
                             <option value="gluten">Gluten</option>
@@ -149,6 +157,7 @@
                             <option value="none">None</option>
                         </select>
                     </div>
+
                     <div class="tab-item" data-tab="Goal">
                         <label for="goal-type">Goal Type</label>
                         <select id="goal-type" name="goal-type">
@@ -157,14 +166,15 @@
                             <option value="calories">Calories</option>
                             <option value="proteins">Proteins</option>
                         </select>
+
                         <label for="goal-target">Goal Target</label>
                         <input type="number" id="goal-target" name="goal-target" placeholder="Enter target (lbs, grams, etc.)">
+
                         <label for="target-date">Target Date (Optional)</label>
                         <input type="date" id="target-date" name="target-date"> 
                         <button>Set a New Goal</button>
-                        <p>[Add carosel or container that shows all goals] </p>
-
                     </div>
+
                     <div class="tab-item" data-tab="Budget">
                         <label>Budget Span</label>
                         <div>
@@ -181,12 +191,12 @@
                         <input type="number" id="budget-amount" name="budget-amount" placeholder="Enter amount in dollars ($)">
                          <button>Set a New Budget</button>                               
                     </div>
+
                 </div>
             </div>
         </div>
-
     </div>
-    
+
 </body>
 
 <script src="views/sidebar_script.js"></script>

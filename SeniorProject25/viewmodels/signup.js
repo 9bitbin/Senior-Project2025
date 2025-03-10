@@ -1,7 +1,7 @@
 // Import Firebase Authentication
 import { app, auth } from "../models/database.js"; // Use existing Firebase instance
 import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { save } from "../models/database.js"; // Import Firestore save function
+import { save } from "../models/user.js"; // Import Firestore save function
 
 // Attach signup event listener
 document.getElementById("signupBtn").addEventListener("click", async function (event) {
