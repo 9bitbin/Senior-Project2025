@@ -16,21 +16,19 @@
             <div class="row">
                 <div>
                     <label>First</label>
-                    <input type="text" placeholder="First Name">
+                    <input type="text" placeholder="First Name" required>
                 </div>
                 <div>
                     <label>Last</label>
-                    <input type="text" placeholder="Last Name">
+                    <input type="text" placeholder="Last Name" required>
                 </div>
             </div>
         </div>
 
         <div class="card">
             <h3>Birthday</h3>
-            <input type="date">
+            <input type="date" required>
         </div>
-
-        <button class="next-btn">Next</button>
     </section>
 
     <section class="onboarding-section">
@@ -44,15 +42,13 @@
 
         <div class="card">
             <h3>Weight</h3>
-            <input type="text" placeholder="Enter your weight">
+            <input type="text" placeholder="Enter your weight" required>
         </div>
 
         <div class="card">
             <h3>Height</h3>
-            <input type="text" placeholder="Enter your height">
+            <input type="text" placeholder="Enter your height" required>
         </div>
-
-        <button class="next-btn">Next</button>
     </section>
 
     <section class="onboarding-section">
@@ -65,7 +61,6 @@
                 <button class="option-btn">None</button>
             </div>
         </div>
-        <button class="next-btn">Next</button>
     </section>
 
     <section class="onboarding-section final-section">
@@ -95,15 +90,14 @@
 
         <div class="final-cta">
             <p class="ready-text">Great, Ready to Start!</p>
-            <button class="circle-arrow-btn" id="start-btn">
-                ➡️
-            </button>
+            <button class="circle-arrow-btn" id="start-btn">➡️</button>
         </div>
+
+        <p class="error-message" id="error-message"></p>
     </section>
 
 </div>
 
-<!-- ✅ Place script here to ensure HTML loads first -->
 <script src="viewmodels/onboarding.js" defer></script>
 
 </body>
