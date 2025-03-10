@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIDIA - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container" id="container">
+        <form id="authForm">
+            <h1 id="formTitle">Login</h1>
+            
+            <div class="media-icons">
+                <a href="#" id="googleLogin" class="icon"><i class="fa-brands fa-google"></i></a>
+            </div>
+            
+            <span>or use your email:</span>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button id="authBtn" type="button">Login</button>
+
+            <p id="toggleText">Don't have an account? <a href="#" id="toggleAuth">Sign Up</a></p>
+        </form>
+    </div>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

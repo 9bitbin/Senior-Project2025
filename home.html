@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vidia - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Welcome to Vidia</h1>
+    <p id="user-info">Loading user info...</p>
+
+    <!-- 🔹 User Health Info Section -->
+    <div class="container">
+        <h2>Your Health Information</h2>
+        <p><strong>Weight:</strong> <span id="user-weight">Loading...</span> lbs</p>
+        <p><strong>Height:</strong> <span id="user-height">Loading...</span> inches</p>
+    </div>
+
+    <!-- 🔹 Dashboard Overview Section -->
+<div class="container">
+    <h2>📊 Health & Finance Overview</h2>
+    
+    <!-- 🔹 Calories Chart -->
+    <div class="chart-container">
+        <h3>Calories: Intake vs. Burned</h3>
+        <canvas id="caloriesChart"></canvas>
+    </div>
+
+    <!-- 🔹 Macronutrient Breakdown -->
+    <div class="chart-container">
+        <h3>Macronutrient Breakdown</h3>
+        <canvas id="macroChart"></canvas>
+    </div>
+
+    <!-- 🔹 Workout Summary -->
+    <div class="chart-container">
+        <h3>Weekly Workout Summary</h3>
+        <canvas id="workoutChart"></canvas>
+    </div>
+
+    <!-- 🔹 Budget Trends -->
+    <div class="chart-container">
+        <h3>Spending vs. Budget</h3>
+        <canvas id="budgetChart"></canvas>
+    </div>
+</div>
+
+
+
+    <!-- 🔹 BMI Section -->
+    <div class="container">
+        <h2>Your BMI</h2>
+        <p id="bmi-value">BMI Value: Calculating...</p>
+        <p id="bmi-category">Category: Calculating...</p>
+    </div>
+
+    <!-- 🔹 Share Your Progress Section -->
+<div class="container">
+    <h2>📢 Share Your Progress</h2>
+    <textarea id="postContent" placeholder="Write about your meal, workout, or achievement..."></textarea>
+    
+    <label for="postType">Select Type:</label>
+    <select id="postType">
+        <option value="meal">🍽️ Meal</option>
+        <option value="workout">💪 Workout</option>
+        <option value="achievement">🏆 Achievement</option>
+    </select>
+
+    <label>
+        <input type="checkbox" id="anonymousCheck"> Share Anonymously
+    </label>
+
+    <button id="sharePostBtn">📤 Share</button>
+</div>
+
+<!-- 🔹 Community Feed Section -->
+<div class="container">
+    <h2>🌍 Community Feed</h2>
+    <div id="communityFeed">Loading posts...</div>
+</div>
+
+
+
+
+    <!-- 🔹 Food Logging & Meal History -->
+    <div class="container">
+        <h2>Food Logging & Meal History</h2>
+        <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)">
+        <button id="fetch-nutrition">Get Nutrition Info</button>
+
+        <div id="nutrition-results">
+            <h3>Nutrition Breakdown</h3>
+            <p><strong>Calories:</strong> <span id="calories">--</span> kcal</p>
+            <p><strong>Protein:</strong> <span id="protein">--</span> g</p>
+            <p><strong>Carbs:</strong> <span id="carbs">--</span> g</p>
+            <p><strong>Fat:</strong> <span id="fat">--</span> g</p>
+        </div>
+
+        <label for="start-date">Start Date:</label>
+        <input type="date" id="start-date">
+        <label for="end-date">End Date:</label>
+        <input type="date" id="end-date">
+        <button id="filter-meals">Filter Meals</button>
+        <button id="reset-meals">Reset</button>
+
+        <h3>Meal History</h3>
+        <p><strong>Average Daily Calories:</strong> <span id="average-calories">Calculating...</span> kcal</p>
+        <p><strong>Total Calories:</strong> <span id="total-calories">0</span> kcal</p>
+        <ul id="meal-list">
+            <li>Loading...</li>
+        </ul>
+    </div>
+
+  
+    
+
+    <div id="recipe-section">
+        <h2>Find Recipes</h2>
+        <input type="text" id="recipeInput" placeholder="Enter a dish (e.g., Chicken)">
+        <button id="getRecipeBtn">Get Recipes</button>
+        <button id="getRandomRecipeBtn">Surprise Me!</button>
+        <div id="recipeResults"></div> <!-- Results will be shown here -->
+    </div>
+
+    <div id="saved-recipes-section">
+        <h2>Saved Recipes</h2>
+        <div id="savedRecipes"></div>
+    </div>
+    
+    
+    
+
+
+
+
+   <!-- Meal Budget Tracking -->
+<div class="container">
+    <h2>Meal Budget Tracking</h2>
+    <label>Set Budget ($):</label>
+    <input type="number" id="budget-amount" placeholder="Enter budget">
+    
+    <label>Budget Period:</label>
+    <select id="budget-period">
+        <option value="Daily">Daily</option>
+        <option value="Weekly">Weekly</option>
+        <option value="Monthly">Monthly</option>
+    </select>
+    <button id="set-budget">Set Budget</button>
+
+    <label>Log Meal Cost ($):</label>
+    <input type="number" id="meal-cost" placeholder="Enter meal cost">
+    <button id="log-meal-cost">Log Cost</button>
+
+    <!-- Budget Overview -->
+    <h3>Budget Overview</h3>
+    <p><strong>Budget:</strong> $<span id="budget-value">0</span></p>
+    <p><strong>Total Spent:</strong> $<span id="total-spent">0</span></p>
+    <p><strong>Remaining Budget:</strong> $<span id="remaining-budget">0</span></p>
+    <p id="budget-alert" style="color: red;"></p>
+</div>
+
+<!-- Meal Budget History -->
+<div class="container">
+    <h2>Spending History</h2>
+
+    <!-- 🔹 Date Range Filtering -->
+    <label for="budget-start-date">Start Date:</label>
+    <input type="date" id="budget-start-date">
+    
+    <label for="budget-end-date">End Date:</label>
+    <input type="date" id="budget-end-date">
+    
+    <button id="filter-budget">Filter Budget</button>
+    <button id="reset-budget">Reset</button>
+
+    <!-- 🔹 Spending History List -->
+    <h3>Meal Expenses</h3>
+    <ul id="budget-history-list">
+        <li>Loading...</li>
+    </ul>
+</div>
+
+
+    <!-- 🔹 Exercise Tracking Section -->
+    <div class="container">
+        <h2>Exercise Recommendations</h2>
+        <label for="exercise-type">Select Workout Type:</label>
+        <select id="exercise-type">
+            <option value="cardio">Cardio</option>
+            <option value="strength">Strength</option>
+            <option value="stretching">Stretching</option>
+            <option value="yoga">Yoga</option>
+        </select>
+        <button id="fetch-exercise">Get Exercises</button>
+
+        <div id="exercise-results">
+            <h3>Suggested Workouts</h3>
+            <ul id="exercise-list">
+                <li>Exercises will appear here...</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 🔹 Workout Tracking Section -->
+    <div class="container">
+        <h2>Workout Tracking</h2>
+        <label for="workout-type">Workout Type:</label>
+        <select id="workout-type">
+            <option value="cardio">Cardio</option>
+            <option value="strength">Strength</option>
+            <option value="stretching">Stretching</option>
+            <option value="yoga">Yoga</option>
+        </select>
+        <label for="workout-duration">Duration (minutes):</label>
+        <input type="number" id="workout-duration" min="1">
+        <button id="get-calories">Get Estimated Calories</button>
+        <p><strong>Estimated Calories Burned:</strong> <span id="estimated-calories">--</span> kcal</p>
+        <button id="log-workout">Log Workout</button>
+    </div>
+
+    <!-- 🔹 Workout History Section -->
+    <div class="container">
+        <h2>Workout History</h2>
+        <label for="workout-start-date">Start Date:</label>
+        <input type="date" id="workout-start-date">
+        <label for="workout-end-date">End Date:</label>
+        <input type="date" id="workout-end-date">
+        <button id="filter-workouts">Filter Workouts</button>
+        <button id="reset-workouts">Reset</button>
+
+        <h3>Workout Logs</h3>
+        <p><strong>Total Calories Burned:</strong> <span id="total-workout-calories">0</span> kcal</p>
+        <ul id="workout-list">
+            <li>Loading...</li>
+        </ul>
+    </div>
+
+    <!-- 🔹 Logout Button -->
+    <button id="logoutBtn">Logout</button>
+
+
+    
+
+    <script type="module" src="firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="bmi.js"></script>
+    <script type="module" src="nutrition.js"></script>
+    <script type="module" src="exercise.js"></script>
+    <script type="module" src="workout.js"></script>
+    <script type="module" src="budget.js"></script>
+    <script type="module" src="recipe.js"></script>
+    <script type="module" src="community.js"></script>
+    <script type="module" src="dashboard.js"></script>
+    <script type="module" src="grocery.js"></script>
+
+
+    
+
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+
+        const userInfo = document.getElementById("user-info");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const weightEl = document.getElementById("user-weight");
+        const heightEl = document.getElementById("user-height");
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userInfo.innerText = `Welcome, ${user.email}`;
+
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    weightEl.innerText = data.weight || "N/A";
+                    heightEl.innerText = data.height || "N/A";
+                } else {
+                    weightEl.innerText = "N/A";
+                    heightEl.innerText = "N/A";
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        logoutBtn.addEventListener("click", () => {
+            signOut(auth).then(() => {
+                window.location.href = "index.html";
+            }).catch((error) => {
+                console.error("Logout Error: ", error);
+            });
+        });
+    </script>
+    
+</body>
+</html>
+
+
