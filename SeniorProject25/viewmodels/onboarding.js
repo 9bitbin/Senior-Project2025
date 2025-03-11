@@ -1,4 +1,3 @@
-// Import necessary Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
@@ -27,7 +26,10 @@ document.addEventListener("DOMContentLoaded", () => {
         lastName: "",
         birthday: "",
         height: "",
-        healthConditions: new Set(),
+        dietType: new Set(), // Multiple selection
+        restriction: new Set(),
+        healthCondition: new Set(),
+        weight: ""
     };
 
     // Grab Input Fields
@@ -35,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const lastNameInput = document.querySelector('input[placeholder="Last Name"]');
     const birthdayInput = document.querySelector('input[type="date"]');
     const heightInput = document.querySelector('input[placeholder="Enter your height"]');
+    const weightInput = document.querySelector('input[placeholder="Enter your weight"]');
     const optionButtons = document.querySelectorAll('.option-btn');
     const startButton = document.querySelector('.circle-arrow-btn');
 
@@ -67,14 +70,25 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Multi-select (Health Condition)
+    if (weightInput) {
+        weightInput.addEventListener('input', (e) => {
+            userData.weight = e.target.value.trim();
+            logUserData();
+        });
+    }
+
+    // Multi-select (Health Condition, Restriction, Diet Type)
     optionButtons.forEach(button => {
         button.addEventListener('click', () => {
             const category = button.parentElement.parentElement.querySelector('h3').innerText;
             const value = button.innerText;
 
-            if (category === "Health Condition") {
-                toggleSelection(userData.healthConditions, value);
+            if (category.toLowerCase().includes("health condition")) {
+                toggleSelection(userData.healthCondition, value);
+            } else if (category.toLowerCase().includes("restriction")) {
+                toggleSelection(userData.restriction, value);
+            } else if (category.toLowerCase().includes("diet type")) {
+                toggleSelection(userData.dietType, value);
             }
 
             logUserData();
@@ -88,13 +102,17 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             set.add(value);
         }
+        console.log(`Updated selection for: ${value}`, Array.from(set)); // Debugging log
     }
 
     // Log User Data Function
     function logUserData() {
         console.log("Updated User Data:", {
             ...userData,
-            healthConditions: Array.from(userData.healthConditions),
+            birthday: userData.birthday, // Logging birthday for debugging
+            healthCondition: Array.from(userData.healthCondition),
+            restriction: Array.from(userData.restriction),
+            dietType: Array.from(userData.dietType) // Ensure multiple diet types are logged
         });
     }
 
@@ -103,7 +121,10 @@ document.addEventListener("DOMContentLoaded", () => {
         startButton.addEventListener('click', async () => {
             console.log("Final Submission - User Data:", {
                 ...userData,
-                healthConditions: Array.from(userData.healthConditions),
+                healthCondition: Array.from(userData.healthCondition),
+                restriction: Array.from(userData.restriction),
+                dietType: Array.from(userData.dietType),
+                birthday: userData.birthday // Ensure birthday is saved
             });
 
             const uid = auth.currentUser?.uid;
@@ -112,8 +133,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Convert Sets to Arrays before saving
                 const formattedData = {
                     ...userData,
-                    healthConditions: Array.from(userData.healthConditions),
+                    healthCondition: Array.from(userData.healthCondition),
+                    restriction: Array.from(userData.restriction),
+                    dietType: Array.from(userData.dietType),
+                    birthday: userData.birthday // Ensure birthday is included in Firestore
                 };
+
+                console.log("Data sent to saveProfile:", formattedData); // Debugging log
 
                 // Save the profile data
                 await saveProfile(uid, formattedData);
