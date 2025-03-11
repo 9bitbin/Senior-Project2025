@@ -110,6 +110,11 @@
 
                 <div class="tab-filter-item-container">
                     <div class="tab-item selected_tab" data-tab="Basic">
+                        <div class="edit-buttons">
+                            <button id="edit-basic">Edit</button>
+                            <button id="return-basic">Back</button>
+                            <button id="save-basic">Save</button>
+                        </div>
                         <label for="birthday">Birthday</label>
                         <input type="date" id="birthday" name="birthday">
 
@@ -124,7 +129,7 @@
                         <input type="number" id="weight" name="weight" placeholder="Enter weight (lbs/kg)">
 
                         <label for="height">Height</label>
-                        <input type="number" id="height" name="height" placeholder="Enter height (cm/in)">
+                        <input type="text" id="height" name="height" placeholder="Enter height (cm/in)">
 
                         <label for="health-condition">Health Condition</label>
                         <select id="health-condition" name="health-condition" multiple title="Select your health conditions">
@@ -137,6 +142,11 @@
                     </div>
 
                     <div class="tab-item" data-tab="Dietary">
+                        <div class="edit-buttons">
+                            <button id="edit-dietary">Edit</button>
+                            <button id="return-dietary">Back</button>
+                            <button id="save-dietary">Save</button>
+                        </div>
                         <label for="diet-type">Diet Type</label>
                         <select id="diet-type" name="diet-type" title="Select your diet type">
                             <option value="vegetarian">Vegetarian</option>
@@ -205,5 +215,6 @@
 <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js"></script>
 <script src="models/database.js"></script>
+<script type="module" src="viewmodels/profile.js"></script>
 
 </html>
