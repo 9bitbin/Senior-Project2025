@@ -1,26 +1,24 @@
 
 
-// --- Nutrition Tracking (from nutrition.js) ---
 import { db, auth } from "./firebase-config.js";
 import { doc, updateDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-// ... (Your nutrition tracking code) ...
+// --- Nutrition Tracking ---
+// ... (Your nutrition tracking code - fetchNutritionData, saveMealToFirestore, fetchLoggedMeals, etc.) ...
 
-// --- Budget Tracking (from budget.js) ---
-// ... (Your budget tracking code) ...
+// --- Budget Tracking ---
+// ... (Your budget tracking code - setBudget, logMealCost, fetchBudgetHistory, fetchBudgetData, generateBudgetChart, etc.) ...
 
-// --- Dashboard Functionality (from dashboard.js) ---
-
+// --- Dashboard Functionality ---
 // Select Canvas Elements
 const caloriesChartEl = document.getElementById("caloriesChart").getContext("2d");
 const macroChartEl = document.getElementById("macroChart").getContext("2d");
 const workoutChartEl = document.getElementById("workoutChart").getContext("2d");
-const budgetChartEl = document.getElementById("budgetChart").getContext("2d");
 
-// Chart Instances (for dynamic updates)
-let caloriesChart, macroChart, workoutChart; // Removed duplicate budgetChart
+// Chart Instances
+let caloriesChart, macroChart, workoutChart;
 
-// Function to Initialize Charts
+// Initialize Charts
 function initializeCharts() {
     caloriesChart = new Chart(caloriesChartEl, {
         type: "bar",
@@ -41,42 +39,30 @@ function initializeCharts() {
     });
 }
 
-// Function to Update Charts with Real-Time Data
+// Update Charts
 function updateCharts(userData) {
-    // Fetch Meal Logging Data
     const mealLogs = userData.mealLogs || [];
     const totalCalories = mealLogs.reduce((sum, meal) => sum + (meal.calories || 0), 0);
     const totalCarbs = mealLogs.reduce((sum, meal) => sum + (meal.carbs || 0), 0);
     const totalProtein = mealLogs.reduce((sum, meal) => sum + (meal.protein || 0), 0);
     const totalFat = mealLogs.reduce((sum, meal) => sum + (meal.fat || 0), 0);
 
-    // Fetch Workout Logs
     const workoutLogs = userData.workoutLogs || [];
     const workoutDates = workoutLogs.map(workout => new Date(workout.timestamp).toLocaleDateString());
     const workoutCaloriesData = workoutLogs.map(workout => workout.caloriesBurned || 0);
 
-    // Fetch Budget & Spending Data
-    const mealBudget = userData.mealBudget || { expenses: [], totalSpent: 0, amount: 0 };
-    const budgetExpenses = mealBudget.expenses || [];
-    const budgetDates = budgetExpenses.map(entry => new Date(entry.timestamp).toLocaleDateString());
-    const budgetSpent = budgetExpenses.map(entry => entry.cost || 0);
-    const budgetAllocated = mealBudget.amount;
-
-    // Update Calories Chart
     caloriesChart.data.datasets[0].data = [totalCalories, workoutCaloriesData.reduce((a, b) => a + b, 0)];
     caloriesChart.update();
 
-    // Update Macronutrient Breakdown Chart
     macroChart.data.datasets[0].data = [totalCarbs, totalProtein, totalFat];
     macroChart.update();
 
-    // Update Workout Summary Chart
     workoutChart.data.labels = workoutDates;
     workoutChart.data.datasets[0].data = workoutCaloriesData;
     workoutChart.update();
 }
 
-// Real-Time Listener for User Data
+// Real-Time Listener
 auth.onAuthStateChanged(user => {
     if (!user) return;
 
@@ -90,31 +76,31 @@ auth.onAuthStateChanged(user => {
     });
 });
 
-// Initialize Charts on Load
+// Initialize Charts
 initializeCharts();
 
-// --- Sidebar Navigation (from dashboard.js) ---
+// --- Sidebar Navigation ---
 document.addEventListener("DOMContentLoaded", () => {
     const navItems = document.querySelectorAll(".nav-item");
     const sections = document.querySelectorAll(".content-section");
 
     navItems.forEach(item => {
         item.addEventListener("click", () => {
-            // Remove active class from all items
             navItems.forEach(nav => nav.classList.remove("active"));
             item.classList.add("active");
 
-            // Hide all sections
             sections.forEach(section => section.classList.remove("active"));
 
-            // Show selected section
-            const targetId = item.getAttribute("data-target");
-            document.getElementById(targetId).classList.add("active");
+            const targetId = item.textContent.trim().toLowerCase();
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.classList.add("active");
+            }
         });
     });
 });
 
-// --- Initial Fetch on Load (if needed) ---
+// --- Initial Fetch ---
 auth.onAuthStateChanged((user) => {
     if (user) {
         fetchLoggedMeals();

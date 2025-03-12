@@ -1,5 +1,8 @@
+
 import { db, auth } from "./firebase-config.js";
-import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+import { doc, updateDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+
+
 
 // 🔹 Select Canvas Elements
 const caloriesChartEl = document.getElementById("caloriesChart").getContext("2d");
