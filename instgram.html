@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <!-- Linking External CSS -->
+     <link rel="stylesheet" href="home.css">
+    
+     <!-- Font Awesome for Icons -->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+     
+     <style>
+         .loading-container {
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             text-align: center;
+             padding: 20px;
+         }
+         .loading-animation {
+             width: 50px;
+             height: 50px;
+             border: 5px solid #f3f3f3;
+             border-top: 5px solid #4caf50;
+             border-radius: 50%;
+             animation: spin 1s linear infinite;
+         }
+         @keyframes spin {
+             0% { transform: rotate(0deg); }
+             100% { transform: rotate(360deg); }
+         }
+     </style>    
+ 
+</head>
+<body>
+
+    <div class="main-content loading-container">
+        <h3>Connect using Instagram</h3>
+        <li><a href="https://www.instagram.com/">Instagram</a></li>
+        
+
+        <a href="" class="icon"><i class= "img src = 'instagram.png' width= '30' height='20'"></i></a>
+        <img src ="instagram.png" width="30" height="25">
+    </div>
+
+    
+</body>
+</html>
