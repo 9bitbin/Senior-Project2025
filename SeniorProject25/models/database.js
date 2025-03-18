@@ -19,20 +19,4 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Save function for Firestore (Uses UID as document ID)
-export async function save(uid, username) {
-    if (!uid || !username.trim()) {
-        console.error("Invalid UID or username. Not saving to Firestore.");
-        return;
-    }
-
-    try {
-        await setDoc(doc(db, "users", uid), { username: username });
-        console.log(`User "${username}" saved successfully in Firestore!`);
-    } catch (error) {
-        console.error("Error saving user to Firestore:", error);
-    }
-}
-
 export { db, app, auth };
-
