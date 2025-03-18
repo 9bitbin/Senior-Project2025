@@ -1,67 +1,67 @@
+// ✅ Import Firebase
 import { auth, db } from "./firebase-config.js";
-import { collection, query, orderBy, limit, getDocs, addDoc, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+import { collection, query, orderBy, limit, getDocs, addDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
 
+// ✅ Ensure Firestore is initialized
+console.log("✅ Firebase Firestore Loaded:", db);
 
+// ✅ Select Elements Safely
+const getRecipeBtn = document.getElementById("getRecipeBtn");
+const getRandomRecipeBtn = document.getElementById("getRandomRecipeBtn");
+const recipeInput = document.getElementById("recipeInput");
+const recipeResults = document.getElementById("recipeResults");
+const savedRecipesDiv = document.getElementById("savedRecipes");
 
-
-// 🔹 Ensure Firestore is initialized
-console.log("Firebase Firestore Loaded:", db);
-
-
-
-
-
-document.getElementById("getRandomRecipeBtn").addEventListener("click", function() {
-    fetch("https://www.themealdb.com/api/json/v1/1/random.php")
-    .then(response => response.json())
-    .then(data => {
-        displayRecipes(data.meals);
-    })
-    .catch(error => {
-        console.error("Error fetching random recipe:", error);
-        document.getElementById("recipeResults").innerHTML = "<p>Error fetching random recipe. Try again later.</p>";
-    });
-});
-
-
-
-function fetchRecipe(query) {
-    if (!query.trim()) {
-        alert("Please enter a dish name!");
-        return;
-    }
-
-    console.log("🔍 Searching for:", query); // Debugging
-
-    fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`)
-    .then(response => response.json())
-    .then(data => {
-        console.log("📡 API Response:", data); // Debugging
-
-        if (!data.meals) {
-            document.getElementById("recipeResults").innerHTML = "<p>No recipes found. Try another dish!</p>";
-            return;
-        }
-
-        displayRecipes(data.meals);
-    })
-    .catch(error => {
-        console.error("❌ Error fetching recipe:", error);
-        document.getElementById("recipeResults").innerHTML = "<p>Error fetching recipes. Try again later.</p>";
+// ✅ Fetch a Random Recipe
+if (getRandomRecipeBtn) {
+    getRandomRecipeBtn.addEventListener("click", function () {
+        fetch("https://www.themealdb.com/api/json/v1/1/random.php")
+            .then(response => response.json())
+            .then(data => {
+                displayRecipes(data.meals);
+            })
+            .catch(error => {
+                console.error("❌ Error fetching random recipe:", error);
+                if (recipeResults) recipeResults.innerHTML = "<p>Error fetching random recipe. Try again later.</p>";
+            });
     });
 }
 
+// ✅ Fetch Recipe by Search Query
+function fetchRecipe(query) {
+    if (!query.trim()) {
+        alert("❌ Please enter a dish name!");
+        return;
+    }
 
+    console.log("🔍 Searching for:", query);
 
+    fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("📡 API Response:", data);
 
+            if (!data.meals) {
+                if (recipeResults) recipeResults.innerHTML = "<p>No recipes found. Try another dish!</p>";
+                return;
+            }
 
+            displayRecipes(data.meals);
+        })
+        .catch(error => {
+            console.error("❌ Error fetching recipe:", error);
+            if (recipeResults) recipeResults.innerHTML = "<p>Error fetching recipes. Try again later.</p>";
+        });
+}
+
+// ✅ Display Recipes in UI
 function displayRecipes(meals) {
-    let resultsDiv = document.getElementById("recipeResults");
-    resultsDiv.innerHTML = ""; // Clear previous results
+    if (!recipeResults) return;
+    recipeResults.innerHTML = ""; // Clear previous results
 
     if (!meals) {
-        resultsDiv.innerHTML = "<p>No recipes found. Try another dish!</p>";
+        recipeResults.innerHTML = "<p>No recipes found. Try another dish!</p>";
         return;
     }
 
@@ -84,10 +84,10 @@ function displayRecipes(meals) {
             </button>
             <hr>
         `;
-        resultsDiv.appendChild(recipeCard);
+        recipeResults.appendChild(recipeCard);
     });
 
-    // Attach event listeners for Save buttons
+    // ✅ Attach Event Listeners for Save Buttons
     document.querySelectorAll(".save-recipe-btn").forEach(button => {
         button.addEventListener("click", function () {
             let name = this.getAttribute("data-name");
@@ -98,71 +98,36 @@ function displayRecipes(meals) {
     });
 }
 
-
-
-
-async function getLastLoggedMeal() {
-    console.log("Fetching last logged meal...");
-
-    // Corrected query to properly fetch meals
-    const mealsQuery = query(collection(db, "meals"), orderBy("timestamp", "desc"), limit(1));
-
-    try {
-        const querySnapshot = await getDocs(mealsQuery);
-        if (!querySnapshot.empty) {
-            const mealDoc = querySnapshot.docs[0];
-            const mealData = mealDoc.data();
-            console.log("Fetched meal from Firestore:", mealData);
-
-            let mealName = mealData.name; // Use correct field name
-            if (!mealName) {
-                console.log("No valid meal name found in Firestore.");
-                return;
-            }
-
-            console.log("Auto-suggesting recipes for:", mealName);
-            fetchRecipe(mealName);
-        } else {
-            console.log("No meals found in Firestore.");
-        }
-    } catch (error) {
-        console.error("Error fetching last logged meal:", error);
-    }
-}
-
-
-
-
-
+// ✅ Save Recipe to Firestore
 async function saveRecipe(name, image, instructions) {
-    console.log("Attempting to save recipe:", name); // Debugging
+    console.log("✅ Attempting to save recipe:", name);
 
     if (!auth || !auth.currentUser) {
-        alert("You must be logged in to save recipes.");
+        alert("❌ You must be logged in to save recipes.");
         return;
     }
 
     try {
         await addDoc(collection(db, "savedRecipes"), {
-            userId: auth.currentUser.uid, // Save per user
-            name: name,
-            image: image,
-            instructions: instructions,
+            userId: auth.currentUser.uid,
+            name,
+            image,
+            instructions,
             timestamp: new Date().toISOString()
         });
 
-        alert("Recipe saved successfully!");
-        loadSavedRecipes(); // Refresh list
+        alert("✅ Recipe saved successfully!");
+        loadSavedRecipes();
     } catch (error) {
-        console.error("Error saving recipe:", error);
+        console.error("❌ Error saving recipe:", error);
         alert("Error saving recipe. Try again.");
     }
 }
 
-
+// ✅ Load Saved Recipes
 async function loadSavedRecipes() {
-    let savedDiv = document.getElementById("savedRecipes");
-    savedDiv.innerHTML = ""; 
+    if (!savedRecipesDiv) return;
+    savedRecipesDiv.innerHTML = ""; 
 
     const savedRecipesQuery = query(collection(db, "savedRecipes"), orderBy("timestamp", "desc"));
 
@@ -170,13 +135,13 @@ async function loadSavedRecipes() {
         const querySnapshot = await getDocs(savedRecipesQuery);
 
         if (querySnapshot.empty) {
-            savedDiv.innerHTML = "<p>No saved recipes yet.</p>";
+            savedRecipesDiv.innerHTML = "<p>No saved recipes yet.</p>";
             return;
         }
 
         querySnapshot.forEach(doc => {
             let recipe = doc.data();
-            console.log("Loaded recipe:", recipe); 
+            console.log("✅ Loaded recipe:", recipe);
 
             let recipeCard = document.createElement("div");
             recipeCard.classList.add("recipe-card");
@@ -187,25 +152,23 @@ async function loadSavedRecipes() {
                 <button onclick="deleteRecipe('${doc.id}')">Delete</button>
                 <hr>
             `;
-            savedDiv.appendChild(recipeCard);
+            savedRecipesDiv.appendChild(recipeCard);
         });
     } catch (error) {
-        console.error("Error loading saved recipes:", error);
+        console.error("❌ Error loading saved recipes:", error);
     }
 }
 
-
-
 // ✅ Delete Recipe from Firestore
 async function deleteRecipe(recipeId) {
-    console.log("Deleting recipe with ID:", recipeId); // Debugging
+    console.log("🗑️ Deleting recipe with ID:", recipeId);
 
     try {
         await deleteDoc(doc(db, "savedRecipes", recipeId));
-        alert("Recipe deleted successfully!");
-        loadSavedRecipes(); // ✅ Refresh saved recipes list
+        alert("✅ Recipe deleted successfully!");
+        loadSavedRecipes();
     } catch (error) {
-        console.error("Error deleting recipe:", error);
+        console.error("❌ Error deleting recipe:", error);
         alert("Error deleting recipe. Try again.");
     }
 }
@@ -213,20 +176,51 @@ async function deleteRecipe(recipeId) {
 // ✅ Ensure deleteRecipe() is globally accessible
 window.deleteRecipe = deleteRecipe;
 
-
-
-
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("DOMContentLoaded fired!"); // Debugging
+// ✅ Run on Page Load
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("✅ DOMContentLoaded fired!"); 
     getLastLoggedMeal(); // Auto-suggest recipe
     loadSavedRecipes();  // Load saved recipes
 });
 
-document.getElementById("getRecipeBtn").addEventListener("click", function() {
-    let query = document.getElementById("recipeInput").value.trim();
-    fetchRecipe(query);
-});
+// ✅ Get Last Logged Meal from Firestore
+async function getLastLoggedMeal() {
+    console.log("🔄 Fetching last logged meal...");
 
+    const mealsQuery = query(collection(db, "meals"), orderBy("timestamp", "desc"), limit(1));
+
+    try {
+        const querySnapshot = await getDocs(mealsQuery);
+        if (!querySnapshot.empty) {
+            const mealDoc = querySnapshot.docs[0];
+            const mealData = mealDoc.data();
+            console.log("✅ Fetched meal from Firestore:", mealData);
+
+            let mealName = mealData.name;
+            if (!mealName) {
+                console.log("❌ No valid meal name found in Firestore.");
+                return;
+            }
+
+            console.log("🔍 Auto-suggesting recipes for:", mealName);
+            fetchRecipe(mealName);
+        } else {
+            console.log("❌ No meals found in Firestore.");
+        }
+    } catch (error) {
+        console.error("❌ Error fetching last logged meal:", error);
+    }
+}
+
+// ✅ Attach Event Listener for Search Button
+if (getRecipeBtn && recipeInput) {
+    getRecipeBtn.addEventListener("click", function () {
+        let query = recipeInput.value.trim();
+        fetchRecipe(query);
+    });
+}
+
+// ✅ Handle User Login State
 onAuthStateChanged(auth, (user) => {
     if (user) {
         console.log("✅ User is logged in:", user.email);
@@ -234,3 +228,4 @@ onAuthStateChanged(auth, (user) => {
         console.warn("⚠️ No user is logged in. Recipes won't be saved.");
     }
 });
+

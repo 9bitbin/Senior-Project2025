@@ -17,6 +17,36 @@
         <p><strong>Height:</strong> <span id="user-height">Loading...</span> inches</p>
     </div>
 
+    <!-- 🔹 Weight Progress Tracker Section -->
+    <div class="container">
+        <h2>Weight Progress Tracker</h2>
+
+        <!-- Input for weight entry -->
+        <input type="number" id="weight-input" placeholder="Enter your weight (lbs/kg)">
+        <button id="log-weight-btn">Log Weight</button>
+
+        <!-- Table to display weight history -->
+        <h3>Weight History</h3>
+        <table id="weight-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Weight</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="weight-table-body">
+                <tr><td colspan='3'>Loading...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Weight Trend Chart -->
+        <div class="chart-container">
+            <h3>Weight Progress Over Time</h3>
+            <canvas id="weightChart"></canvas>
+        </div>
+    </div>
+
     <!-- 🔹 Dashboard Overview Section -->
 <div class="container">
     <h2>📊 Health & Finance Overview</h2>
@@ -235,9 +265,46 @@
             <li>Loading...</li>
         </ul>
     </div>
+    
+
+    <!-- 🔹 Intermittent Fasting Tracker Section -->
+<div class="container fasting-tracker">
+    <h2>⏳ Intermittent Fasting Tracker</h2>
+
+    <!-- Timer Display -->
+    <div class="fasting-timer-container">
+        <span id="fasting-timer">00h 00m 00s</span>
+    </div>
+
+    <!-- Fasting Window Selection -->
+    <label for="fasting-window">Choose Fasting Window:</label>
+    <select id="fasting-window">
+        <option value="16">16:8 (16 hours fasting, 8 hours eating)</option>
+        <option value="18">18:6 (18 hours fasting, 6 hours eating)</option>
+        <option value="20">20:4 (20 hours fasting, 4 hours eating)</option>
+    </select>
+
+    <!-- Start / End Buttons -->
+    <button id="start-fasting" class="start-btn">🚀 Start Fasting</button>
+    <button id="end-fasting" class="end-btn" disabled>⏹ End Fasting</button>
+
+    <!-- Fasting Status -->
+    <p><strong>Status:</strong> <span id="fasting-status">Not Started</span></p>
+
+    <!-- Fasting History -->
+    <h3>📜 Fasting History</h3>
+    <ul id="fasting-history">
+        <li>Loading fasting history...</li>
+    </ul>
+</div>
+
+
 
     <!-- 🔹 Logout Button -->
     <button id="logoutBtn">Logout</button>
+
+
+    
 
 
     
@@ -252,7 +319,10 @@
     <script type="module" src="recipe.js"></script>
     <script type="module" src="community.js"></script>
     <script type="module" src="dashboard.js"></script>
-    <script type="module" src="grocery.js"></script>
+    <script type="module" src="weight.js"></script>
+    <script type="module" src="fasting.js"></script>
+
+
 
 
     
@@ -299,5 +369,4 @@
     
 </body>
 </html>
-
 
