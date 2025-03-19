@@ -221,7 +221,7 @@ header{
     background: white;
     margin: 0 auot;
     position: relative;
-    height: 30rem;
+    height: 35rem;
     overflow: hidden;
 }
 
@@ -293,4 +293,3 @@ header{
 .tab-item input[type="radio"] {
     margin-right: 0.5rem;
 }
-
