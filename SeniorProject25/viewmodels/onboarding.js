@@ -125,16 +125,16 @@ class userOnboarding {
         const uid = user.uid;
         try {
             console.log(`Saving user data for UID: ${uid}...`);
-            await saveUser(uid, this.userData); // Ensuring user data is saved first
+            await saveUser(uid, this.userData); // Save user data first (without weight)
             console.log("User profile saved successfully.");
             alert("Profile saved successfully!");
             messageElement.textContent = "Profile saved successfully!";
             messageElement.style.color = "green";
     
-            // Ensure weight is saved only after profile data is saved
+            // Ensure weight is stored in a subcollection
             if (this.userData.weight) {
                 console.log(`Saving weight entry: ${this.userData.weight} for UID: ${uid}...`);
-                await saveWeight(uid, this.userData.weight); // Ensure await
+                await saveWeight(uid, this.userData.weight);
                 console.log("Weight saved successfully.");
                 alert("Weight saved successfully!");
             }
@@ -147,8 +147,7 @@ class userOnboarding {
             messageElement.textContent = "Error saving profile. Please try again.";
             messageElement.style.color = "red";
         }
-    }
-    
+    }    
 }
 
 document.addEventListener("DOMContentLoaded", () => {
