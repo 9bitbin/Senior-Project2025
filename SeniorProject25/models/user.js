@@ -1,31 +1,20 @@
 import { db } from "./database.js"; // Import Firestore instance
 import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
-// Signup page - Save function for Firestore (Uses UID as document ID)
-export async function save(uid, username) {
-    if (!uid || !username.trim()) {
-        console.error("Invalid UID or username. Not saving to Firestore.");
+export async function saveUser(uid, userData) {
+    if (!uid || !userData) {
+        console.error("Invalid UID or user data.");
         return;
     }
-
     try {
-        await setDoc(doc(db, "users", uid), { username: username });
-        console.log(`User "${username}" saved successfully in Firestore!`);
-    } catch (error) {
-        console.error("Error saving user to Firestore:", error);
-    }
-}
-
-// Save user data
-export async function saveUser(uid, userData) {
-    if (!uid || !userData) return console.error("Invalid UID or user data.");
-    try {
-        await setDoc(doc(db, "users", uid), userData);
-        console.log(`User "${uid}" saved successfully.`);
+        await setDoc(doc(db, "users", uid), userData, { merge: true }); // Merge with existing data
+        console.log(`User "${uid}" saved successfully with data:`, userData);
     } catch (error) {
         console.error("Error saving user:", error);
     }
 }
+
+
 
 // Get user data
 export async function getUser(uid) {
@@ -62,15 +51,27 @@ export async function deleteUser(uid) {
 }
 
 // Save weight entry
+
 export async function saveWeight(uid, weight) {
-    if (!uid || !weight) return console.error("Invalid UID or weight.");
+    if (!uid || !weight) {
+        console.error("Invalid UID or weight.");
+        return;
+    }
+
     try {
+        const weightValue = parseFloat(weight);
+        if (isNaN(weightValue)) {
+            console.error("Invalid weight value.");
+            return;
+        }
+
         const weightCollectionRef = collection(db, "users", uid, "weight");
         await addDoc(weightCollectionRef, {
-            weight: parseFloat(weight),
-            timestamp: new Date()
+            weight: weightValue,
+            timestamp: new Date().toISOString() // Ensuring ISO string for consistency
         });
-        console.log(`Weight entry saved for user "${uid}".`);
+
+        console.log(`Weight entry ${weightValue} saved for user "${uid}".`);
     } catch (error) {
         console.error("Error saving weight:", error);
     }

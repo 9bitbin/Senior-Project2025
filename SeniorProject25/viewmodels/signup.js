@@ -1,7 +1,7 @@
 // Import Firebase Authentication
 import { app, auth } from "../models/database.js"; // Use existing Firebase instance
 import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { save } from "../models/user.js"; // Import Firestore save function
+import { saveUser } from "../models/user.js"; // Use saveUser instead of saveUsername
 
 // Attach signup event listener
 document.getElementById("signupBtn").addEventListener("click", async function (event) {
@@ -31,9 +31,9 @@ document.getElementById("signupBtn").addEventListener("click", async function (e
         console.log("User registered in Firebase Authentication:", user);
 
         // Firestore: Save Username (Using UID as the document ID)
-        await save(user.uid, username);
+        await saveUser(user.uid, { username });
 
-        // ✅ Redirect to onboarding page instead of profile page
+        // Redirect to onboarding page
         window.location.href = "onboarding.html";
     } catch (error) {
         console.error("Signup Error:", error);
