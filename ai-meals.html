@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VIDIA - AI Meal Suggestions</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f6f6f6;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #d8f3dc;
+      padding-top: 20px;
+      position: fixed;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 22px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 10px 20px;
+    }
+
+    .sidebar ul li a {
+      text-decoration: none;
+      font-weight: bold;
+      color: black;
+      display: block;
+      transition: background 0.3s;
+    }
+
+    .sidebar ul li a:hover {
+      background: #b7e4c7;
+      border-radius: 6px;
+      padding-left: 25px;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 40px;
+      width: calc(100% - 220px);
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 6px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #10b981;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #059669;
+    }
+
+    #suggestion-result {
+      margin-top: 20px;
+    }
+
+    .meal-box {
+      background: #f1f1f1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>VIDIA</h2>
+    <ul>
+      <li><a href="home.html">🏠 Dashboard</a></li>
+      <li><a href="profile.html">👤 Profile</a></li>
+      <li><a href="nutrition.html">🍎 Nutrition & Meals</a></li>
+      <li><a href="budget.html">💰 Budget</a></li>
+      <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
+      <li><a href="fasting.html">⏳ Fasting</a></li>
+      <li><a href="recipe.html">📖 Recipes</a></li>
+      <li><a href="community.html">🌍 Community</a></li>
+      <li><a href="ai-meals.html">🤖 AI Meal Ideas</a></li>
+      <li><a href="index.html">🚪 Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="card">
+      <h2>🤖 AI-Powered Meal Suggestions</h2>
+
+      <label for="goal-select">Choose Your Goal:</label>
+      <select id="goal-select">
+        <option value="High Protein">High Protein</option>
+        <option value="Low Carb">Low Carb</option>
+        <option value="Balanced">Balanced</option>
+        <option value="Low Fat">Low Fat</option>
+      </select>
+
+      <button id="generate-btn">Generate Meals</button>
+
+      <div id="suggestion-result"></div>
+    </div>
+  </div>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="ai-meals.js"></script>
+
+</body>
+</html>

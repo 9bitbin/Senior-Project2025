@@ -2,6 +2,7 @@
 import { db, auth } from "./firebase-config.js";
 import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
+
 // ✅ Calories Burned Per Minute (Adjustable Values)
 const CALORIE_BURN_RATES = {
     cardio: 10,
@@ -161,4 +162,40 @@ auth.onAuthStateChanged((user) => {
         window.location.href = "index.html";
     }
 });
+
+document.getElementById("download-workouts")?.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    const workoutLogs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
+  
+    if (!workoutLogs.length) {
+      alert("No workouts to export.");
+      return;
+    }
+  
+    const headers = ["Type", "Duration (min)", "Calories Burned", "Timestamp"];
+    const rows = workoutLogs.map(log => [
+      `"${log.type || ''}"`,
+      log.duration || 0,
+      log.caloriesBurned || 0,
+      `"${new Date(log.timestamp).toLocaleString()}"`
+    ]);
+  
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+  
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+  
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "workout-history.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  });
+
 

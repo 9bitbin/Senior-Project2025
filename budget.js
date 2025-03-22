@@ -127,7 +127,8 @@ async function logMealCost() {
 }
 
 // ✅ Fetch & Display Budget Data
-async function fetchBudgetData() {
+async function fetchBudgetData(startDate = null, endDate = null) {
+
     console.log("🔄 Fetching budget data...");
 
     const user = auth.currentUser;
@@ -153,7 +154,23 @@ async function fetchBudgetData() {
             budgetAlertEl.style.color = remainingBudget < 0 ? "red" : "black";
         }
 
-        generateBudgetChart(budgetData.expenses);
+        generateBudgetChart(filteredExpenses);
+
+// ✅ Also update history list
+renderBudgetHistoryList(filteredExpenses);
+
+
+        let filteredExpenses = [...budgetData.expenses];
+
+if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    filteredExpenses = filteredExpenses.filter(expense => {
+        const expenseDate = new Date(expense.timestamp);
+        return expenseDate >= start && expenseDate <= end;
+    });
+}
     }
 }
 
@@ -221,3 +238,17 @@ auth.onAuthStateChanged((user) => {
         window.location.href = "index.html";
     }
 });
+
+function renderBudgetHistoryList(expenses) {
+    if (!budgetHistoryList) return;
+
+    if (expenses.length === 0) {
+        budgetHistoryList.innerHTML = "<li>No expenses found for this range.</li>";
+        return;
+    }
+
+    budgetHistoryList.innerHTML = expenses.map(exp => {
+        const date = new Date(exp.timestamp).toLocaleString();
+        return `<li>$${exp.cost.toFixed(2)} <em>on ${date}</em></li>`;
+    }).join("");
+}

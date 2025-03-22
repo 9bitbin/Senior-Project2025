@@ -723,3 +723,410 @@ body {
 }
 
 
+.sidebar {
+    width: 220px;
+    height: 100vh;
+    background: #d8f3dc; /* 🌿 light pastel green */
+    color: black;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: 20px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: black;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    padding: 12px 20px;
+}
+
+.sidebar ul li a {
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    transition: background 0.3s ease, padding-left 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background: #b7e4c7; /* 💚 hover shade of green */
+    padding-left: 25px;
+    border-radius: 6px;
+}
+
+.sidebar {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+/* Container alignment */
+.container {
+    background: white;
+    padding: 30px;
+    margin: 30px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    max-width: 800px;
+    width: 100%;
+  }
+  
+  textarea {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    resize: vertical;
+  }
+  
+  select, input[type="checkbox"] {
+    margin: 10px 0;
+  }
+  
+  #sharePostBtn {
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+  
+  #sharePostBtn:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Posts */
+  .post-card {
+    background: #f8f9fa;
+    border-left: 5px solid #0d6efd;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  
+  .post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .post-type {
+    font-weight: bold;
+    color: #0d6efd;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+  
+  .post-timestamp {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .post-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  
+  .post-user img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+  
+  .comment-section {
+    margin-top: 10px;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .comment-section input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+  .comment-section button {
+    background: #007bff;
+    color: white;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-top: 5px;
+  }
+  
+  .comment-section button:hover {
+    background: #0056b3;
+  }
+
+  
+  /* Recipe Main Section */
+#recipe-section, #saved-recipes-section {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin: 40px auto;
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  #recipeInput {
+    width: 80%;
+    padding: 10px;
+    margin: 12px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+  
+  #recipe-section button {
+    padding: 10px 18px;
+    margin: 6px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  #recipe-section button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Saved Recipes Layout */
+  .recipe-card {
+    background: #f9f9f9;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .recipe-card img {
+    width: 160px;
+    height: auto;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+  
+  .recipe-content {
+    flex-grow: 1;
+    text-align: left;
+  }
+  
+  .recipe-content h3 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    color: #333;
+  }
+  
+  .recipe-content p {
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 10px;
+  }
+  
+  .recipe-card button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .recipe-card button:hover {
+    background-color: #c82333;
+  }
+  
+  #authForm {
+    background: #ffffff;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    width: 350px;
+    margin: 100px auto;
+    text-align: center;
+  }
+  
+  #authForm h1 {
+    margin-bottom: 20px;
+  }
+  
+  #authForm input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+  
+  #authBtn {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    font-weight: bold;
+    border-radius: 6px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  #authBtn:hover {
+    background: #0056b3;
+  }
+  
+  #toggleText {
+    margin-top: 16px;
+  }
+  
+  #toggleText a {
+    color: #007bff;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  
+  #toggleText a:hover {
+    text-decoration: underline;
+  }
+
+  /* Reset & Fonts */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body, input, button {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* 🔹 Auth Background */
+  .auth-body {
+    background: linear-gradient(135deg, #f2f9f7, #dbeafe);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* 🔹 Auth Container */
+  .auth-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+  }
+  
+  /* 🔹 Auth Card */
+  .auth-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(15px);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    text-align: center;
+  }
+  
+  .auth-card h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #1e293b;
+  }
+  
+  .auth-card .subtext {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 30px;
+  }
+  
+  /* 🔹 Input Fields */
+  .auth-card input {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    font-size: 15px;
+    transition: border 0.2s;
+  }
+  
+  .auth-card input:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+  
+  /* 🔹 Button */
+  .auth-card button {
+    width: 100%;
+    padding: 12px;
+    background-color: #3b82f6;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background 0.3s ease;
+  }
+  
+  .auth-card button:hover {
+    background-color: #2563eb;
+  }
+  
+  /* 🔹 Toggle Text */
+  #toggleText {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #64748b;
+  }
+  
+  #toggleText a {
+    color: #3b82f6;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  #toggleText a:hover {
+    text-decoration: underline;
+  }
+  

@@ -1,314 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vidia - Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vidia - Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
+      display: flex;
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #bbf7d0;
+      color: black;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding-top: 20px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 12px 20px;
+    }
+
+    .sidebar ul li a {
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+      display: block;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar ul li a:hover {
+      background: #86efac;
+      padding-left: 25px;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 40px;
+      width: calc(100% - 220px);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      color: #14532d;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #166534;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    .chart-container {
+      margin-top: 20px;
+    }
+
+    canvas {
+      width: 100% !important;
+      max-width: 100%;
+    }
+
+    #user-info {
+      text-align: center;
+      font-size: 18px;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>VIDIA</h2>
+    <ul>
+      <li><a href="home.html">🏠 Dashboard</a></li>
+      <li><a href="profile.html">👤 Profile</a></li>
+      <li><a href="nutrition.html">🍎 Nutrition & Meals</a></li>
+      <li><a href="budget.html">💰 Budget</a></li>
+      <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
+      <li><a href="fasting.html">⏳ Fasting</a></li>
+      <li><a href="recipe.html">📖 Recipes</a></li>
+      <li><a href="community.html">🌍 Community</a></li>
+      <li><a href="ai-meals.html">🤖 AI Meals</a></li>
+      <li><a href="index.html">🚪 Logout</a></li>
+      
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
     <h1>Welcome to Vidia</h1>
     <p id="user-info">Loading user info...</p>
 
-    <!-- 🔹 User Health Info Section -->
-    <div class="container">
-        <h2>Your Health Information</h2>
-        <p><strong>Weight:</strong> <span id="user-weight">Loading...</span> lbs</p>
-        <p><strong>Height:</strong> <span id="user-height">Loading...</span> inches</p>
+    <!-- Health Info -->
+    <div class="card">
+      <h2 class="section-title">🧍 Your Health Information</h2>
+      <p><strong>Weight:</strong> <span id="user-weight">Loading...</span> lbs</p>
+      <p><strong>Height:</strong> <span id="user-height">Loading...</span> inches</p>
     </div>
 
-    <!-- 🔹 Weight Progress Tracker Section -->
-    <div class="container">
-        <h2>Weight Progress Tracker</h2>
-
-        <!-- Input for weight entry -->
-        <input type="number" id="weight-input" placeholder="Enter your weight (lbs/kg)">
-        <button id="log-weight-btn">Log Weight</button>
-
-        <!-- Table to display weight history -->
-        <h3>Weight History</h3>
-        <table id="weight-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Weight</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="weight-table-body">
-                <tr><td colspan='3'>Loading...</td></tr>
-            </tbody>
-        </table>
-
-        <!-- Weight Trend Chart -->
-        <div class="chart-container">
-            <h3>Weight Progress Over Time</h3>
-            <canvas id="weightChart"></canvas>
-        </div>
-    </div>
-
-    <!-- 🔹 Dashboard Overview Section -->
-<div class="container">
-    <h2>📊 Health & Finance Overview</h2>
-    
-    <!-- 🔹 Calories Chart -->
-    <div class="chart-container">
-        <h3>Calories: Intake vs. Burned</h3>
-        <canvas id="caloriesChart"></canvas>
-    </div>
-
-    <!-- 🔹 Macronutrient Breakdown -->
-    <div class="chart-container">
-        <h3>Macronutrient Breakdown</h3>
-        <canvas id="macroChart"></canvas>
-    </div>
-
-    <!-- 🔹 Workout Summary -->
-    <div class="chart-container">
-        <h3>Weekly Workout Summary</h3>
-        <canvas id="workoutChart"></canvas>
-    </div>
-
-    <!-- 🔹 Budget Trends -->
-    <div class="chart-container">
-        <h3>Spending vs. Budget</h3>
-        <canvas id="budgetChart"></canvas>
-    </div>
+    <!-- 🔹 Daily Health Tip Section -->
+<div class="card" id="daily-quote-card" data-aos="fade-up">
+  <h2>💡 Daily Health Tip</h2>
+  <p id="quote-text">Loading your tip...</p>
 </div>
 
 
+    <!-- Overview Section -->
+    <!-- 🔹 Dashboard Charts -->
+<div class="card" data-aos="fade-up">
+  <h2>📊 Health & Finance Overview</h2>
 
-    <!-- 🔹 BMI Section -->
-    <div class="container">
-        <h2>Your BMI</h2>
-        <p id="bmi-value">BMI Value: Calculating...</p>
-        <p id="bmi-category">Category: Calculating...</p>
-    </div>
+  <div class="chart-container" data-aos="fade-up">
+    <h3>Calories: Intake vs. Burned</h3>
+    <canvas id="caloriesChart"></canvas>
+  </div>
 
-    <!-- 🔹 Share Your Progress Section -->
-<div class="container">
-    <h2>📢 Share Your Progress</h2>
-    <textarea id="postContent" placeholder="Write about your meal, workout, or achievement..."></textarea>
-    
-    <label for="postType">Select Type:</label>
-    <select id="postType">
-        <option value="meal">🍽️ Meal</option>
-        <option value="workout">💪 Workout</option>
-        <option value="achievement">🏆 Achievement</option>
-    </select>
+  <div class="chart-container" data-aos="fade-up">
+    <h3>Macronutrient Breakdown</h3>
+    <canvas id="macroChart"></canvas>
+  </div>
 
-    <label>
-        <input type="checkbox" id="anonymousCheck"> Share Anonymously
-    </label>
+  <div class="chart-container" data-aos="fade-up">
+    <h3>Weekly Workout Summary</h3>
+    <canvas id="workoutChart"></canvas>
+  </div>
 
-    <button id="sharePostBtn">📤 Share</button>
-</div>
-
-<!-- 🔹 Community Feed Section -->
-<div class="container">
-    <h2>🌍 Community Feed</h2>
-    <div id="communityFeed">Loading posts...</div>
+  <div class="chart-container" data-aos="fade-up">
+    <h3>Spending vs. Budget</h3>
+    <canvas id="budgetChart"></canvas>
+  </div>
 </div>
 
 
-
-
-    <!-- 🔹 Food Logging & Meal History -->
-    <div class="container">
-        <h2>Food Logging & Meal History</h2>
-        <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)">
-        <button id="fetch-nutrition">Get Nutrition Info</button>
-
-        <div id="nutrition-results">
-            <h3>Nutrition Breakdown</h3>
-            <p><strong>Calories:</strong> <span id="calories">--</span> kcal</p>
-            <p><strong>Protein:</strong> <span id="protein">--</span> g</p>
-            <p><strong>Carbs:</strong> <span id="carbs">--</span> g</p>
-            <p><strong>Fat:</strong> <span id="fat">--</span> g</p>
-        </div>
-
-        <label for="start-date">Start Date:</label>
-        <input type="date" id="start-date">
-        <label for="end-date">End Date:</label>
-        <input type="date" id="end-date">
-        <button id="filter-meals">Filter Meals</button>
-        <button id="reset-meals">Reset</button>
-
-        <h3>Meal History</h3>
-        <p><strong>Average Daily Calories:</strong> <span id="average-calories">Calculating...</span> kcal</p>
-        <p><strong>Total Calories:</strong> <span id="total-calories">0</span> kcal</p>
-        <ul id="meal-list">
-            <li>Loading...</li>
-        </ul>
+    <!-- BMI Section -->
+    <div class="card">
+      <h2 class="section-title">📏 Your BMI</h2>
+      <p id="bmi-value">BMI Value: Calculating...</p>
+      <p id="bmi-category">Category: Calculating...</p>
     </div>
+  </div>
+
+
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="dashboard.js"></script>
+
+
+
 
   
-    
-
-    <div id="recipe-section">
-        <h2>Find Recipes</h2>
-        <input type="text" id="recipeInput" placeholder="Enter a dish (e.g., Chicken)">
-        <button id="getRecipeBtn">Get Recipes</button>
-        <button id="getRandomRecipeBtn">Surprise Me!</button>
-        <div id="recipeResults"></div> <!-- Results will be shown here -->
-    </div>
-
-    <div id="saved-recipes-section">
-        <h2>Saved Recipes</h2>
-        <div id="savedRecipes"></div>
-    </div>
-    
-    
-    
-
-
-
-
-   <!-- Meal Budget Tracking -->
-<div class="container">
-    <h2>Meal Budget Tracking</h2>
-    <label>Set Budget ($):</label>
-    <input type="number" id="budget-amount" placeholder="Enter budget">
-    
-    <label>Budget Period:</label>
-    <select id="budget-period">
-        <option value="Daily">Daily</option>
-        <option value="Weekly">Weekly</option>
-        <option value="Monthly">Monthly</option>
-    </select>
-    <button id="set-budget">Set Budget</button>
-
-    <label>Log Meal Cost ($):</label>
-    <input type="number" id="meal-cost" placeholder="Enter meal cost">
-    <button id="log-meal-cost">Log Cost</button>
-
-    <!-- Budget Overview -->
-    <h3>Budget Overview</h3>
-    <p><strong>Budget:</strong> $<span id="budget-value">0</span></p>
-    <p><strong>Total Spent:</strong> $<span id="total-spent">0</span></p>
-    <p><strong>Remaining Budget:</strong> $<span id="remaining-budget">0</span></p>
-    <p id="budget-alert" style="color: red;"></p>
-</div>
-
-<!-- Meal Budget History -->
-<div class="container">
-    <h2>Spending History</h2>
-
-    <!-- 🔹 Date Range Filtering -->
-    <label for="budget-start-date">Start Date:</label>
-    <input type="date" id="budget-start-date">
-    
-    <label for="budget-end-date">End Date:</label>
-    <input type="date" id="budget-end-date">
-    
-    <button id="filter-budget">Filter Budget</button>
-    <button id="reset-budget">Reset</button>
-
-    <!-- 🔹 Spending History List -->
-    <h3>Meal Expenses</h3>
-    <ul id="budget-history-list">
-        <li>Loading...</li>
-    </ul>
-</div>
-
-
-    <!-- 🔹 Exercise Tracking Section -->
-    <div class="container">
-        <h2>Exercise Recommendations</h2>
-        <label for="exercise-type">Select Workout Type:</label>
-        <select id="exercise-type">
-            <option value="cardio">Cardio</option>
-            <option value="strength">Strength</option>
-            <option value="stretching">Stretching</option>
-            <option value="yoga">Yoga</option>
-        </select>
-        <button id="fetch-exercise">Get Exercises</button>
-
-        <div id="exercise-results">
-            <h3>Suggested Workouts</h3>
-            <ul id="exercise-list">
-                <li>Exercises will appear here...</li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- 🔹 Workout Tracking Section -->
-    <div class="container">
-        <h2>Workout Tracking</h2>
-        <label for="workout-type">Workout Type:</label>
-        <select id="workout-type">
-            <option value="cardio">Cardio</option>
-            <option value="strength">Strength</option>
-            <option value="stretching">Stretching</option>
-            <option value="yoga">Yoga</option>
-        </select>
-        <label for="workout-duration">Duration (minutes):</label>
-        <input type="number" id="workout-duration" min="1">
-        <button id="get-calories">Get Estimated Calories</button>
-        <p><strong>Estimated Calories Burned:</strong> <span id="estimated-calories">--</span> kcal</p>
-        <button id="log-workout">Log Workout</button>
-    </div>
-
-    <!-- 🔹 Workout History Section -->
-    <div class="container">
-        <h2>Workout History</h2>
-        <label for="workout-start-date">Start Date:</label>
-        <input type="date" id="workout-start-date">
-        <label for="workout-end-date">End Date:</label>
-        <input type="date" id="workout-end-date">
-        <button id="filter-workouts">Filter Workouts</button>
-        <button id="reset-workouts">Reset</button>
-
-        <h3>Workout Logs</h3>
-        <p><strong>Total Calories Burned:</strong> <span id="total-workout-calories">0</span> kcal</p>
-        <ul id="workout-list">
-            <li>Loading...</li>
-        </ul>
-    </div>
-    
-
-    <!-- 🔹 Intermittent Fasting Tracker Section -->
-<div class="container fasting-tracker">
-    <h2>⏳ Intermittent Fasting Tracker</h2>
-
-    <!-- Timer Display -->
-    <div class="fasting-timer-container">
-        <span id="fasting-timer">00h 00m 00s</span>
-    </div>
-
-    <!-- Fasting Window Selection -->
-    <label for="fasting-window">Choose Fasting Window:</label>
-    <select id="fasting-window">
-        <option value="16">16:8 (16 hours fasting, 8 hours eating)</option>
-        <option value="18">18:6 (18 hours fasting, 6 hours eating)</option>
-        <option value="20">20:4 (20 hours fasting, 4 hours eating)</option>
-    </select>
-
-    <!-- Start / End Buttons -->
-    <button id="start-fasting" class="start-btn">🚀 Start Fasting</button>
-    <button id="end-fasting" class="end-btn" disabled>⏹ End Fasting</button>
-
-    <!-- Fasting Status -->
-    <p><strong>Status:</strong> <span id="fasting-status">Not Started</span></p>
-
-    <!-- Fasting History -->
-    <h3>📜 Fasting History</h3>
-    <ul id="fasting-history">
-        <li>Loading fasting history...</li>
-    </ul>
-</div>
-
-
-
-    <!-- 🔹 Logout Button -->
-    <button id="logoutBtn">Logout</button>
-
-
-    
-
-
-    
-
     <script type="module" src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="bmi.js"></script>
@@ -321,12 +221,6 @@
     <script type="module" src="dashboard.js"></script>
     <script type="module" src="weight.js"></script>
     <script type="module" src="fasting.js"></script>
-
-
-
-
-    
-
 
     <script type="module">
         import { auth, db } from "./firebase-config.js";
@@ -366,6 +260,32 @@
             });
         });
     </script>
+
+
+
+<!-- AOS Library -->
+<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 800,
+    offset: 120,
+    once: true
+  });
+</script>
+
+<script type="module">
+  import { quotes } from './quotes.js';
+
+  const quoteText = document.getElementById('quote-text');
+
+  if (quoteText) {
+    const randomIndex = new Date().getDate() % quotes.length;
+    quoteText.textContent = quotes[randomIndex];
+  }
+</script>
+
+
     
 </body>
 </html>

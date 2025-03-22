@@ -205,3 +205,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+document.getElementById("download-fasting")?.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+  
+    if (!userDoc.exists()) {
+      alert("User data not found.");
+      return;
+    }
+  
+    const data = userDoc.data();
+    const fastingLogs = Array.isArray(data.fastingHistory) ? data.fastingHistory : [];
+  
+    if (fastingLogs.length === 0) {
+      alert("No fasting logs to export.");
+      return;
+    }
+  
+    const headers = ["Start Time", "Planned End Time", "Actual End Time", "Duration", "Status"];
+    const rows = fastingLogs.map(log => [
+      `"${new Date(log.startTime).toLocaleString()}"`,
+      `"${new Date(log.plannedEndTime).toLocaleString()}"`,
+      `"${new Date(log.actualEndTime).toLocaleString()}"`,
+      log.duration,
+      log.status
+    ]);
+  
+    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+  
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "fasting-history.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+  

@@ -193,4 +193,42 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
+document.getElementById("download-meals")?.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    const mealLogs = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
+  
+    if (!mealLogs.length) {
+      alert("No meals to export.");
+      return;
+    }
+  
+    // Convert to CSV format
+    const headers = ["Food", "Calories", "Protein", "Carbs", "Fat", "Timestamp"];
+    const rows = mealLogs.map(meal => [
+      `"${meal.name || ''}"`,
+      meal.calories || 0,
+      meal.protein || 0,
+      meal.carbs || 0,
+      meal.fat || 0,
+      `"${new Date(meal.timestamp).toLocaleString()}"`
+    ]);
+  
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+  
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+  
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "meal-history.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  });
+  
 

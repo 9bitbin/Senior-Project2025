@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vidia - Profile</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <title>Vidia - Nutrition & Meals</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * {
@@ -65,17 +65,18 @@
       width: calc(100% - 220px);
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
     }
 
-    .profile-card {
-      background: white;
+    .nutrition-card {
+      
+      background: rgba(255, 255, 255, 0.9);
       padding: 30px;
       border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      max-width: 700px;
       width: 100%;
-      max-width: 600px;
       animation: fadeInUp 0.6s ease;
     }
 
@@ -90,54 +91,70 @@
       }
     }
 
-    .profile-card h1 {
+    .nutrition-card h2 {
       text-align: center;
-      margin-bottom: 25px;
-      font-size: 26px;
+      font-size: 24px;
+      margin-bottom: 20px;
     }
 
-    form input, form select, form textarea {
+    input[type="text"],
+    input[type="date"],
+    button {
       width: 100%;
       padding: 12px;
       margin-bottom: 15px;
-      border: 1px solid #ccc;
       border-radius: 8px;
+      border: 1px solid #ccc;
       font-size: 15px;
       transition: 0.2s;
     }
 
-    form input:focus, form select:focus, form textarea:focus {
+    input:focus, button:focus {
       outline: none;
       border-color: #10b981;
       box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
     }
 
-    form textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    form button {
-      width: 100%;
-      padding: 14px;
+    button {
       background-color: #10b981;
       color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
       font-weight: bold;
+      border: none;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background-color 0.3s ease;
     }
 
-    form button:hover {
+    button:hover {
       background-color: #059669;
+    }
+
+    #nutrition-results {
+      margin-bottom: 20px;
+    }
+
+    #nutrition-results h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    #nutrition-results p {
+      margin: 6px 0;
+    }
+
+    #meal-list {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+
+    #meal-list li {
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
 
-  <!-- 🔹 Sidebar -->
+  <!-- Sidebar Navigation -->
   <div class="sidebar">
     <h2>VIDIA</h2>
     <ul>
@@ -154,43 +171,46 @@
     </ul>
   </div>
 
-  <!-- 🔹 Main Content -->
+  <!-- Main Content -->
   <div class="main-content">
-    <div class="profile-card">
-      <h1>Update Profile</h1>
-      <form id="profileForm">
-        <input type="text" id="name" placeholder="Full Name" required />
-        <input type="number" id="age" placeholder="Age" required />
-        <input type="number" id="weight" placeholder="Weight (lbs)" required />
-        <input type="number" id="height" placeholder="Height (inches)" required />
-        <input type="date" id="dob" required />
+    <div class="nutrition-card">
+      
+      <h2>🍽 Food Logging & Meal History</h2>
+      
+      <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)">
+      <button id="fetch-nutrition">Get Nutrition Info</button>
 
-        <select id="sex" required>
-          <option value="" disabled selected>Select Sex</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
+      <div id="nutrition-results">
+        <h3>Nutrition Breakdown</h3>
+        <p><strong>Calories:</strong> <span id="calories">--</span> kcal</p>
+        <p><strong>Protein:</strong> <span id="protein">--</span> g</p>
+        <p><strong>Carbs:</strong> <span id="carbs">--</span> g</p>
+        <p><strong>Fat:</strong> <span id="fat">--</span> g</p>
+      </div>
 
-        <input type="number" id="calorieGoal" placeholder="Daily Calorie Goal (kcal)" required />
+      <label for="start-date">Start Date:</label>
+      <input type="date" id="start-date">
 
-        <select id="exerciseType" required>
-          <option value="" disabled selected>Select Exercise Type</option>
-          <option value="cardio">Cardio</option>
-          <option value="strength">Strength Training</option>
-          <option value="flexibility">Flexibility</option>
-          <option value="mixed">Mixed Workout</option>
-        </select>
+      <label for="end-date">End Date:</label>
+      <input type="date" id="end-date">
 
-        <textarea id="healthGoals" placeholder="Enter Your Health Goals" required></textarea>
+      <button id="filter-meals">Filter Meals</button>
+      <button id="reset-meals">Reset</button>
+      <!-- 🔹 Download Meal Data -->
+      <button id="download-meals">📥 Download Meal Data (CSV)</button>
 
-        <button type="submit">💾 Save Profile</button>
-      </form>
+      <h3>📅 Meal History</h3>
+      <p><strong>Average Daily Calories:</strong> <span id="average-calories">Calculating...</span> kcal</p>
+      <p><strong>Total Calories:</strong> <span id="total-calories">0</span> kcal</p>
+
+      <ul id="meal-list">
+        <li>Loading...</li>
+      </ul>
     </div>
   </div>
 
-  <!-- 🔹 Scripts -->
+  <!-- Scripts -->
   <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="profile.js"></script>
+  <script type="module" src="nutrition.js"></script>
 </body>
 </html>

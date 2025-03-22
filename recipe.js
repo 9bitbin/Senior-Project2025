@@ -1,6 +1,7 @@
 // ✅ Import Firebase
 import { auth, db } from "./firebase-config.js";
-import { collection, query, orderBy, limit, getDocs, addDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+import { collection, query, where, orderBy, limit, getDocs, addDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
 
 // ✅ Ensure Firestore is initialized
@@ -98,18 +99,19 @@ function displayRecipes(meals) {
     });
 }
 
-// ✅ Save Recipe to Firestore
 async function saveRecipe(name, image, instructions) {
     console.log("✅ Attempting to save recipe:", name);
 
-    if (!auth || !auth.currentUser) {
+    const user = auth.currentUser;
+    if (!user) {
         alert("❌ You must be logged in to save recipes.");
         return;
     }
 
     try {
-        await addDoc(collection(db, "savedRecipes"), {
-            userId: auth.currentUser.uid,
+        const userRecipesRef = collection(db, "users", user.uid, "savedRecipes");
+
+        await addDoc(userRecipesRef, {
             name,
             image,
             instructions,
@@ -117,19 +119,25 @@ async function saveRecipe(name, image, instructions) {
         });
 
         alert("✅ Recipe saved successfully!");
-        loadSavedRecipes();
+        loadSavedRecipes();  // Refresh only that user's recipes
     } catch (error) {
         console.error("❌ Error saving recipe:", error);
         alert("Error saving recipe. Try again.");
     }
 }
 
-// ✅ Load Saved Recipes
+
 async function loadSavedRecipes() {
     if (!savedRecipesDiv) return;
-    savedRecipesDiv.innerHTML = ""; 
+    savedRecipesDiv.innerHTML = "";
 
-    const savedRecipesQuery = query(collection(db, "savedRecipes"), orderBy("timestamp", "desc"));
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const savedRecipesQuery = query(
+        collection(db, "users", user.uid, "savedRecipes"),
+        orderBy("timestamp", "desc")
+    );
 
     try {
         const querySnapshot = await getDocs(savedRecipesQuery);
@@ -140,10 +148,10 @@ async function loadSavedRecipes() {
         }
 
         querySnapshot.forEach(doc => {
-            let recipe = doc.data();
+            const recipe = doc.data();
             console.log("✅ Loaded recipe:", recipe);
 
-            let recipeCard = document.createElement("div");
+            const recipeCard = document.createElement("div");
             recipeCard.classList.add("recipe-card");
             recipeCard.innerHTML = `
                 <h3>${recipe.name}</h3>
@@ -159,12 +167,14 @@ async function loadSavedRecipes() {
     }
 }
 
-// ✅ Delete Recipe from Firestore
 async function deleteRecipe(recipeId) {
+    const user = auth.currentUser;
+    if (!user) return;
+
     console.log("🗑️ Deleting recipe with ID:", recipeId);
 
     try {
-        await deleteDoc(doc(db, "savedRecipes", recipeId));
+        await deleteDoc(doc(db, "users", user.uid, "savedRecipes", recipeId));
         alert("✅ Recipe deleted successfully!");
         loadSavedRecipes();
     } catch (error) {
@@ -172,6 +182,7 @@ async function deleteRecipe(recipeId) {
         alert("Error deleting recipe. Try again.");
     }
 }
+
 
 // ✅ Ensure deleteRecipe() is globally accessible
 window.deleteRecipe = deleteRecipe;
