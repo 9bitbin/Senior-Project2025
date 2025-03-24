@@ -22,3 +22,19 @@ if (bmi < 18.5) {
 } else {
     console.log("Category: Obesity");
 }
+
+if (console.error()) {
+    display = "Invalid BMI"
+}
+
+else {
+    ProcessingInstruction.platform;
+}
+
+ bmi = requestAnimationFrame('events');
+
+bmi.on('category',() =>{
+    console.log('categorytype')
+})
+
+bmi.emit('category');
