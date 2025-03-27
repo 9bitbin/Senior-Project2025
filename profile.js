@@ -15,20 +15,29 @@ onAuthStateChanged(auth, async (user) => {
             const data = userDoc.data();
             document.getElementById("name").value = data.name || "";
             document.getElementById("age").value = data.age || "";
-            document.getElementById("weight").value = data.weight || "";  // Now in lbs
-            document.getElementById("height").value = data.height || "";  // Now in inches
+            document.getElementById("weight").value = data.weight || "";
+            document.getElementById("height").value = data.height || "";
             document.getElementById("dob").value = data.dob || "";
             document.getElementById("sex").value = data.sex || "";
             document.getElementById("calorieGoal").value = data.calorieGoal || "";
             document.getElementById("exerciseType").value = data.exerciseType || "";
             document.getElementById("healthGoals").value = data.healthGoals || "";
+
+            document.getElementById("activityLevel").value = data.activityLevel || "";
+            document.getElementById("dietType").value = data.dietType || "";
+            document.getElementById("allergies").value = data.allergies || "";
+            document.getElementById("budgetPreference").value = data.budgetPreference || "";
+            document.getElementById("sleepHours").value = data.sleepHours || "";
+            document.getElementById("waterIntakeGoal").value = data.waterIntakeGoal || "";
+            document.getElementById("preferredWorkoutTime").value = data.preferredWorkoutTime || "";
+            document.getElementById("mentalHealthFocus").value = data.mentalHealthFocus || "";
         }
     } else {
         window.location.href = "index.html"; // Redirect if not logged in
     }
 });
 
-// 🔹 Save user profile data
+// 🔹 Save user profile data (merged safely)
 profileForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -38,23 +47,42 @@ profileForm.addEventListener("submit", async (e) => {
         return;
     }
 
-    const profileData = {
+    const updatedData = {
         name: document.getElementById("name").value,
         age: document.getElementById("age").value,
-        weight: document.getElementById("weight").value, // Now stored in lbs
-        height: document.getElementById("height").value, // Now stored in inches
+        weight: document.getElementById("weight").value,
+        height: document.getElementById("height").value,
         dob: document.getElementById("dob").value,
         sex: document.getElementById("sex").value,
         calorieGoal: document.getElementById("calorieGoal").value,
         exerciseType: document.getElementById("exerciseType").value,
         healthGoals: document.getElementById("healthGoals").value,
+        activityLevel: document.getElementById("activityLevel").value,
+        dietType: document.getElementById("dietType").value,
+        allergies: document.getElementById("allergies").value,
+        budgetPreference: document.getElementById("budgetPreference").value,
+        sleepHours: document.getElementById("sleepHours").value,
+        waterIntakeGoal: document.getElementById("waterIntakeGoal").value,
+        preferredWorkoutTime: document.getElementById("preferredWorkoutTime").value,
+        mentalHealthFocus: document.getElementById("mentalHealthFocus").value,
     };
 
+    const userDocRef = doc(db, "users", user.uid);
+
     try {
-        await setDoc(doc(db, "users", user.uid), profileData);
-        alert("Profile saved successfully!");
-        window.location.href = "home.html"; // Redirect to dashboard
+        // 🔐 Merge with existing profile
+        const existingDoc = await getDoc(userDocRef);
+        const existingData = existingDoc.exists() ? existingDoc.data() : {};
+
+        const mergedData = {
+            ...existingData,
+            ...updatedData
+        };
+
+        await setDoc(userDocRef, mergedData);
+        alert("✅ Profile saved successfully!");
+        window.location.href = "home.html";
     } catch (error) {
-        alert("Error saving profile: " + error.message);
+        alert("❌ Error saving profile: " + error.message);
     }
 });

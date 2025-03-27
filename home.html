@@ -124,6 +124,47 @@
       font-weight: 600;
       margin-bottom: 10px;
     }
+
+    .bmi-bar-wrapper {
+  width: 100%;
+  max-width: 500px;
+  margin-top: 20px;
+  position: relative;
+}
+
+.bmi-bar {
+  display: flex;
+  width: 100%;
+  height: 30px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  font-size: 12px;
+  text-align: center;
+  color: white;
+}
+
+.bmi-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bmi-zone.underweight { background-color: #60a5fa; } /* Blue */
+.bmi-zone.normal { background-color: #10b981; }     /* Green */
+.bmi-zone.overweight { background-color: #fbbf24; } /* Yellow */
+.bmi-zone.obese { background-color: #ef4444; }       /* Red */
+
+#bmi-pointer {
+  position: absolute;
+  top: 30px;
+  font-size: 18px;
+  transform: translateX(-50%);
+  transition: left 1s ease-in-out; /* 👈 added */
+}
+
+
   </style>
 </head>
 <body>
@@ -141,6 +182,7 @@
       <li><a href="recipe.html">📖 Recipes</a></li>
       <li><a href="community.html">🌍 Community</a></li>
       <li><a href="ai-meals.html">🤖 AI Meals</a></li>
+      <li><a href="ai-advice.html">🧠 AI Advisor</a></li>
       <li><a href="index.html">🚪 Logout</a></li>
       
     </ul>
@@ -193,15 +235,28 @@
 
 
     <!-- BMI Section -->
-    <div class="card">
-      <h2 class="section-title">📏 Your BMI</h2>
-      <p id="bmi-value">BMI Value: Calculating...</p>
-      <p id="bmi-category">Category: Calculating...</p>
+<div class="card">
+  <h2 class="section-title">📏 Your BMI</h2>
+  <p><strong>BMI Value:</strong> <span id="bmi-value">Calculating...</span></p>
+  <p><strong>Category:</strong> <span id="bmi-category">Calculating...</span></p>
+  <p id="bmi-message"></p>
+
+  <!-- 🔹 BMI Visual Bar -->
+  <div class="bmi-bar-wrapper">
+    <div class="bmi-bar">
+      <div class="bmi-zone underweight">Under</div>
+      <div class="bmi-zone normal">Normal</div>
+      <div class="bmi-zone overweight">Over</div>
+      <div class="bmi-zone obese">Obese</div>
+      <div id="bmi-pointer">▼</div>
     </div>
   </div>
+</div>
 
 
 
+
+// DO NOT TOUCH THIS SECTION 
   <script type="module" src="firebase-config.js"></script>
   <script type="module" src="dashboard.js"></script>
 
@@ -219,7 +274,6 @@
     <script type="module" src="recipe.js"></script>
     <script type="module" src="community.js"></script>
     <script type="module" src="dashboard.js"></script>
-    <script type="module" src="weight.js"></script>
     <script type="module" src="fasting.js"></script>
 
     <script type="module">
@@ -252,16 +306,10 @@
             }
         });
 
-        logoutBtn.addEventListener("click", () => {
-            signOut(auth).then(() => {
-                window.location.href = "index.html";
-            }).catch((error) => {
-                console.error("Logout Error: ", error);
-            });
-        });
+        
     </script>
 
-
+// DO NOT TOUCH 
 
 <!-- AOS Library -->
 <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">

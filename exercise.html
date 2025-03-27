@@ -8,17 +8,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       display: flex;
       font-family: 'Inter', sans-serif;
       background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
     }
-
     .sidebar {
       width: 220px;
       height: 100vh;
@@ -30,23 +26,19 @@
       padding-top: 20px;
       box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
     }
-
     .sidebar h2 {
       text-align: center;
       font-size: 22px;
       margin-bottom: 20px;
     }
-
     .sidebar ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
-
     .sidebar ul li {
       padding: 12px 20px;
     }
-
     .sidebar ul li a {
       color: black;
       font-weight: bold;
@@ -54,13 +46,11 @@
       display: block;
       transition: 0.3s;
     }
-
     .sidebar ul li a:hover {
       background-color: #b7e4c7;
       padding-left: 25px;
       border-radius: 6px;
     }
-
     .main-content {
       margin-left: 220px;
       padding: 40px;
@@ -70,7 +60,6 @@
       gap: 30px;
       align-items: center;
     }
-
     .card {
       background: rgba(255, 255, 255, 0.9);
       padding: 30px;
@@ -80,32 +69,23 @@
       max-width: 700px;
       animation: fadeInUp 0.6s ease;
     }
-
     @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-
     .card h2 {
       text-align: center;
       margin-bottom: 20px;
       font-size: 22px;
     }
-
     label {
       font-weight: 600;
       display: block;
       margin-top: 10px;
     }
-
     input[type="number"],
     input[type="date"],
+    input[type="text"],
     select,
     button {
       width: 100%;
@@ -116,13 +96,11 @@
       border: 1px solid #ccc;
       transition: border 0.2s, box-shadow 0.2s;
     }
-
     input:focus, select:focus, button:focus {
       outline: none;
       border-color: #10b981;
       box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
     }
-
     button {
       background-color: #10b981;
       color: white;
@@ -131,23 +109,25 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-
     button:hover {
       background-color: #059669;
     }
-
     ul {
       padding-left: 18px;
       margin-top: 10px;
     }
-
     ul li {
       margin-bottom: 10px;
     }
-
     #estimated-calories {
       font-weight: bold;
       color: #059669;
+    }
+    #ai-response {
+      background: #f0fdf4;
+      padding: 15px;
+      border-radius: 10px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -165,6 +145,7 @@
       <li><a href="fasting.html">⏳ Fasting</a></li>
       <li><a href="recipe.html">📖 Recipes</a></li>
       <li><a href="community.html">🌍 Community</a></li>
+      <li><a href="ai-advice.html">🧠 AI Advisor</a></li>
       <li><a href="index.html">🚪 Logout</a></li>
       <li><a href="ai-meals.html">🤖 AI Meals</a></li>
     </ul>
@@ -176,13 +157,41 @@
     <!-- 🔹 Exercise Recommendations -->
     <div class="card">
       <h2>🏃 Exercise Recommendations</h2>
-      <label for="exercise-type">Select Workout Type:</label>
+
+      <label for="exercise-type">Workout Type:</label>
       <select id="exercise-type">
         <option value="cardio">Cardio</option>
         <option value="strength">Strength</option>
         <option value="stretching">Stretching</option>
         <option value="yoga">Yoga</option>
       </select>
+
+      <label for="muscle-group">Target Muscle Group:</label>
+      <select id="muscle-group">
+        <option value="">-- Optional --</option>
+        <option value="chest">Chest</option>
+        <option value="back">Back</option>
+        <option value="shoulders">Shoulders</option>
+        <option value="biceps">Biceps</option>
+        <option value="triceps">Triceps</option>
+        <option value="abs">Abs</option>
+        <option value="glutes">Glutes</option>
+        <option value="hamstrings">Hamstrings</option>
+        <option value="calves">Calves</option>
+        <option value="quadriceps">Quadriceps</option>
+      </select>
+
+      <label for="equipment-type">Equipment Type:</label>
+      <select id="equipment-type">
+        <option value="">-- Optional --</option>
+        <option value="body weight">Body Weight</option>
+        <option value="dumbbell">Dumbbell</option>
+        <option value="barbell">Barbell</option>
+        <option value="kettlebell">Kettlebell</option>
+        <option value="resistance band">Resistance Band</option>
+        <option value="machine">Machine</option>
+      </select>
+
       <button id="fetch-exercise">Get Exercises</button>
 
       <div id="exercise-results">
@@ -216,31 +225,29 @@
     <!-- 🔹 Workout History -->
     <div class="card">
       <h2>📈 Workout History</h2>
-
       <label for="workout-start-date">Start Date:</label>
       <input type="date" id="workout-start-date" />
-
       <label for="workout-end-date">End Date:</label>
       <input type="date" id="workout-end-date" />
-
       <button id="filter-workouts">Filter Workouts</button>
       <button id="reset-workouts">Reset</button>
-
       <button id="download-workouts">📥 Download Workout Data (CSV)</button>
-
-
       <h3>📅 Workout Logs</h3>
       <p><strong>Total Calories Burned:</strong> <span id="total-workout-calories">0</span> kcal</p>
-      <ul id="workout-list"> 
-      
-        <li>Loading...</li>
-      
-        
-
-      </ul>
+      <ul id="workout-list"><li>Loading...</li></ul>
     </div>
+
+    <!-- 🔹 AI Workout Suggestion -->
+    <div class="card">
+      <h2>🤖 Ask AI for a Workout</h2>
+      <input type="text" id="ai-prompt" placeholder="e.g. Suggest a 20-min strength workout at home">
+      <button id="ask-ai-btn">Ask AI</button>
+      <div id="ai-response">AI response will appear here...</div>
+    </div>
+
   </div>
 
+  <!-- Scripts -->
   <script type="module" src="firebase-config.js"></script>
   <script type="module" src="exercise.js"></script>
   <script type="module" src="workout.js"></script>

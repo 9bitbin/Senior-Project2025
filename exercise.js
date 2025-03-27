@@ -3,224 +3,232 @@ import { db, auth } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
 import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-// ✅ API Configuration (ExerciseDB API)
-const API_KEY = "6ef7d8b092msh8f0f7027753276dp19011fjsn33971607c751";
-const API_URL = "https://exercisedb.p.rapidapi.com/exercises/bodyPart/";
-
-// ✅ Select Elements Safely
+// ✅ DOM Elements
 const exerciseTypeEl = document.getElementById("exercise-type");
+const muscleGroupEl = document.getElementById("muscle-group");
+const equipmentTypeEl = document.getElementById("equipment-type");
 const fetchExerciseBtn = document.getElementById("fetch-exercise");
 const exerciseListEl = document.getElementById("exercise-list");
 const workoutListEl = document.getElementById("workout-list");
+const aiInput = document.getElementById("ai-prompt");
+const askAiBtn = document.getElementById("ask-ai-btn");
+const aiResponseBox = document.getElementById("ai-response");
 
-// ✅ Exercise Categories Mapped to API
-const exerciseCategories = {
-    "cardio": "cardio",
-    "strength": "chest",
-    "stretching": "lower legs"
+let userWeightLbs = 150; // default fallback
+let userProfile = "User profile not loaded yet.";
+
+const MET_VALUES = {
+  cardio: 8,
+  strength: 6,
+  stretching: 3,
+  yoga: 2.5
 };
 
-// ✅ Manually Defined Yoga Exercises (No API Images)
+const exerciseCategories = {
+  "cardio": "cardio",
+  "strength": "chest",
+  "stretching": "lower legs"
+};
+
 const yogaExercises = [
-    { name: "Downward Dog", target: "Full Body" },
-    { name: "Tree Pose", target: "Balance" },
-    { name: "Warrior II", target: "Legs & Core" },
-    { name: "Child’s Pose", target: "Lower Back" },
-    { name: "Cobra Pose", target: "Spine & Core" }
+  { name: "Downward Dog", target: "Full Body" },
+  { name: "Tree Pose", target: "Balance" },
+  { name: "Warrior II", target: "Legs & Core" },
+  { name: "Child’s Pose", target: "Lower Back" },
+  { name: "Cobra Pose", target: "Spine & Core" }
 ];
 
-// ✅ Fetch Exercises from API or Use Yoga Poses
-async function fetchExerciseData(category) {
-    if (category === "yoga") {
-        return yogaExercises;
-    }
-
-    const apiUrl = `${API_URL}${category}?limit=5`;
-    try {
-        const response = await fetch(apiUrl, {
-            method: "GET",
-            headers: {
-                "X-RapidAPI-Key": API_KEY,
-                "X-RapidAPI-Host": "exercisedb.p.rapidapi.com"
-            }
-        });
-
-        if (!response.ok) {
-            console.warn(`⚠️ API Error: ${response.status}`);
-            return [];
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error("❌ Error fetching exercise data:", error);
-        return [];
-    }
-}
-
-// ✅ Handle "Get Exercises" Button Click
-if (fetchExerciseBtn && exerciseTypeEl) {
-    fetchExerciseBtn.addEventListener("click", async () => {
-        const selectedType = exerciseTypeEl.value;
-        const category = exerciseCategories[selectedType] || selectedType;
-
-        // Fetch exercises
-        const exercises = await fetchExerciseData(category);
-
-        if (!exercises || exercises.length === 0) {
-            alert("⚠️ No exercises found for this category.");
-            return;
-        }
-
-        // ✅ Update UI safely
-        if (exerciseListEl) {
-            exerciseListEl.innerHTML = "";
-            exercises.forEach(exercise => {
-                const li = document.createElement("li");
-                li.innerHTML = `
-                    <strong>${exercise.name}</strong> 
-                    <p>Muscle Group: ${exercise.target}</p>
-                    <img src="${exercise.gifUrl || 'https://via.placeholder.com/150'}" 
-                        alt="${exercise.name}" width="150">
-                `;
-                exerciseListEl.appendChild(li);
-            });
-        }
-
-        // ✅ Save Workouts to Firestore
-        await saveWorkoutToFirestore(selectedType, exercises);
+// ✅ General API Fetcher
+async function fetchFromExerciseDB(path) {
+  const url = `https://exercisedb.p.rapidapi.com/exercises/${path}?limit=10`;
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "X-RapidAPI-Key": "6ef7d8b092msh8f0f7027753276dp19011fjsn33971607c751",
+        "X-RapidAPI-Host": "exercisedb.p.rapidapi.com"
+      }
     });
+    return await res.json();
+  } catch (err) {
+    console.error("❌ API Fetch Error:", err);
+    return [];
+  }
 }
 
-// ✅ Save Workouts to Firestore
-async function saveWorkoutToFirestore(type, exercises) {
-    const user = auth.currentUser;
-    if (!user) return;
+// ✅ Handle Get Exercises
+let currentExercises = [];
 
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
-    let workouts = [];
+fetchExerciseBtn.addEventListener("click", async () => {
+  const type = exerciseTypeEl.value;
+  const target = muscleGroupEl.value;
+  const equipment = equipmentTypeEl.value;
 
-    if (userDoc.exists()) {
-        const data = userDoc.data();
-        workouts = data.workoutLogs || [];
-    }
+  let exercises = [];
+  if (type === "yoga") {
+    exercises = yogaExercises;
+  } else if (target) {
+    exercises = await fetchFromExerciseDB(`target/${target}`);
+  } else if (equipment) {
+    exercises = await fetchFromExerciseDB(`equipment/${equipment}`);
+  } else {
+    const category = exerciseCategories[type] || type;
+    exercises = await fetchFromExerciseDB(`bodyPart/${category}`);
+  }
 
-    // Ensure workouts array
-    if (!Array.isArray(workouts)) workouts = [];
+  if (!exercises.length) {
+    exerciseListEl.innerHTML = "<li>No exercises found.</li>";
+    return;
+  }
 
-    const newWorkout = {
-        id: Date.now().toString(),  // ✅ Unique ID for deletion
-        type: type,
-        exercises: exercises.map(e => ({
-            name: e.name,
-            muscleGroup: e.target,
-            gif: e.gifUrl || 'https://via.placeholder.com/150'
-        })),
-        timestamp: new Date().toISOString()
-    };
+  const met = MET_VALUES[type] || 5;
+  const duration = 10; // default 10 mins
 
-    workouts.push(newWorkout);
+  currentExercises = exercises;
 
-    try {
-        await updateDoc(userDocRef, { workoutLogs: workouts });
-        console.log("✅ Workout saved successfully.");
-        fetchLoggedWorkouts(); // Refresh workout history
-    } catch (error) {
-        console.error("❌ Error saving workout:", error);
-    }
-}
+  exerciseListEl.innerHTML = exercises.map(ex => {
+    const calories = Math.round(met * userWeightLbs * 0.453592 * 3.5 / 200 * duration);
+    return `
+      <li>
+        <strong>${ex.name}</strong><br>
+        Muscle Group: ${ex.target}<br>
+        <img src="${ex.gifUrl || 'https://via.placeholder.com/150'}" alt="${ex.name}" width="150"><br>
+        <strong>Estimated Calories:</strong> ${calories} kcal (10 min)
+      </li>
+    `;
+  }).join("") + `<br><button id="log-workout-confirm" class="log-btn">✅ Log This Workout</button>`;
 
-// ✅ Fetch & Display Logged Workouts
-async function fetchLoggedWorkouts() {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
-
-    if (userDoc.exists()) {
-        let workouts = userDoc.data().workoutLogs || [];
-
-        console.log("🔥 Retrieved Workouts:", workouts);
-
-        if (!workoutListEl) return; // ✅ Prevent issues if workoutListEl is missing
-
-        // ✅ Prevent blank screen issue
-        if (!Array.isArray(workouts) || workouts.length === 0) {
-            workoutListEl.innerHTML = "<li>No workouts logged yet.</li>";
-            return;
-        }
-
-        // ✅ Update UI safely
-        workoutListEl.innerHTML = "";
-        workouts.forEach((workout, index) => {
-            if (!workout.exercises || !Array.isArray(workout.exercises)) {
-                console.warn(`⚠️ Workout at index ${index} has no valid exercises array.`);
-                return;
-            }
-
-            const li = document.createElement("li");
-            li.innerHTML = `
-                <strong>Workout Type:</strong> ${workout.type} <br>
-                <ul>
-                    ${workout.exercises.map(ex => `
-                        <li>
-                            <strong>${ex.name}</strong> - ${ex.muscleGroup} <br>
-                            <img src="${ex.gif || 'https://via.placeholder.com/100'}" alt="${ex.name}" width="100">
-                        </li>
-                    `).join("")}
-                </ul>
-                <button class="delete-workout" data-index="${index}">Delete</button>
-            `;
-            workoutListEl.appendChild(li);
-        });
-
-        // ✅ Attach event listeners for Delete buttons
-        document.querySelectorAll(".delete-workout").forEach(button => {
-            button.addEventListener("click", async (event) => {
-                const workoutIndex = event.target.dataset.index;
-                await deleteWorkoutFromFirestore(parseInt(workoutIndex));
-            });
-        });
-    }
-}
-
-// ✅ Delete Workout from Firestore
-async function deleteWorkoutFromFirestore(workoutIndex) {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
-
-    if (!userDoc.exists()) return;
-
-    try {
-        let workouts = userDoc.data().workoutLogs || [];
-
-        if (workouts.length === 0 || workoutIndex < 0 || workoutIndex >= workouts.length) {
-            console.error("❌ Invalid workout index for deletion.");
-            return;
-        }
-
-        workouts.splice(workoutIndex, 1); // ✅ Remove workout
-
-        await updateDoc(userDocRef, { workoutLogs: workouts });
-
-        console.log("✅ Workout deleted successfully.");
-        fetchLoggedWorkouts(); // ✅ Refresh UI properly after deletion
-    } catch (error) {
-        console.error("❌ Error deleting workout:", error);
-    }
-}
-
-// ✅ Ensure User is Logged In & Fetch Workouts
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        fetchLoggedWorkouts();
-    } else {
-        window.location.href = "index.html";
-    }
+  document.getElementById("log-workout-confirm").addEventListener("click", () => {
+    saveWorkoutToFirestore(type, currentExercises);
+  });
 });
 
+// ✅ Save Workout
+async function saveWorkoutToFirestore(type, exercises) {
+  const user = auth.currentUser;
+  if (!user) return;
 
+  const userDocRef = doc(db, "users", user.uid);
+  const userDoc = await getDoc(userDocRef);
+  const logs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
+
+  const workout = {
+    id: Date.now().toString(),
+    type,
+    timestamp: new Date().toISOString(),
+    exercises: exercises.map(e => ({
+      name: e.name,
+      muscleGroup: e.target,
+      gif: e.gifUrl || 'https://via.placeholder.com/150'
+    }))
+  };
+
+  logs.push(workout);
+  await updateDoc(userDocRef, { workoutLogs: logs });
+  fetchLoggedWorkouts();
+}
+
+// ✅ Load Logs
+async function fetchLoggedWorkouts() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  const logs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
+
+  if (!workoutListEl) return;
+
+  if (!logs.length) {
+    workoutListEl.innerHTML = "<li>No workouts logged yet.</li>";
+    return;
+  }
+
+  workoutListEl.innerHTML = "";
+  logs.forEach((log, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>Workout Type:</strong> ${log.type}<br>
+      ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
+      ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
+      ${log.exercises ? `
+        <ul>${log.exercises.map(ex => `
+          <li>${ex.name} - ${ex.muscleGroup}<br>
+            <img src="${ex.gif}" width="100">
+          </li>`).join("")}</ul>
+      ` : ""}
+      <em>Logged on: ${new Date(log.timestamp).toLocaleString()}</em><br>
+      <button class="delete-workout" data-index="${i}">Delete</button>
+    `;
+    workoutListEl.appendChild(li);
+  });
+
+  document.querySelectorAll(".delete-workout").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      await deleteWorkout(parseInt(e.target.dataset.index));
+    });
+  });
+}
+
+async function deleteWorkout(index) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userDocRef = doc(db, "users", user.uid);
+  const userDoc = await getDoc(userDocRef);
+  const logs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
+
+  logs.splice(index, 1);
+  await updateDoc(userDocRef, { workoutLogs: logs });
+  fetchLoggedWorkouts();
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      if (data.weight) userWeightLbs = data.weight;
+      userProfile = `Age: ${data.age || "N/A"}\nWeight: ${data.weight} lbs\nSex: ${data.sex}\nGoal: ${data.healthGoals || "N/A"}\nPreferred Exercise: ${data.exerciseType || "N/A"}`;
+    }
+    fetchLoggedWorkouts();
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
+// ✅ AI Workout Suggestion
+if (askAiBtn) {
+  askAiBtn.addEventListener("click", async () => {
+    const prompt = aiInput.value.trim();
+    if (!prompt) return;
+
+    aiResponseBox.innerText = "🧠 Thinking...";
+
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer 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",
+          "HTTP-Referer": "http://localhost:5500",
+          "X-Title": "VIDIA AI Workout Advisor"
+        },
+        body: JSON.stringify({
+          model: "mistralai/mistral-small-3.1-24b-instruct:free",
+          messages: [
+            { role: "system", content: `You are a fitness expert. Use this user profile if helpful:\n\n${userProfile}` },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.7
+        })
+      });
+
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "⚠️ No response received.";
+      aiResponseBox.innerText = reply;
+    } catch (err) {
+      console.error("❌ AI Error:", err);
+      aiResponseBox.innerText = "⚠️ Failed to fetch response.";
+    }
+  });
+}

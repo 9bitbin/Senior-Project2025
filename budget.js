@@ -126,54 +126,51 @@ async function logMealCost() {
     }
 }
 
-// ✅ Fetch & Display Budget Data
 async function fetchBudgetData(startDate = null, endDate = null) {
-
     console.log("🔄 Fetching budget data...");
-
+  
     const user = auth.currentUser;
     if (!user) {
-        console.error("ERROR: User not logged in!");
-        return;
+      console.error("ERROR: User not logged in!");
+      return;
     }
-
+  
     const userDocRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userDocRef);
-
+  
     if (userDoc.exists()) {
-        let budgetData = userDoc.data().mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
-        let remainingBudget = budgetData.amount - budgetData.totalSpent;
-
-        // ✅ Update UI
-        if (budgetValueEl) budgetValueEl.innerText = `$${budgetData.amount.toFixed(2)}`;
-        if (totalSpentEl) totalSpentEl.innerText = `$${budgetData.totalSpent.toFixed(2)}`;
-        if (remainingBudgetEl) remainingBudgetEl.innerText = `$${remainingBudget.toFixed(2)}`;
-
-        if (budgetAlertEl) {
-            budgetAlertEl.innerText = remainingBudget < 0 ? "⚠️ Warning: You have exceeded your budget!" : "";
-            budgetAlertEl.style.color = remainingBudget < 0 ? "red" : "black";
-        }
-
-        generateBudgetChart(filteredExpenses);
-
-// ✅ Also update history list
-renderBudgetHistoryList(filteredExpenses);
-
-
-        let filteredExpenses = [...budgetData.expenses];
-
-if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    filteredExpenses = filteredExpenses.filter(expense => {
-        const expenseDate = new Date(expense.timestamp);
-        return expenseDate >= start && expenseDate <= end;
-    });
-}
+      let budgetData = userDoc.data().mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
+      let remainingBudget = budgetData.amount - budgetData.totalSpent;
+  
+      // ✅ Start filtering early
+      let filteredExpenses = [...budgetData.expenses];
+  
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+  
+        filteredExpenses = filteredExpenses.filter(expense => {
+          const expenseDate = new Date(expense.timestamp);
+          return expenseDate >= start && expenseDate <= end;
+        });
+      }
+  
+      // ✅ Update UI
+      if (budgetValueEl) budgetValueEl.innerText = `$${budgetData.amount.toFixed(2)}`;
+      if (totalSpentEl) totalSpentEl.innerText = `$${budgetData.totalSpent.toFixed(2)}`;
+      if (remainingBudgetEl) remainingBudgetEl.innerText = `$${remainingBudget.toFixed(2)}`;
+  
+      if (budgetAlertEl) {
+        budgetAlertEl.innerText = remainingBudget < 0 ? "⚠️ Warning: You have exceeded your budget!" : "";
+        budgetAlertEl.style.color = remainingBudget < 0 ? "red" : "black";
+      }
+  
+      // ✅ These now work safely
+      generateBudgetChart(filteredExpenses);
+      renderBudgetHistoryList(filteredExpenses);
     }
-}
-
+  }
+  
 // ✅ Generate Budget Chart
 function generateBudgetChart(expenses) {
     if (!budgetChartCanvas) return;

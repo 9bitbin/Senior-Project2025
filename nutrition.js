@@ -1,4 +1,4 @@
-// ✅ Import Firebase
+// ✅ Import Firebase 
 import { db, auth } from "./firebase-config.js";
 import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
@@ -206,7 +206,6 @@ document.getElementById("download-meals")?.addEventListener("click", async () =>
       return;
     }
   
-    // Convert to CSV format
     const headers = ["Food", "Calories", "Protein", "Carbs", "Fat", "Timestamp"];
     const rows = mealLogs.map(meal => [
       `"${meal.name || ''}"`,
@@ -217,7 +216,7 @@ document.getElementById("download-meals")?.addEventListener("click", async () =>
       `"${new Date(meal.timestamp).toLocaleString()}"`
     ]);
   
-    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\\n");
   
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -229,6 +228,54 @@ document.getElementById("download-meals")?.addEventListener("click", async () =>
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+});
+
+
+// ✅ AI Feedback for Meal History
+const aiBtn = document.getElementById("ai-feedback-btn");
+const aiOutput = document.getElementById("ai-feedback-output");
+
+if (aiBtn) {
+  aiBtn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const data = userDoc.exists() ? userDoc.data() : {};
+    const meals = data.mealLogs || [];
+
+    if (meals.length === 0) {
+      aiOutput.innerText = "You have no meal logs yet.";
+      return;
+    }
+
+    const sample = meals.slice(-7).map(meal => {
+      return `${meal.name} | ${meal.calories} kcal | Protein: ${meal.protein}g, Carbs: ${meal.carbs}g, Fat: ${meal.fat}g`;
+    }).join("\\n");
+
+    const prompt = `You're a health and nutrition expert. Based on the following meal log, give a short summary of how healthy the person's eating habits are. Suggest 2 improvements.\\n\\nMeal Log:\\n${sample}`;
+
+    aiOutput.innerText = "🧠 Thinking...";
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer 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", // Replace with your OpenRouter key
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "mistralai/mistral-small-3.1-24b-instruct:free",
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      const result = await res.json();
+      aiOutput.innerText = result.choices?.[0]?.message?.content || "No response.";
+    } catch (err) {
+      console.error(err);
+      aiOutput.innerText = "⚠️ Failed to get feedback.";
+    }
   });
-  
+}
+
 
