@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vidia - Budget</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #d8f3dc;
+      padding-top: 20px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 12px 20px;
+    }
+
+    .sidebar ul li a {
+      color: black;
+      font-weight: bold;
+      text-decoration: none;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .sidebar ul li a:hover {
+      background-color: #b7e4c7;
+      border-radius: 6px;
+      padding-left: 25px;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 40px;
+      width: calc(100% - 220px);
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 650px;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card h2 {
+      margin-bottom: 20px;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    input[type="number"],
+    input[type="date"],
+    select,
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus, button:focus {
+      outline: none;
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    button {
+      background-color: #10b981;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+      
+    
+    button:hover {
+      background-color: #059669;
+    }
+
+    #budget-alert {
+      margin-top: 10px;
+      font-weight: bold;
+      color: red;
+      text-align: center;
+    }
+
+    ul#budget-history-list {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+    ul#budget-history-list li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>VIDIA</h2>
+    <ul>
+      <li><a href="home.html">🏠 Dashboard</a></li>
+      <li><a href="profile.html">👤 Profile</a></li>
+      <li><a href="nutrition.html">🍎 Nutrition & Meals</a></li>
+      <li><a href="budget.html">💰 Budget</a></li>
+      <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
+      <li><a href="fasting.html">⏳ Fasting</a></li>
+      <li><a href="recipe.html">📖 Recipes</a></li>
+      <li><a href="community.html">🌍 Community</a></li>
+      <li><a href="ai-meals.html">🤖 AI Meals</a></li>
+      <li><a href="ai-advice.html">🧠 AI Advisor</a></li>
+      <li><a href="index.html">🚪 Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Budget Setup + Logging -->
+    <div class="card">
+      <h2>💸 Meal Budget Tracking</h2>
+
+      <label for="budget-amount">Set Budget ($):</label>
+      <input type="number" id="budget-amount" placeholder="Enter budget">
+
+      <label for="budget-period">Budget Period:</label>
+      <select id="budget-period">
+        <option value="Daily">Daily</option>
+        <option value="Weekly">Weekly</option>
+        <option value="Monthly">Monthly</option>
+      </select>
+      <button id="set-budget">Set Budget</button>
+
+      <label for="meal-cost">Log Meal Cost ($):</label>
+      <input type="number" id="meal-cost" placeholder="Enter meal cost">
+      <button id="log-meal-cost">Log Cost</button>
+
+      <h3>Budget Overview</h3>
+      <p><strong>Budget:</strong> $<span id="budget-value">0</span></p>
+      <p><strong>Total Spent:</strong> $<span id="total-spent">0</span></p>
+      <p><strong>Remaining Budget:</strong> $<span id="remaining-budget">0</span></p>
+      <p id="budget-alert"></p>
+    </div>
+
+    <!-- Spending History -->
+    <div class="card">
+      <h2>📊 Spending History</h2>
+
+      <label for="budget-start-date">Start Date:</label>
+      <input type="date" id="budget-start-date">
+
+      <label for="budget-end-date">End Date:</label>
+      <input type="date" id="budget-end-date">
+
+      <button id="filter-budget">Filter Budget</button>
+      <button id="reset-budget">Reset</button>
+
+      <h3>Meal Expenses</h3>
+      <ul id="budget-history-list">
+        <li>Loading...</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="budget.js"></script>
+</body>
+</html>

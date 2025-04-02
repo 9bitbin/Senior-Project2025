@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vidia - Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
+      display: flex;
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #bbf7d0;
+      color: black;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding-top: 20px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 12px 20px;
+    }
+
+    .sidebar ul li a {
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+      display: block;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar ul li a:hover {
+      background: #86efac;
+      padding-left: 25px;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 40px;
+      width: calc(100% - 220px);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      color: #14532d;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #166534;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    .chart-container {
+      margin-top: 20px;
+    }
+
+    canvas {
+      width: 100% !important;
+      max-width: 100%;
+    }
+
+    #user-info {
+      text-align: center;
+      font-size: 18px;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .bmi-bar-wrapper {
+  width: 100%;
+  max-width: 500px;
+  margin-top: 20px;
+  position: relative;
+}
+
+.bmi-bar {
+  display: flex;
+  width: 100%;
+  height: 30px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  font-size: 12px;
+  text-align: center;
+  color: white;
+}
+
+.bmi-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bmi-zone.underweight { background-color: #60a5fa; } /* Blue */
+.bmi-zone.normal { background-color: #10b981; }     /* Green */
+.bmi-zone.overweight { background-color: #fbbf24; } /* Yellow */
+.bmi-zone.obese { background-color: #ef4444; }       /* Red */
+
+#bmi-pointer {
+  position: absolute;
+  top: 30px;
+  font-size: 18px;
+  transform: translateX(-50%);
+  transition: left 1s ease-in-out; /* 👈 added */
+}
+
+
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>VIDIA</h2>
+    <ul>
+      <li><a href="home.html">🏠 Dashboard</a></li>
+      <li><a href="profile.html">👤 Profile</a></li>
+      <li><a href="nutrition.html">🍎 Nutrition & Meals</a></li>
+      <li><a href="budget.html">💰 Budget</a></li>
+      <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
+      <li><a href="fasting.html">⏳ Fasting</a></li>
+      <li><a href="recipe.html">📖 Recipes</a></li>
+      <li><a href="community.html">🌍 Community</a></li>
+      <li><a href="ai-meals.html">🤖 AI Meals</a></li>
+      <li><a href="ai-advice.html">🧠 AI Advisor</a></li>
+      <li><a href="index.html">🚪 Logout</a></li>
+      
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1>Welcome to Vidia</h1>
+    <p id="user-info">Loading user info...</p>
+
+    <!-- Health Info -->
+    <div class="card">
+      <h2 class="section-title">🧍 Your Health Information</h2>
+      <p><strong>Weight:</strong> <span id="user-weight">Loading...</span> lbs</p>
+      <p><strong>Height:</strong> <span id="user-height">Loading...</span> inches</p>
+    </div>
+
+    <!-- 🔹 Daily Health Tip Section -->
+<div class="card" id="daily-quote-card" data-aos="fade-up">
+  <h2>💡 Daily Health Tip</h2>
+  <p id="quote-text">Loading your tip...</p>
+</div>
+
+
+    <!-- Overview Section -->
+    <!-- 🔹 Dashboard Charts -->
+<div class="card" data-aos="fade-up">
+  <h2>📊 Health & Finance Overview</h2>
+
+  <div class="chart-container" data-aos="fade-up">
+    <h3>Calories: Intake vs. Burned</h3>
+    <canvas id="caloriesChart"></canvas>
+  </div>
+
+  <div class="chart-container" data-aos="fade-up">
+    <h3>Macronutrient Breakdown</h3>
+    <canvas id="macroChart"></canvas>
+  </div>
+
+  <div class="chart-container" data-aos="fade-up">
+    <h3>Weekly Workout Summary</h3>
+    <canvas id="workoutChart"></canvas>
+  </div>
+
+  <div class="chart-container" data-aos="fade-up">
+    <h3>Spending vs. Budget</h3>
+    <canvas id="budgetChart"></canvas>
+  </div>
+</div>
+
+
+    <!-- BMI Section -->
+<div class="card">
+  <h2 class="section-title">📏 Your BMI</h2>
+  <p><strong>BMI Value:</strong> <span id="bmi-value">Calculating...</span></p>
+  <p><strong>Category:</strong> <span id="bmi-category">Calculating...</span></p>
+  <p id="bmi-message"></p>
+
+  <!-- 🔹 BMI Visual Bar -->
+  <div class="bmi-bar-wrapper">
+    <div class="bmi-bar">
+      <div class="bmi-zone underweight">Under</div>
+      <div class="bmi-zone normal">Normal</div>
+      <div class="bmi-zone overweight">Over</div>
+      <div class="bmi-zone obese">Obese</div>
+      <div id="bmi-pointer">▼</div>
+    </div>
+  </div>
+</div>
+
+
+
+
+// DO NOT TOUCH THIS SECTION 
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="dashboard.js"></script>
+
+
+
+
+  
+    <script type="module" src="firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="bmi.js"></script>
+    <script type="module" src="nutrition.js"></script>
+    <script type="module" src="exercise.js"></script>
+    <script type="module" src="workout.js"></script>
+    <script type="module" src="budget.js"></script>
+    <script type="module" src="recipe.js"></script>
+    <script type="module" src="community.js"></script>
+    <script type="module" src="dashboard.js"></script>
+    <script type="module" src="fasting.js"></script>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+
+        const userInfo = document.getElementById("user-info");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const weightEl = document.getElementById("user-weight");
+        const heightEl = document.getElementById("user-height");
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userInfo.innerText = `Welcome, ${user.email}`;
+
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    weightEl.innerText = data.weight || "N/A";
+                    heightEl.innerText = data.height || "N/A";
+                } else {
+                    weightEl.innerText = "N/A";
+                    heightEl.innerText = "N/A";
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        
+    </script>
+
+// DO NOT TOUCH 
+
+<!-- AOS Library -->
+<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 800,
+    offset: 120,
+    once: true
+  });
+</script>
+
+<script type="module">
+  import { quotes } from './quotes.js';
+
+  const quoteText = document.getElementById('quote-text');
+
+  if (quoteText) {
+    const randomIndex = new Date().getDate() % quotes.length;
+    quoteText.textContent = quotes[randomIndex];
+  }
+</script>
+
+
+    
+</body>
+</html>
+
