@@ -130,7 +130,14 @@
       transition: background-color 0.3s ease;
     }
       
-    
+    button.secondary {
+      background-color: #eb0000;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
     button:hover {
       background-color: #059669;
     }
@@ -177,7 +184,7 @@
 
     <!-- Budget Setup + Logging -->
     <div class="card">
-      <h2>💸 Meal Budget Tracking</h2>
+      <h2>💸 Meal Budget Tracking </h2>
 
       <label for="budget-amount">Set Budget ($):</label>
       <input type="number" id="budget-amount" placeholder="Enter budget">
@@ -194,7 +201,10 @@
       <input type="number" id="meal-cost" placeholder="Enter meal cost">
       <button id="log-meal-cost">Log Cost</button>
 
-      <h3>Budget Overview</h3>
+      <h3>Budget Overview<sup style="color: red;"></sup></h3>
+  <p style="font-size: 0.8em; margin-top: 5px;">
+    <span style="color: red;">*</span>Below is a key of how data is logged.
+  </p>
       <p><strong>Budget:</strong> $<span id="budget-value">0</span></p>
       <p><strong>Total Spent:</strong> $<span id="total-spent">0</span></p>
       <p><strong>Remaining Budget:</strong> $<span id="remaining-budget">0</span></p>
@@ -212,7 +222,7 @@
       <input type="date" id="budget-end-date">
 
       <button id="filter-budget">Filter Budget</button>
-      <button id="reset-budget">Reset</button>
+      <button id="reset-budget" class="end-btn">Reset</button>
 
       <h3>Meal Expenses</h3>
       <ul id="budget-history-list">

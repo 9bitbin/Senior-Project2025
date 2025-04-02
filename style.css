@@ -247,6 +247,16 @@ body {
 
 /* 🔹 Buttons */
 button {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin-top: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button.secondary{
     background: #ff0000;
     color: white;
     border: none;
