@@ -1,0 +1,1132 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Centering container */
+.container {
+    width: 100%;
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #f4f4f4;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form styling */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* Social Media Icons */
+.media-icons {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.icon {
+    font-size: 24px;
+    margin: 0 10px;
+    color: #444;
+    cursor: pointer;
+}
+
+.icon:hover {
+    color: #007bff;
+}
+
+/* Toggle text */
+#toggleText {
+    margin-top: 10px;
+}
+
+#toggleText a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+#toggleText a:hover {
+    text-decoration: underline;
+}
+
+/* Logout Button */
+#logoutBtn {
+    background: red;
+}
+
+#logoutBtn:hover {
+    background: darkred;
+}
+
+#calorieChart {
+    max-width: 100%;
+    height: 300px !important;
+}
+#macroChart {
+    max-width: 100%;
+    height: 300px !important;
+}
+
+#recipe-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+#recipeInput {
+    width: 80%;
+    padding: 8px;
+    margin-right: 5px;
+}
+
+#getRecipeBtn {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.recipe-card {
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 10px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#recipe-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+#recipeInput {
+    width: 80%;
+    padding: 8px;
+    margin-right: 5px;
+}
+
+#getRecipeBtn {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.recipe-card {
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 10px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.post {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.comments-section {
+    margin-top: 10px;
+}
+
+.comments-section input {
+    width: 80%;
+    padding: 5px;
+}
+
+.comments-section button {
+    padding: 5px;
+    cursor: pointer;
+}
+
+/* 🔹 General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+/* 🔹 Containers */
+.container {
+    background: white;
+    padding: 20px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    text-align: left;
+}
+
+/* 🔹 Community Feed Card */
+.post {
+    background: #ffffff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 🔹 Profile Section */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+}
+
+/* 🔹 Post Header */
+.post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.post p {
+    margin: 5px 0;
+}
+
+/* 🔹 Buttons */
+button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin-top: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* 🔹 Like Button */
+.like-btn {
+    background: #ffcc00;
+    color: black;
+}
+
+.like-btn:hover {
+    background: #e6b800;
+}
+
+/* 🔹 Comment Section */
+.comments-section {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+}
+
+.comments-section input {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* 🔹 General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    background: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 🔹 Community Feed */
+.post {
+    background: #ffffff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    position: relative;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.post h4 {
+    margin: 5px 0;
+}
+
+/* 🔹 Color-Coded Post Types */
+.post[data-type="MEAL"] {
+    border-left: 5px solid #ff9800;
+}
+
+.post[data-type="WORKOUT"] {
+    border-left: 5px solid #4caf50;
+}
+
+.post[data-type="ACHIEVEMENT"] {
+    border-left: 5px solid #2196f3;
+}
+
+/* 🔹 Like & Comment Buttons */
+.like-btn, .comment-btn {
+    background: #ffcc00;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 5px;
+    transition: background 0.3s;
+}
+
+.like-btn:hover {
+    background: #ffb300;
+}
+
+.comment-btn {
+    background: #007bff;
+    color: white;
+}
+
+.comment-btn:hover {
+    background: #0056b3;
+}
+
+/* 🔹 Comment Section */
+.comments-section {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.comments-section input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* 🔹 Delete Button */
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+}
+
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* 🔹 General Layout */
+body {
+    background-color: #f4f4f4;
+    color: #333;
+    text-align: center;
+    padding: 20px;
+}
+
+/* 🔹 Containers */
+.container {
+    max-width: 600px;
+    background: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 🔹 Community Feed */
+#communityFeed {
+    margin-top: 20px;
+}
+
+/* 🔹 Individual Post */
+.post {
+    background: #ffffff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    position: relative;
+    border-left: 5px solid #ddd;
+    transition: transform 0.2s;
+}
+
+.post:hover {
+    transform: scale(1.02);
+}
+
+/* 🔹 Profile & Post Header */
+.post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+}
+
+.post h4 {
+    margin: 5px 0;
+}
+
+/* 🔹 Color-Coded Post Types */
+.post[data-type="MEAL"] {
+    border-left: 5px solid #ff9800;
+}
+
+.post[data-type="WORKOUT"] {
+    border-left: 5px solid #4caf50;
+}
+
+.post[data-type="ACHIEVEMENT"] {
+    border-left: 5px solid #2196f3;
+}
+
+/* 🔹 Like & Comment Buttons */
+.like-btn, .comment-btn, .delete-btn {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: background 0.3s ease;
+}
+
+.like-btn {
+    background: #ffcc00;
+    color: black;
+}
+
+.like-btn:hover {
+    background: #ffb300;
+}
+
+.comment-btn {
+    background: #007bff;
+    color: white;
+}
+
+.comment-btn:hover {
+    background: #0056b3;
+}
+
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+    float: right;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+}
+
+/* 🔹 Comment Section */
+.comments-section {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.comments-section input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* 🔹 Share Post Section */
+#postContent {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: none;
+}
+
+#sharePostBtn {
+    width: 100%;
+    margin-top: 10px;
+    background: #007bff;
+    color: white;
+}
+
+#sharePostBtn:hover {
+    background: #0056b3;
+}
+
+/* 🔹 Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+    }
+
+    .post {
+        width: 100%;
+    }
+}
+.chart-container {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.chart-container canvas {
+    max-width: 100%;
+    height: 300px !important;
+}
+
+/* 🔹 Sidebar Styles */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 220px;
+    background: #2c3e50;
+    color: white;
+    padding-top: 20px;
+}
+
+.sidebar h2 {
+    text-align: center;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    padding: 15px;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar ul li span {
+    margin-right: 10px;
+}
+
+.sidebar ul li:hover,
+.sidebar ul li.active {
+    background: #34495e;
+}
+
+/* 🔹 Main Content Area */
+.main-content {
+    margin-left: 240px;
+    padding: 20px;
+}
+
+/* 🔹 Hide sections except active */
+.content-section {
+    display: none;
+}
+
+.content-section.active {
+    display: block;
+}
+
+/* 🔹 Fasting Tracker Container */
+.fasting-tracker {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 500px;
+    margin: auto;
+}
+
+/* 🔹 Center Timer Text */
+.fasting-timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin: 15px 0;
+}
+
+/* 🔹 Make Timer Compact */
+.fasting-timer-container span {
+    display: inline-block;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* 🔹 Fasting Buttons */
+.start-btn, .end-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font-size: 1.2rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-top: 8px;
+    transition: background 0.3s ease;
+}
+
+.start-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.start-btn:hover {
+    background-color: #45a049;
+}
+
+.end-btn {
+    background-color: #E53935;
+    color: white;
+}
+
+.end-btn:hover {
+    background-color: #c62828;
+}
+
+/* 🔹 Status Message */
+#fasting-status {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* 🔹 Fasting History */
+#fasting-history {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+}
+
+#fasting-history li {
+    background: #f9f9f9;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+
+.sidebar {
+    width: 220px;
+    height: 100vh;
+    background: #d8f3dc; /* 🌿 light pastel green */
+    color: black;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: 20px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: black;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    padding: 12px 20px;
+}
+
+.sidebar ul li a {
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    transition: background 0.3s ease, padding-left 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background: #b7e4c7; /* 💚 hover shade of green */
+    padding-left: 25px;
+    border-radius: 6px;
+}
+
+.sidebar {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+/* Container alignment */
+.container {
+    background: white;
+    padding: 30px;
+    margin: 30px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    max-width: 800px;
+    width: 100%;
+  }
+  
+  textarea {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    resize: vertical;
+  }
+  
+  select, input[type="checkbox"] {
+    margin: 10px 0;
+  }
+  
+  #sharePostBtn {
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+  
+  #sharePostBtn:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Posts */
+  .post-card {
+    background: #f8f9fa;
+    border-left: 5px solid #0d6efd;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  
+  .post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .post-type {
+    font-weight: bold;
+    color: #0d6efd;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+  
+  .post-timestamp {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .post-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  
+  .post-user img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+  
+  .comment-section {
+    margin-top: 10px;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .comment-section input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+  .comment-section button {
+    background: #007bff;
+    color: white;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-top: 5px;
+  }
+  
+  .comment-section button:hover {
+    background: #0056b3;
+  }
+
+  
+  /* Recipe Main Section */
+#recipe-section, #saved-recipes-section {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin: 40px auto;
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  #recipeInput {
+    width: 80%;
+    padding: 10px;
+    margin: 12px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+  
+  #recipe-section button {
+    padding: 10px 18px;
+    margin: 6px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  #recipe-section button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Saved Recipes Layout */
+  .recipe-card {
+    background: #f9f9f9;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .recipe-card img {
+    width: 160px;
+    height: auto;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+  
+  .recipe-content {
+    flex-grow: 1;
+    text-align: left;
+  }
+  
+  .recipe-content h3 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    color: #333;
+  }
+  
+  .recipe-content p {
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 10px;
+  }
+  
+  .recipe-card button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .recipe-card button:hover {
+    background-color: #c82333;
+  }
+  
+  #authForm {
+    background: #ffffff;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    width: 350px;
+    margin: 100px auto;
+    text-align: center;
+  }
+  
+  #authForm h1 {
+    margin-bottom: 20px;
+  }
+  
+  #authForm input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+  
+  #authBtn {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    font-weight: bold;
+    border-radius: 6px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  #authBtn:hover {
+    background: #0056b3;
+  }
+  
+  #toggleText {
+    margin-top: 16px;
+  }
+  
+  #toggleText a {
+    color: #007bff;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  
+  #toggleText a:hover {
+    text-decoration: underline;
+  }
+
+  /* Reset & Fonts */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body, input, button {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* 🔹 Auth Background */
+  .auth-body {
+    background: linear-gradient(135deg, #f2f9f7, #dbeafe);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* 🔹 Auth Container */
+  .auth-container {
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+  }
+  
+  /* 🔹 Auth Card */
+  .auth-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(15px);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    text-align: center;
+  }
+  
+  .auth-card h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #1e293b;
+  }
+  
+  .auth-card .subtext {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 30px;
+  }
+  
+  /* 🔹 Input Fields */
+  .auth-card input {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    font-size: 15px;
+    transition: border 0.2s;
+  }
+  
+  .auth-card input:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+  
+  /* 🔹 Button */
+  .auth-card button {
+    width: 100%;
+    padding: 12px;
+    background-color: #3b82f6;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background 0.3s ease;
+  }
+  
+  .auth-card button:hover {
+    background-color: #2563eb;
+  }
+  
+  /* 🔹 Toggle Text */
+  #toggleText {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #64748b;
+  }
+  
+  #toggleText a {
+    color: #3b82f6;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  #toggleText a:hover {
+    text-decoration: underline;
+  }
+  

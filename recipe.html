@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vidia - Recipes</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
+      display: flex;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #d8f3dc;
+      height: 100vh;
+      position: fixed;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 10px 20px;
+    }
+
+    .sidebar ul li a {
+      text-decoration: none;
+      font-weight: bold;
+      color: black;
+      display: block;
+      transition: all 0.3s;
+    }
+
+    .sidebar ul li a:hover {
+      background: #b7e4c7;
+      border-radius: 6px;
+      padding-left: 25px;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 40px;
+      width: calc(100% - 220px);
+    }
+
+    #recipe-section, #saved-recipes-section {
+      background-color: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+      margin-bottom: 40px;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #111;
+      text-align: center;
+    }
+
+    #recipeInput {
+      width: 60%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 12px 16px;
+      margin-left: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      background-color: #10b981;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #059669;
+    }
+
+    .recipe-card {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      background-color: #f9fafb;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .recipe-card img {
+      width: 220px;
+      height: auto;
+      border-radius: 10px;
+      margin-right: 20px;
+    }
+
+    .recipe-info {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .recipe-info p {
+      margin: 8px 0;
+      line-height: 1.5;
+    }
+
+    .recipe-info a {
+      color: #10b981;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+
+    .recipe-info a:hover {
+      color: #059669;
+    }
+
+    .recipe-card button {
+      margin-top: 15px;
+      background-color: #3b82f6;
+    }
+
+    .recipe-card button:hover {
+      background-color: #2563eb;
+    }
+
+    .no-recipes {
+      font-style: italic;
+      color: gray;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>VIDIA</h2>
+  <ul>
+    <li><a href="home.html">🏠 Dashboard</a></li>
+    <li><a href="profile.html">👤 Profile</a></li>
+    <li><a href="nutrition.html">🍎 Nutrition & Meals</a></li>
+    <li><a href="budget.html">💰 Budget</a></li>
+    <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
+    <li><a href="index.html">🚪 Logout</a></li>
+    <li><a href="fasting.html">⏳ Fasting</a></li>
+    <li><a href="recipe.html">📖 Recipes</a></li>
+    <li><a href="community.html">🌍 Community</a></li>
+       <!-- <li><a href="ai-meals.html">🤖 AI Meals</a></li>
+        <li><a href="ai-advice.html">🧠 AI Advisor</a></li>-->
+  </ul>
+</div>
+
+<!-- Main Section -->
+<div class="main-content">
+  <div id="recipe-section">
+    <h2>Find Recipes</h2>
+    <input type="text" id="recipeInput" placeholder="Enter a dish (e.g., Chicken)">
+    <button id="getRecipeBtn">Get Recipes</button>
+    <button id="getRandomRecipeBtn">Surprise Me!</button>
+    <div id="recipeResults" class="results-container"></div>
+  </div>
+
+  <div id="saved-recipes-section">
+    <h2>Saved Recipes</h2>
+    <div id="savedRecipes" class="results-container">
+      <p class="no-recipes">No saved recipes found.</p>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="firebase-config.js"></script>
+<script type="module" src="recipe.js"></script>
+
+</body>
+</html>
