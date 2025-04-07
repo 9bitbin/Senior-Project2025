@@ -96,7 +96,7 @@ fetchExerciseBtn.addEventListener("click", async () => {
         <strong>Estimated Calories:</strong> ${calories} kcal (10 min)
       </li>
     `;
-  }).join("") + `<br><button id="log-workout-confirm" class="log-btn">✅ Log This Workout</button>`;
+  }) .join("") + `<br><button id="log-workout-confirm" class="log-btn"></button>`;
 
   document.getElementById("log-workout-confirm").addEventListener("click", () => {
     saveWorkoutToFirestore(type, currentExercises);
