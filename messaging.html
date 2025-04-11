@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vidia - Messaging</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #d8f3dc;
+      padding-top: 20px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 22px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 10px 20px;
+    }
+
+    .sidebar ul li a {
+      text-decoration: none;
+      font-weight: bold;
+      color: black;
+      display: block;
+      transition: all 0.3s;
+    }
+
+    .sidebar ul li a:hover {
+      background: #b7e4c7;
+      border-radius: 6px;
+      padding-left: 25px;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      width: calc(100% - 220px);
+      display: flex;
+      height: 100vh;
+    }
+
+    .chat-sidebar {
+      width: 280px;
+      background: #ffffffd9;
+      padding: 20px;
+      border-right: 1px solid #ccc;
+      overflow-y: auto;
+    }
+
+    .chat-sidebar h3 {
+      margin-top: 0;
+    }
+
+    .user-item {
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-bottom: 10px;
+    }
+
+    .user-item:hover, .user-item.active {
+      background-color: #bbf7d0;
+    }
+
+    .chat-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      background: #f0fdf4;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+      margin-bottom: 15px;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .message .bubble {
+      max-width: 60%;
+      padding: 12px;
+      border-radius: 12px;
+      background: #10b981;
+      color: white;
+      word-wrap: break-word;
+    }
+
+    .message.user .bubble {
+      background: #059669;
+      margin-left: auto;
+    }
+
+    .message.ai .bubble {
+      background: #10b981;
+      margin-right: auto;
+    }
+
+    .chat-input {
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .chat-input button {
+      padding: 12px 20px;
+      background-color: #10b981;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .chat-input button:hover {
+      background-color: #047857;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <h2>VIDIA</h2>
+    <ul>
+      <li><a href="home.html">🏠 Dashboard</a></li>
+      <li><a href="profile.html">👤 Profile</a></li>
+      <li><a href="nutrition.html">🍎 Nutrition</a></li>
+      <li><a href="budget.html">💰 Budget</a></li>
+      <li><a href="exercise.html">🏋️ Exercise</a></li>
+      <li><a href="fasting.html">⏳ Fasting</a></li>
+      <li><a href="recipe.html">📖 Recipes</a></li>
+      <li><a href="community.html">🌍 Community</a></li>
+      <li><a href="ai-meals.html">🤖 AI Meals</a></li>
+      <li><a href="ai-advice.html">🧠 AI Advisor</a></li>
+      <li><a href="weight.html">⚖️ Weight</a></li>
+      <li><a href="messaging.html">💬 Messaging</a></li>
+      <li><a href="index.html">🚪 Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Messaging UI -->
+  <div class="main-content">
+    <div class="chat-sidebar">
+      <h3>📬 Chats</h3>
+      <div id="user-list">
+        <p>Loading users...</p>
+      </div>
+    </div>
+
+    <div class="chat-window">
+      <div class="messages" id="chat-messages">
+        <p>Select a conversation to begin.</p>
+      </div>
+
+      <div class="chat-input">
+        <input type="text" id="chat-input" placeholder="Type a message...">
+        <button id="send-btn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="messaging.js"></script>
+</body>
+</html>

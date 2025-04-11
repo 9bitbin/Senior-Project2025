@@ -9,7 +9,7 @@ const userInput = document.getElementById("user-input");
 const chatOutput = document.getElementById("chat-output");
 const voiceStatus = document.getElementById("voice-status");
 
-const API_KEY = "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";
+const API_KEY = "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";
 
 let userContext = "User profile not available yet.";
 
