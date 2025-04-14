@@ -141,6 +141,30 @@
       color: #666;
       font-size: 12px;
     }
+
+    .search-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #searchUser {
+      padding: 10px 15px;
+      width: 60%;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    #clearSearchBtn {
+      margin-left: 10px;
+      padding: 10px 16px;
+      background-color: #f87171;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -155,16 +179,17 @@
     <li><a href="budget.html">💰 Budget</a></li>
     <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
     <li><a href="index.html">🚪 Logout</a></li>
-    <!--<li><a href="fasting.html">⏳ Fasting</a></li>
-        <li><a href="recipe.html">📖 Recipes</a></li>
-        <li><a href="community.html">🌍 Community</a></li>
-        <li><a href="ai-meals.html">🤖 AI Meals</a></li>
-        <li><a href="ai-advice.html">🧠 AI Advisor</a></li>-->
   </ul>
 </div>
 
 <!-- Main Content -->
 <div class="main-content">
+
+  <!-- 🔍 Username Search Bar -->
+  <div class="search-container">
+    <input type="text" id="searchUser" placeholder="Search by username..." />
+    <button id="clearSearchBtn">Clear</button>
+  </div>
 
   <!-- 🔹 Share Your Progress -->
   <div class="card" data-aos="fade-up">
