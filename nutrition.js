@@ -260,7 +260,7 @@ if (aiBtn) {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": "Bearer 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", // Replace with your OpenRouter key
+          "Authorization": "Bearer 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", // Replace with your OpenRouter key
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
