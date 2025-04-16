@@ -247,4 +247,70 @@ document.getElementById("download-fasting")?.addEventListener("click", async () 
     a.remove();
     URL.revokeObjectURL(url);
   });
+
+// Water tracking functionality
+let waterIntake = 0;
+const maxWaterIntake = 2000; // 2L daily goal
+
+function addWater(amount) {
+    waterIntake += amount;
+    document.getElementById('water-intake').textContent = waterIntake;
+    
+    // Update progress bar
+    const progress = (waterIntake / maxWaterIntake) * 100;
+    document.getElementById('water-progress-fill').style.setProperty('--progress', `${Math.min(progress, 100)}%`);
+    
+    // Save to Firebase
+    const userId = auth.currentUser.uid;
+    const today = new Date().toISOString().split('T')[0];
+    
+    const waterRef = ref(database, `users/${userId}/waterIntake/${today}`);
+    set(waterRef, waterIntake);
+}
+
+// Mood tracking functionality
+function trackMood(mood) {
+    const userId = auth.currentUser.uid;
+    const timestamp = new Date().toISOString();
+    
+    const moodRef = ref(database, `users/${userId}/moods/${timestamp}`);
+    set(moodRef, {
+        mood: mood,
+        timestamp: timestamp,
+        fastingActive: fastingActive // Assuming you have this variable from fasting tracker
+    });
+
+    // Visual feedback
+    const buttons = document.querySelectorAll('.mood-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // Show confirmation
+    Swal.fire({
+        icon: 'success',
+        title: 'Mood Tracked!',
+        text: `You're feeling ${mood}`,
+        timer: 1500,
+        showConfirmButton: false
+    });
+}
+
+// Add this to your window load or initialization code
+window.addEventListener('load', () => {
+    // Load today's water intake
+    const userId = auth.currentUser?.uid;
+    if (userId) {
+        const today = new Date().toISOString().split('T')[0];
+        const waterRef = ref(database, `users/${userId}/waterIntake/${today}`);
+        
+        get(waterRef).then((snapshot) => {
+            if (snapshot.exists()) {
+                waterIntake = snapshot.val();
+                document.getElementById('water-intake').textContent = waterIntake;
+                const progress = (waterIntake / maxWaterIntake) * 100;
+                document.getElementById('water-progress-fill').style.setProperty('--progress', `${Math.min(progress, 100)}%`);
+            }
+        });
+    }
+});
   
