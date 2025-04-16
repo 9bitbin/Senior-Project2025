@@ -1,6 +1,6 @@
 import { db, auth } from "./firebase-config.js";
 import { 
-    collection, addDoc, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, getDoc, onSnapshot 
+    collection, addDoc, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, getDoc, onSnapshot, where 
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
 // 🔹 Select Elements
@@ -9,11 +9,18 @@ const sharePostBtn = document.getElementById("sharePostBtn");
 const postContent = document.getElementById("postContent");
 const postType = document.getElementById("postType");
 const anonymousCheck = document.getElementById("anonymousCheck");
+const searchUserInput = document.getElementById("searchUser");
+const clearSearchBtn = document.getElementById("clearSearchBtn");
 
 // ✅ Listen for real-time updates & auto-refresh posts
-function listenForPosts() {
+function listenForPosts(searchQuery = '') {
     const postsRef = collection(db, "sharedPosts");
-    const q = query(postsRef, orderBy("timestamp", "desc"));
+
+    // If a search query is provided, filter the posts by username
+    let q = query(postsRef, orderBy("timestamp", "desc"));
+    if (searchQuery) {
+        q = query(postsRef, orderBy("timestamp", "desc"), where("username", "==", searchQuery));
+    }
 
     onSnapshot(q, (snapshot) => {
         postsContainer.innerHTML = ""; // Clear the feed
@@ -93,7 +100,8 @@ sharePostBtn.addEventListener("click", async () => {
             anonymous: anonymousCheck.checked,
             timestamp: new Date(),
             likes: [],
-            comments: []
+            comments: [],
+            username: user.displayName || user.email.split("@")[0] // Storing the username for search
         });
 
         postContent.value = ""; // Clear input field
@@ -161,4 +169,14 @@ async function deletePost(postId) {
 // ✅ Start real-time updates
 listenForPosts();
 
+// ✅ Search Functionality
+searchUserInput.addEventListener("input", (e) => {
+    const searchQuery = e.target.value.trim().toLowerCase();
+    listenForPosts(searchQuery); // Refresh the posts with the search query
+});
 
+// ✅ Clear search functionality
+clearSearchBtn.addEventListener("click", () => {
+    searchUserInput.value = "";
+    listenForPosts(); // Clear search and refresh all posts
+});
