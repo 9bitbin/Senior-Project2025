@@ -123,6 +123,7 @@
       font-size: 20px;
       font-weight: 600;
       margin-bottom: 10px;
+      justify-content: center;
     }
 
     .bmi-bar-wrapper {
@@ -130,6 +131,7 @@
   max-width: 500px;
   margin-top: 20px;
   position: relative;
+  justify-self: center;
 }
 
 .bmi-bar {
@@ -222,12 +224,17 @@
         <canvas id="workoutChart"></canvas>
       </div>
 
-  <div class="chart-container" data-aos="fade-up">
-    <h3>Spending vs. Budget</h3>
-    <canvas id="budgetChart"></canvas>
-  </div>
-</div>
+      <div class="chart-container" data-aos="fade-up" style="display: none;">
+        <h3>Spending vs. Budget</h3>
+        <canvas id="budgetChart"></canvas>
+      </div>
 
+      <!-- 🔹 Budget Pie Chart Section -->
+      <div class="chart-container" data-aos="fade-up">
+        <h3>Budget: Spent vs Remaining</h3>
+        <canvas id="budgetPieChart"></canvas>
+      </div>
+    </div>
 
     <!-- BMI Section -->
     <div class="card">
