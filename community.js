@@ -1,6 +1,6 @@
 import { db, auth } from "./firebase-config.js";
-import { 
-    collection, addDoc, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, getDoc, onSnapshot 
+import {
+    collection, addDoc, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, getDoc, getDocs, onSnapshot, where
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
 // 🔹 Select Elements
@@ -9,11 +9,18 @@ const sharePostBtn = document.getElementById("sharePostBtn");
 const postContent = document.getElementById("postContent");
 const postType = document.getElementById("postType");
 const anonymousCheck = document.getElementById("anonymousCheck");
+const searchUserInput = document.getElementById("searchUser");
+const clearSearchBtn = document.getElementById("clearSearchBtn");
 
 // ✅ Listen for real-time updates & auto-refresh posts
-function listenForPosts() {
+function listenForPosts(searchQuery = '') {
     const postsRef = collection(db, "sharedPosts");
-    const q = query(postsRef, orderBy("timestamp", "desc"));
+
+    // If a search query is provided, filter the posts by username
+    let q = query(postsRef, orderBy("timestamp", "desc"));
+    if (searchQuery) {
+        q = query(postsRef, orderBy("timestamp", "desc"), where("username", "==", searchQuery));
+    }
 
     onSnapshot(q, (snapshot) => {
         postsContainer.innerHTML = ""; // Clear the feed
@@ -32,8 +39,8 @@ function renderPost(postId, post) {
     const likeButtonText = userLiked ? "Unlike 👍" : "Like 👍";
 
     // Generate avatar
-    const avatarUrl = post.anonymous 
-        ? "https://i.pravatar.cc/40?u=anonymous" 
+    const avatarUrl = post.anonymous
+        ? "https://i.pravatar.cc/40?u=anonymous"
         : `https://i.pravatar.cc/40?u=${post.userId}`;
 
     const postElement = document.createElement("div");
@@ -93,7 +100,8 @@ sharePostBtn.addEventListener("click", async () => {
             anonymous: anonymousCheck.checked,
             timestamp: new Date(),
             likes: [],
-            comments: []
+            comments: [],
+            username: user.displayName || user.email.split("@")[0] // Storing the username for search
         });
 
         postContent.value = ""; // Clear input field
@@ -161,4 +169,73 @@ async function deletePost(postId) {
 // ✅ Start real-time updates
 listenForPosts();
 
+// ✅ Search Functionality
+searchUserInput.addEventListener("input", (e) => {
+    const searchQuery = e.target.value.trim().toLowerCase();
+    //listenForPosts(searchQuery); // Refresh the posts with the search query
+});
+
+// ✅ Clear search functionality
+clearSearchBtn.addEventListener("click", () => {
+    const inputField = document.getElementById("searchUser");
+    const output = document.querySelector(".search-container p");
+
+    //searchUserInput.value = "";
+    inputField.value = "";
+    output.textContent = "";
+    followBtn.style.display = "none";
+
+    listenForPosts(); // Clear search and refresh all posts
+});
+
+let searchedUserId = null; // store the found user's ID
+
+document.getElementById("searchBtn").addEventListener("click", async function () {
+    const input = document.getElementById("searchUser").value.trim();
+    const output = document.querySelector(".search-container p");
+    const followBtn = document.getElementById("followBtn");
+
+    followBtn.style.display = "none";
+    searchedUserId = null; // reset on each search
+
+    if (!input) {
+        output.textContent = "Please enter a username.";
+        return;
+    }
+
+    try {
+        const userRef = collection(db, "users");
+        const q = query(userRef, where("name", "==", input));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const docSnap = querySnapshot.docs[0];
+            searchedUserId = docSnap.id; // save found user's ID
+            output.textContent = `${input} found`;
+            followBtn.style.display = "inline-block";
+        } else {
+            output.textContent = `${input} not found`;
+        }
+    } catch (error) {
+        console.error("Error searching Firestore:", error);
+        output.textContent = "Error searching for user.";
+    }
+});
+
+document.getElementById("followBtn").addEventListener("click", async () => {
+    if (!searchedUserId || !auth.currentUser) return;
+
+    const currentUserId = auth.currentUser.uid;
+    const currentUserRef = doc(db, "users", currentUserId);
+
+    try {
+        await updateDoc(currentUserRef, {
+            friends: arrayUnion(searchedUserId) // adds the user to friends array
+        });
+        alert("New friend added successfully!");
+    } catch (error) {
+        console.error("Error adding friend:", error);
+        alert("Failed to add user.");
+    }
+});
 

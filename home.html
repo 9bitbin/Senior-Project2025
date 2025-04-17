@@ -178,14 +178,10 @@
       <li><a href="nutrition.html">🍎 Nutrition & Meals</a></li>
       <li><a href="budget.html">💰 Budget</a></li>
       <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
-      <li><a href="index.html">🚪 Logout</a></li>
       <li><a href="fasting.html">⏳ Fasting</a></li>
-      <li><a href="recipe.html">📖 Recipes</a></li>
-      <li><a href="community.html">🌍 Community</a></li>
-        <!--<li><a href="ai-meals.html">🤖 AI Meals</a></li>
-        <li><a href="ai-advice.html">🧠 AI Advisor</a></li>-->
-      
-      
+        <li><a href="recipe.html">📖 Recipes</a></li>
+        <li><a href="community.html">🌍 Community</a></li>
+        <li><a href="index.html">🚪 Logout</a></li>
     </ul>
   </div>
 
@@ -202,70 +198,60 @@
     </div>
 
     <!-- 🔹 Daily Health Tip Section -->
-<div class="card" id="daily-quote-card" data-aos="fade-up">
-  <h2>💡 Daily Health Tip</h2>
-  <p id="quote-text">Loading your tip...</p>
-</div>
-
+    <div class="card" id="daily-quote-card" data-aos="fade-up">
+      <h2>💡 Daily Health Tip</h2>
+      <p id="quote-text">Loading your tip...</p>
+    </div>
 
     <!-- Overview Section -->
-    <!-- 🔹 Dashboard Charts -->
-<div class="card" data-aos="fade-up">
-  <h2>📊 Health & Finance Overview</h2>
+    <div class="card" data-aos="fade-up">
+      <h2>📊 Health & Finance Overview</h2>
+
+      <div class="chart-container" data-aos="fade-up">
+        <h3>Calories: Intake vs. Burned</h3>
+        <canvas id="caloriesChart"></canvas>
+      </div>
+
+      <div class="chart-container" data-aos="fade-up">
+        <h3>Macronutrient Breakdown</h3>
+        <canvas id="macroChart"></canvas>
+      </div>
+
+      <div class="chart-container" data-aos="fade-up">
+        <h3>Weekly Workout Summary</h3>
+        <canvas id="workoutChart"></canvas>
+      </div>
 
   <div class="chart-container" data-aos="fade-up">
-    <h3>Calories: Intake vs. Burned</h3>
-    <canvas id="caloriesChart"></canvas>
-  </div>
-
-  <div class="chart-container" data-aos="fade-up">
-    <h3>Macronutrient Breakdown</h3>
-    <canvas id="macroChart"></canvas>
-  </div>
-
-  <div class="chart-container" data-aos="fade-up">
-    <h3>Weekly Workout Summary</h3>
-    <canvas id="workoutChart"></canvas>
-  </div>
-
-  <div class="chart-container" data-aos="fade-up" style="display: none;">
     <h3>Spending vs. Budget</h3>
     <canvas id="budgetChart"></canvas>
   </div>
-  
 </div>
 
 
     <!-- BMI Section -->
-<div class="card">
-  <h2 class="section-title">📏 Your BMI</h2>
-  <p><strong>BMI Value:</strong> <span id="bmi-value">Calculating...</span></p>
-  <p><strong>Category:</strong> <span id="bmi-category">Calculating...</span></p>
-  <p id="bmi-message"></p>
+    <div class="card">
+      <h2 class="section-title">📏 Your BMI</h2>
+      <p><strong>BMI Value:</strong> <span id="bmi-value">Calculating...</span></p>
+      <p><strong>Category:</strong> <span id="bmi-category">Calculating...</span></p>
+      <p id="bmi-message"></p>
 
-  <!-- 🔹 BMI Visual Bar -->
-  <div class="bmi-bar-wrapper">
-    <div class="bmi-bar">
-      <div class="bmi-zone underweight">Under</div>
-      <div class="bmi-zone normal">Normal</div>
-      <div class="bmi-zone overweight">Over</div>
-      <div class="bmi-zone obese">Obese</div>
-      <div id="bmi-pointer">▼</div>
+      <!-- 🔹 BMI Visual Bar -->
+      <div class="bmi-bar-wrapper">
+        <div class="bmi-bar">
+          <div class="bmi-zone underweight">Under</div>
+          <div class="bmi-zone normal">Normal</div>
+          <div class="bmi-zone overweight">Over</div>
+          <div class="bmi-zone obese">Obese</div>
+          <div id="bmi-pointer">▼</div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
+    <!-- DO NOT TOUCH THIS SECTION -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="dashboard.js"></script>
 
-
-
-// DO NOT TOUCH THIS SECTION 
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="dashboard.js"></script>
-
-
-
-
-  
     <script type="module" src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="bmi.js"></script>
@@ -279,64 +265,57 @@
     <script type="module" src="fasting.js"></script>
 
     <script type="module">
-        import { auth, db } from "./firebase-config.js";
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+      import { auth, db } from "./firebase-config.js";
+      import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+      import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-        const userInfo = document.getElementById("user-info");
-        const logoutBtn = document.getElementById("logoutBtn");
-        const weightEl = document.getElementById("user-weight");
-        const heightEl = document.getElementById("user-height");
+      const userInfo = document.getElementById("user-info");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const weightEl = document.getElementById("user-weight");
+      const heightEl = document.getElementById("user-height");
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userInfo.innerText = `Welcome, ${user.email}`;
+      onAuthStateChanged(auth, async (user) => {
+          if (user) {
+              userInfo.innerText = `Welcome, ${user.email}`;
 
-                const userDocRef = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userDocRef);
+              const userDocRef = doc(db, "users", user.uid);
+              const userDoc = await getDoc(userDocRef);
 
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    weightEl.innerText = data.weight || "N/A";
-                    heightEl.innerText = data.height || "N/A";
-                } else {
-                    weightEl.innerText = "N/A";
-                    heightEl.innerText = "N/A";
-                }
-            } else {
-                window.location.href = "index.html";
-            }
-        });
-
-        
+              if (userDoc.exists()) {
+                  const data = userDoc.data();
+                  weightEl.innerText = data.weight || "N/A";
+                  heightEl.innerText = data.height || "N/A";
+              } else {
+                  weightEl.innerText = "N/A";
+                  heightEl.innerText = "N/A";
+              }
+          } else {
+              window.location.href = "index.html";
+          }
+      });
     </script>
 
-// DO NOT TOUCH 
+    <!-- AOS Library -->
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script>
+      AOS.init({
+        duration: 800,
+        offset: 120,
+        once: true
+      });
+    </script>
 
-<!-- AOS Library -->
-<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-<script>
-  AOS.init({
-    duration: 800,
-    offset: 120,
-    once: true
-  });
-</script>
+    <script type="module">
+      import { quotes } from './quotes.js';
 
-<script type="module">
-  import { quotes } from './quotes.js';
+      const quoteText = document.getElementById('quote-text');
 
-  const quoteText = document.getElementById('quote-text');
-
-  if (quoteText) {
-    const randomIndex = new Date().getDate() % quotes.length;
-    quoteText.textContent = quotes[randomIndex];
-  }
-</script>
-
-
+      if (quoteText) {
+        const randomIndex = new Date().getDate() % quotes.length;
+        quoteText.textContent = quotes[randomIndex];
+      }
+    </script>
     
 </body>
 </html>
-
