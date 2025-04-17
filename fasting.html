@@ -113,12 +113,14 @@
           <h4>⏰ Eating Window</h4>
           <div class="time-inputs">
               <div class="time-input-group">
-                  <label>Start Time</label>
-                  <input type="time" id="eating-start-time">
-              </div>
-              <div class="time-input-group">
-                  <label>End Time</label>
-                  <input type="time" id="eating-end-time">
+                  <label>Eating Window Duration</label>
+                  <input type="number" 
+                         id="eating-window" 
+                         min="1" 
+                         max="12" 
+                         value="8" 
+                         step="1">
+                  <span class="unit">hours</span>
               </div>
           </div>
       </div>
@@ -200,6 +202,24 @@
       <p><strong>Status:</strong> <span id="fasting-status">Not Started</span></p>
 
       <h3>📜 Fasting History</h3>
+      <!-- Add Date Filter Section -->
+      <div class="date-filter-container">
+          <div class="date-filter-inputs">
+              <div class="date-input-group">
+                  <label>Start Date</label>
+                  <input type="date" id="filter-start-date">
+              </div>
+              <div class="date-input-group">
+                  <label>End Date</label>
+                  <input type="date" id="filter-end-date">
+              </div>
+              <div>
+                  <button class="filter-btn">🔍 Filter</button>
+                  <button class="reset-filter-btn">↺ Reset</button>
+              </div>
+          </div>
+      </div>
+
       <ul id="fasting-history">
         <li>Loading fasting history...</li>
       </ul>
