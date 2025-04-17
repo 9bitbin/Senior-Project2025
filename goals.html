@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vidia - Goals</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
+      display: flex;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #d8f3dc;
+      height: 100vh;
+      position: fixed;
+      padding-top: 20px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 22px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 12px 20px;
+    }
+
+    .sidebar ul li a {
+      text-decoration: none;
+      font-weight: bold;
+      color: black;
+      display: block;
+    }
+
+    .sidebar ul li a:hover {
+      background: #b7e4c7;
+      border-radius: 6px;
+      padding-left: 25px;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 40px;
+      width: calc(100% - 220px);
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 30px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      background-color: #10b981;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #059669;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    .ai-box {
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>VIDIA</h2>
+  <ul>
+    <li><a href="home.html">🏠 Dashboard</a></li>
+    <li><a href="profile.html">👤 Profile</a></li>
+    <li><a href="nutrition.html">🍎 Nutrition</a></li>
+    <li><a href="budget.html">💰 Budget</a></li>
+    <li><a href="exercise.html">🏋️ Exercise</a></li>
+    <li><a href="fasting.html">⏳ Fasting</a></li>
+    <li><a href="recipe.html">📖 Recipes</a></li>
+    <li><a href="community.html">🌍 Community</a></li>
+    <li><a href="ai-meals.html">🤖 AI Meals</a></li>
+    <li><a href="ai-advice.html">🧠 AI Advisor</a></li>
+    <li><a href="goals.html">🎯 Goals</a></li>
+    <li><a href="index.html">🚪 Logout</a></li>
+  </ul>
+</div>
+
+<div class="main-content">
+  <div class="card">
+    <h2>🎯 Set a Health Goal</h2>
+    <select id="goal-type">
+      <option value="weight">Lose Weight</option>
+      <option value="calories">Daily Calorie Limit</option>
+      <option value="workoutsPerWeek">Workouts Per Week</option>
+      <option value="fastingDays">Fasting Days Per Week</option>
+    </select>
+    <input type="number" id="goal-target" placeholder="Enter target value" />
+    <input type="date" id="goal-deadline" />
+    <button id="save-goal">Save Goal</button>
+  </div>
+
+  <div class="card">
+    <h2>📋 Your Goals</h2>
+    <table>
+      <thead>
+        <tr><th>Type</th><th>Target</th><th>Deadline</th><th>Status</th></tr>
+      </thead>
+      <tbody id="goal-table">
+        <tr><td colspan="4">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>🧠 AI Goal Coach</h2>
+    <div id="goal-ai-response" class="ai-box">Thinking...</div>
+  </div>
+</div>
+
+<script type="module" src="firebase-config.js"></script>
+<script type="module" src="goal.js"></script>
+
+</body>
+</html>
