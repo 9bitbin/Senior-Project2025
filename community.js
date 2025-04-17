@@ -1,6 +1,6 @@
 import { db, auth } from "./firebase-config.js";
-import { 
-    collection, addDoc, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, getDoc, onSnapshot, where 
+import {
+    collection, addDoc, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, getDoc, getDocs, onSnapshot, where
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
 // 🔹 Select Elements
@@ -39,8 +39,8 @@ function renderPost(postId, post) {
     const likeButtonText = userLiked ? "Unlike 👍" : "Like 👍";
 
     // Generate avatar
-    const avatarUrl = post.anonymous 
-        ? "https://i.pravatar.cc/40?u=anonymous" 
+    const avatarUrl = post.anonymous
+        ? "https://i.pravatar.cc/40?u=anonymous"
         : `https://i.pravatar.cc/40?u=${post.userId}`;
 
     const postElement = document.createElement("div");
@@ -172,11 +172,44 @@ listenForPosts();
 // ✅ Search Functionality
 searchUserInput.addEventListener("input", (e) => {
     const searchQuery = e.target.value.trim().toLowerCase();
-    listenForPosts(searchQuery); // Refresh the posts with the search query
+    //listenForPosts(searchQuery); // Refresh the posts with the search query
 });
 
 // ✅ Clear search functionality
 clearSearchBtn.addEventListener("click", () => {
-    searchUserInput.value = "";
+    const inputField = document.getElementById("searchUser");
+    const output = document.querySelector(".search-container p");
+
+    //searchUserInput.value = "";
+    inputField.value = "";
+    output.textContent = "";
+    followBtn.style.display = "none";
+
     listenForPosts(); // Clear search and refresh all posts
+});
+
+document.getElementById("searchBtn").addEventListener("click", async function () {
+    const input = document.getElementById("searchUser").value.trim();
+    const output = document.querySelector(".search-container p");
+
+    if (!input) {
+        output.textContent = "Please enter a username.";
+        return;
+    }
+
+    try {
+        const userRef = collection(db, "users");
+        const q = query(userRef, where("name", "==", input));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            output.textContent = `${input} found`;
+            followBtn.style.display = "inline-block";
+        } else {
+            output.textContent = `${input} not found`;
+        }
+    } catch (error) {
+        console.error("Error searching Firestore:", error);
+        output.textContent = "Error searching for user.";
+    }
 });
