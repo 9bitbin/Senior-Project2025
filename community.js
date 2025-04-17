@@ -188,9 +188,15 @@ clearSearchBtn.addEventListener("click", () => {
     listenForPosts(); // Clear search and refresh all posts
 });
 
+let searchedUserId = null; // store the found user's ID
+
 document.getElementById("searchBtn").addEventListener("click", async function () {
     const input = document.getElementById("searchUser").value.trim();
     const output = document.querySelector(".search-container p");
+    const followBtn = document.getElementById("followBtn");
+
+    followBtn.style.display = "none";
+    searchedUserId = null; // reset on each search
 
     if (!input) {
         output.textContent = "Please enter a username.";
@@ -203,6 +209,8 @@ document.getElementById("searchBtn").addEventListener("click", async function ()
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
+            const docSnap = querySnapshot.docs[0];
+            searchedUserId = docSnap.id; // save found user's ID
             output.textContent = `${input} found`;
             followBtn.style.display = "inline-block";
         } else {
@@ -213,3 +221,21 @@ document.getElementById("searchBtn").addEventListener("click", async function ()
         output.textContent = "Error searching for user.";
     }
 });
+
+document.getElementById("followBtn").addEventListener("click", async () => {
+    if (!searchedUserId || !auth.currentUser) return;
+
+    const currentUserId = auth.currentUser.uid;
+    const currentUserRef = doc(db, "users", currentUserId);
+
+    try {
+        await updateDoc(currentUserRef, {
+            friends: arrayUnion(searchedUserId) // adds the user to friends array
+        });
+        alert("New friend added successfully!");
+    } catch (error) {
+        console.error("Error adding friend:", error);
+        alert("Failed to add user.");
+    }
+});
+
