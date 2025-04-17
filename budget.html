@@ -129,7 +129,15 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-
+      
+    button.secondary {
+      background-color: #eb0000;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
     button:hover {
       background-color: #059669;
     }
@@ -174,52 +182,76 @@
   <!-- Main Content -->
   <div class="main-content">
 
-    <!-- Budget Setup + Logging -->
-    <div class="card">
-      <h2>💸 Meal Budget Tracking</h2>
-
-      <label for="budget-amount">Set Budget ($):</label>
-      <input type="number" id="budget-amount" placeholder="Enter budget">
-
-      <label for="budget-period">Budget Period:</label>
-      <select id="budget-period">
-        <option value="Daily">Daily</option>
-        <option value="Weekly">Weekly</option>
-        <option value="Monthly">Monthly</option>
-      </select>
-      <button id="set-budget">Set Budget</button>
-
-      <label for="meal-cost">Log Meal Cost ($):</label>
-      <input type="number" id="meal-cost" placeholder="Enter meal cost">
-      <button id="log-meal-cost">Log Cost</button>
-
-      <h3>Budget Overview</h3>
-      <p><strong>Budget:</strong> $<span id="budget-value">0</span></p>
-      <p><strong>Total Spent:</strong> $<span id="total-spent">0</span></p>
-      <p><strong>Remaining Budget:</strong> $<span id="remaining-budget">0</span></p>
-      <p id="budget-alert"></p>
+    <!-- Budget Overview Card -->
+    <div class="card overview-card">
+        <h2>💰 Budget Overview</h2>
+        <div class="budget-stats-grid">
+            <div class="stat-box">
+                <span class="stat-label">Total Budget</span>
+                <span class="stat-value" id="budget-value">$0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Total Spent</span>
+                <span class="stat-value" id="total-spent">$0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Remaining</span>
+                <span class="stat-value" id="remaining-budget">$0</span>
+            </div>
+        </div>
+        <p id="budget-alert" class="budget-alert"></p>
     </div>
 
-    <!-- Spending History -->
+    <!-- Budget Setup Card -->
     <div class="card">
-      <h2>📊 Spending History</h2>
-
-      <label for="budget-start-date">Start Date:</label>
-      <input type="date" id="budget-start-date">
-
-      <label for="budget-end-date">End Date:</label>
-      <input type="date" id="budget-end-date">
-
-      <button id="filter-budget">Filter Budget</button>
-      <button id="reset-budget">Reset</button>
-
-      <h3>Meal Expenses</h3>
-      <ul id="budget-history-list">
-        <li>Loading...</li>
-      </ul>
+        <h2>⚙️ Budget Settings</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="budget-amount">Set Budget ($)</label>
+                <input type="number" id="budget-amount" placeholder="Enter amount">
+            </div>
+            <div class="form-group">
+                <label for="budget-period">Budget Period</label>
+                <select id="budget-period">
+                    <option value="Daily">Daily</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                </select>
+            </div>
+        </div>
+        <button id="set-budget" class="primary-btn">Set Budget</button>
     </div>
 
-  </div>
+    <!-- Expense Logging Card -->
+    <div class="card">
+        <h2>📝 Log Expense</h2>
+        <div class="form-group">
+            <label for="meal-cost">Meal Cost ($)</label>
+            <input type="number" id="meal-cost" placeholder="Enter cost">
+        </div>
+        <button id="log-meal-cost" class="primary-btn">Log Expense</button>
+    </div>
+
+    <!-- History Card -->
+    <div class="card">
+        <h2>📊 Expense History</h2>
+        <div class="date-filter">
+            <div class="form-group">
+                <label for="budget-start-date">From</label>
+                <input type="date" id="budget-start-date">
+            </div>
+            <div class="form-group">
+                <label for="budget-end-date">To</label>
+                <input type="date" id="budget-end-date">
+            </div>
+        </div>
+        <div class="button-group">
+            <button id="filter-budget" class="primary-btn">Apply Filter</button>
+            <button id="reset-budget" class="end-btn">Reset</button>
+        </div>
+        <ul id="budget-history-list" class="history-list"></ul>
+    </div>
+</div>
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module" src="budget.js"></script>
