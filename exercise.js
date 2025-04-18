@@ -209,7 +209,7 @@ if (askAiBtn) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer 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",
+          "Authorization": "Bearer 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",
           "HTTP-Referer": "http://localhost:5500",
           "X-Title": "VIDIA AI Workout Advisor"
         },

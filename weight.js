@@ -98,7 +98,7 @@ async function getAIInsight(logs) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer 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",
         "HTTP-Referer": "http://localhost:5500",
         "X-Title": "VIDIA AI Advisor"
       },

@@ -65,7 +65,6 @@ async function renderGoals() {
     let progressPercent = 0;
     let status = "🟢 In Progress";
     const now = new Date();
-    const deadlineDate = new Date(goal.deadline);
 
     if (goal.type === "weight") {
       const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
@@ -166,16 +165,22 @@ async function fetchAIInsight() {
 ${goals.map(g => `- ${g.type} → ${g.target} by ${g.deadline}`).join("\n") || "None"}
 
 📉 Weight Progress:
-${weightLogs.slice(-3).map(w => `${w.date || new Date(w.timestamp).toLocaleDateString()}: ${w.weight} lbs`).join("\n") || "No logs"}
+${weightLogs.slice(-3).map(w =>
+  `${w.date || new Date(w.timestamp || Date.now()).toLocaleDateString()}: ${w.weight || 0} lbs`
+).join("\n") || "No logs"}
 
 💪 Last Workouts:
-${workouts.slice(-3).map(w => `${w.type} (${w.duration} min → ${w.caloriesBurned} kcal)`).join("\n") || "No workouts"}
+${workouts.slice(-3).map(w =>
+  `${w.type || "Workout"} (${w.duration || 0} min → ${w.caloriesBurned || 0} kcal)`
+).join("\n") || "No workouts"}
 
 🍽 Meals:
-${meals.slice(-5).map(m => `${m.name}: ${m.calories} kcal`).join("\n") || "No meals"}
+${meals.slice(-5).map(m =>
+  `${m.name || "Meal"}: ${m.calories || 0} kcal`
+).join("\n") || "No meals"}
 
 💬 Give a motivating summary. Suggest 2 improvements and praise at least 1 strength.
-`;
+  `.trim();
 
   aiResponse.textContent = "🧠 Thinking...";
 
@@ -184,7 +189,7 @@ ${meals.slice(-5).map(m => `${m.name}: ${m.calories} kcal`).join("\n") || "No me
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer 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",
         "HTTP-Referer": "http://localhost:5500",
         "X-Title": "VIDIA Goal Coach"
       },
@@ -201,7 +206,12 @@ ${meals.slice(-5).map(m => `${m.name}: ${m.calories} kcal`).join("\n") || "No me
     });
 
     const result = await res.json();
-    aiResponse.textContent = result.choices?.[0]?.message?.content || "⚠️ No insight received.";
+    if (result.choices?.[0]?.message?.content) {
+      aiResponse.textContent = result.choices[0].message.content;
+    } else {
+      console.warn("OpenRouter returned unexpected:", result);
+      aiResponse.textContent = "⚠️ No insight received.";
+    }
   } catch (error) {
     console.error("AI Error:", error);
     aiResponse.textContent = "⚠️ Failed to fetch insight.";
