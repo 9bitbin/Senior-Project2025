@@ -2,8 +2,6 @@
 import { db, auth } from "./firebase-config.js";
 import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-
-// ✅ Calories Burned Per Minute (Adjustable Values)
 const CALORIE_BURN_RATES = {
     cardio: 10,
     strength: 8,
@@ -11,7 +9,6 @@ const CALORIE_BURN_RATES = {
     yoga: 5
 };
 
-// ✅ Select Elements Safely
 const workoutTypeEl = document.getElementById("workout-type");
 const durationEl = document.getElementById("workout-duration");
 const getCaloriesBtn = document.getElementById("get-calories");
@@ -23,14 +20,13 @@ const startDateInput = document.getElementById("workout-start-date");
 const endDateInput = document.getElementById("workout-end-date");
 const filterWorkoutsBtn = document.getElementById("filter-workouts");
 const resetWorkoutsBtn = document.getElementById("reset-workouts");
+const dailyBurnSummaryEl = document.getElementById("daily-burn-summary");
 
-// ✅ Function to Estimate Calories Burned
 function estimateCaloriesBurned(workoutType, duration) {
     if (!CALORIE_BURN_RATES[workoutType] || isNaN(duration)) return 0;
     return duration * CALORIE_BURN_RATES[workoutType];
 }
 
-// ✅ Handle "Get Estimated Calories" Button
 if (getCaloriesBtn && workoutTypeEl && durationEl && estimatedCaloriesEl) {
     getCaloriesBtn.addEventListener("click", () => {
         const workoutType = workoutTypeEl.value;
@@ -42,11 +38,10 @@ if (getCaloriesBtn && workoutTypeEl && durationEl && estimatedCaloriesEl) {
         }
 
         const estimatedCalories = estimateCaloriesBurned(workoutType, duration);
-        estimatedCaloriesEl.innerText = `${estimatedCalories} kcal`; // Ensures it's set once
+        estimatedCaloriesEl.innerText = `${estimatedCalories} kcal`;
     });
 }
 
-// ✅ Handle "Log Workout" Button
 if (logWorkoutBtn && workoutTypeEl && durationEl) {
     logWorkoutBtn.addEventListener("click", async () => {
         const workoutType = workoutTypeEl.value;
@@ -58,7 +53,7 @@ if (logWorkoutBtn && workoutTypeEl && durationEl) {
         }
 
         const estimatedCalories = estimateCaloriesBurned(workoutType, duration);
-        const timestamp = new Date().toISOString(); // ✅ Using ISO format for consistency
+        const timestamp = new Date().toISOString();
 
         const workout = {
             type: workoutType,
@@ -71,7 +66,6 @@ if (logWorkoutBtn && workoutTypeEl && durationEl) {
     });
 }
 
-// ✅ Save Workout to Firestore
 async function saveWorkoutToFirestore(workout) {
     const user = auth.currentUser;
     if (!user) return;
@@ -84,14 +78,12 @@ async function saveWorkoutToFirestore(workout) {
 
     try {
         await updateDoc(userDocRef, { workoutLogs: workouts });
-        console.log("✅ Workout logged successfully.");
         fetchLoggedWorkouts();
     } catch (error) {
         console.error("❌ Error saving workout:", error);
     }
 }
 
-// ✅ Fetch & Display Logged Workouts
 async function fetchLoggedWorkouts(startDate = null, endDate = null) {
     const user = auth.currentUser;
     if (!user || !workoutListEl || !totalCaloriesEl) return;
@@ -102,8 +94,8 @@ async function fetchLoggedWorkouts(startDate = null, endDate = null) {
     if (userDoc.exists()) {
         let workouts = userDoc.data().workoutLogs || [];
         let totalCaloriesBurned = 0;
+        let dailyCalories = {};
 
-        // ✅ Filter Workouts by Date Range
         if (startDate && endDate) {
             const start = new Date(startDate).toISOString().split("T")[0];
             const end = new Date(endDate).toISOString().split("T")[0];
@@ -114,14 +106,15 @@ async function fetchLoggedWorkouts(startDate = null, endDate = null) {
             });
         }
 
-        // ✅ Display Workout History Safely
         workoutListEl.innerHTML = workouts.length > 0
             ? workouts.map(workout => {
+                const date = new Date(workout.timestamp).toISOString().split("T")[0];
                 const duration = workout.duration ? `${workout.duration} mins` : "Unknown mins";
                 const calories = workout.caloriesBurned ? `${workout.caloriesBurned} kcal` : "Unknown kcal";
-                const timestamp = workout.timestamp ? new Date(workout.timestamp).toLocaleString() : "Unknown Date";
+                const timestamp = new Date(workout.timestamp).toLocaleString();
 
                 totalCaloriesBurned += workout.caloriesBurned || 0;
+                dailyCalories[date] = (dailyCalories[date] || 0) + (workout.caloriesBurned || 0);
 
                 return `
                     <li>
@@ -133,28 +126,27 @@ async function fetchLoggedWorkouts(startDate = null, endDate = null) {
             }).join("")
             : "<li>No workouts logged for this date range.</li>";
 
-        // ✅ Ensure the total calories burned is always a number
         totalCaloriesEl.innerText = isNaN(totalCaloriesBurned) ? "0 kcal" : `${totalCaloriesBurned} kcal`;
+
+        if (dailyBurnSummaryEl) {
+            dailyBurnSummaryEl.innerHTML = `<h4>📆 Daily Burn Summary</h4>` +
+              Object.entries(dailyCalories).map(([date, cals]) => {
+                return `<div><strong>${new Date(date).toLocaleDateString()}:</strong> ${Math.round(cals)} kcal</div>`;
+              }).join("");
+        }
     }
 }
 
-// ✅ Filter Workouts by Date Range
-if (filterWorkoutsBtn && startDateInput && endDateInput) {
-    filterWorkoutsBtn.addEventListener("click", () => {
-        fetchLoggedWorkouts(startDateInput.value, endDateInput.value);
-    });
-}
+filterWorkoutsBtn?.addEventListener("click", () => {
+    fetchLoggedWorkouts(startDateInput.value, endDateInput.value);
+});
 
-// ✅ Reset Workout Filter
-if (resetWorkoutsBtn && startDateInput && endDateInput) {
-    resetWorkoutsBtn.addEventListener("click", () => {
-        startDateInput.value = "";
-        endDateInput.value = "";
-        fetchLoggedWorkouts();
-    });
-}
+resetWorkoutsBtn?.addEventListener("click", () => {
+    startDateInput.value = "";
+    endDateInput.value = "";
+    fetchLoggedWorkouts();
+});
 
-// ✅ Ensure User is Logged In & Fetch Workouts
 auth.onAuthStateChanged((user) => {
     if (user) {
         fetchLoggedWorkouts();
@@ -166,29 +158,29 @@ auth.onAuthStateChanged((user) => {
 document.getElementById("download-workouts")?.addEventListener("click", async () => {
     const user = auth.currentUser;
     if (!user) return;
-  
+
     const userDocRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userDocRef);
     const workoutLogs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
-  
+
     if (!workoutLogs.length) {
-      alert("No workouts to export.");
-      return;
+        alert("No workouts to export.");
+        return;
     }
-  
+
     const headers = ["Type", "Duration (min)", "Calories Burned", "Timestamp"];
     const rows = workoutLogs.map(log => [
-      `"${log.type || ''}"`,
-      log.duration || 0,
-      log.caloriesBurned || 0,
-      `"${new Date(log.timestamp).toLocaleString()}"`
+        `"${log.type || ''}"`,
+        log.duration || 0,
+        log.caloriesBurned || 0,
+        `"${new Date(log.timestamp).toLocaleString()}"`
     ]);
-  
+
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-  
+
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-  
+
     const link = document.createElement("a");
     link.href = url;
     link.download = "workout-history.csv";
@@ -196,6 +188,7 @@ document.getElementById("download-workouts")?.addEventListener("click", async ()
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-  });
+});
+
 
 
