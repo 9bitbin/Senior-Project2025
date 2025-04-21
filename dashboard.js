@@ -121,7 +121,7 @@ Provide a brief AI health insight based on the above.
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer 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",
         "HTTP-Referer": "http://localhost:5500",
         "X-Title": "VIDIA Smart Summary"
       },
