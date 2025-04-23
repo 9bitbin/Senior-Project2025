@@ -193,11 +193,24 @@
 
     <div class="top-controls">
       <input type="text" id="searchInput" placeholder="Search posts...">
+      <select id="postFilter">
+          <option value="all">All Posts</option>
+          <option value="meal">🍽️ Meal</option>
+          <option value="workout">💪 Workout</option>
+          <option value="mindset">🧠 Mindset</option>
+          <option value="sleep">🛌 Sleep</option>
+          <option value="hydration">💧 Hydration</option>
+          <option value="weight">📉 Weight Loss</option>
+          <option value="health">🩺 Health Update</option>
+          <option value="achievement">🏆 Achievement</option>
+          <option value="motivation">🌟 Motivation</option>
+          <option value="question">❓ Ask for Help</option>
+      </select>
       <div class="toggle-wrapper">
-        <input type="checkbox" id="friendToggle" />
-        <label for="friendToggle">Only Friends</label>
+          <input type="checkbox" id="friendToggle" />
+          <label for="friendToggle">Only Friends</label>
       </div>
-    </div>
+  </div>
 
     <div id="communityFeed">
       <p>Loading posts...</p>
