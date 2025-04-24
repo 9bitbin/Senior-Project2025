@@ -107,7 +107,7 @@ function displayRecipes(meals) {
       saveRecipe(name, image, instructions);
     });
   });
-
+ 
   document.querySelectorAll(".log-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const name = btn.dataset.name;

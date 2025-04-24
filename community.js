@@ -192,4 +192,13 @@ searchInput?.addEventListener("input", renderFilteredPosts);
 friendToggle?.addEventListener("change", renderFilteredPosts);
 
 
+document.getElementById("savedRecipes").addEventListener("click", function (event) {
+  const card = event.target.closest(".recipe-card");
+  const isInsideInteractive = event.target.closest("button, input, textarea");
+
+  if (card && !isInsideInteractive) {
+    card.classList.toggle("selected");
+    console.log("Recipe card clicked:", card.classList);
+  }
+});
 

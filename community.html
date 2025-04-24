@@ -128,7 +128,7 @@
     }
   </style>
 </head>
-<body>
+<body class="community-page">
 
 <!-- Sidebar -->
 <div class="sidebar">
@@ -173,6 +173,13 @@
       <option value="question">❓ Ask for Help</option>
     </select>
 
+    <label>Share Recipes</label>
+    <div id="saved-recipes-section">
+      <div id="savedRecipes" class="results-grid">
+        <p class="no-recipes">No saved recipes found.</p>
+      </div>
+    </div>
+
     <label>
       <input type="checkbox" id="anonymousCheck" />
       Share Anonymously
@@ -208,6 +215,7 @@
 
 <script type="module" src="firebase-config.js"></script>
 <script type="module" src="community.js"></script>
+<script type="module" src="recipe.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script>
   AOS.init({ duration: 800, offset: 100, once: true });

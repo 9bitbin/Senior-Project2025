@@ -124,7 +124,16 @@ button:hover {
     cursor: pointer;
 }
 
-.recipe-card {
+.community-page .recipe-card {
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 10px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.recipe-page .recipe-card {
     padding: 10px;
     background-color: white;
     border: 1px solid #ddd;
@@ -155,15 +164,6 @@ button:hover {
     color: white;
     border: none;
     cursor: pointer;
-}
-
-.recipe-card {
-    padding: 10px;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-top: 10px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .post {
@@ -1340,7 +1340,7 @@ body {
   }
   
   /* Saved Recipes Layout */
-  .recipe-card {
+  .recipe-page .recipe-card {
     background: #f9f9f9;
     display: flex;
     align-items: center;
@@ -1353,6 +1353,38 @@ body {
     margin-left: auto;
     margin-right: auto;
   }
+
+  .community-page .results-grid {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: space-between; 
+  }
+
+  .community-page .card-body p{
+    display: none;
+  }
+
+  .community-page .recipe-card {
+    width: 300px;
+    align-items: center;
+    background: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+  
+  .community-page .recipe-card:hover {
+    background: #72e78d;
+    cursor: pointer;
+  }
+  
+  .community-page .recipe-card.selected {
+    background: #36c958 !important;
+  }
+
   
   .recipe-card img {
     width: 160px;
@@ -1377,8 +1409,8 @@ body {
     color: #444;
     margin-bottom: 10px;
   }
-  
-  .recipe-card button {
+   
+  .recipe-page .recipe-card button {
     background: #dc3545;
     color: white;
     border: none;
@@ -1386,12 +1418,17 @@ body {
     border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
+  } 
+
+  .community-page .recipe-card button {
+    display: none;
   }
-  
-  .recipe-card button:hover {
+
+  .recipe-page .recipe-card button:hover {
     background-color: #c82333;
   }
   
+
   #authForm {
     background: #ffffff;
     padding: 30px 40px;
