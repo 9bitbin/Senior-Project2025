@@ -120,7 +120,29 @@ function renderPost(postId, post) {
 sharePostBtn.addEventListener("click", async () => {
   if (!currentUser) return alert("⚠️ You must be logged in to share a post.");
 
-  const content = postContent.value.trim();
+  // Get the manual post input
+  const contentInput = postContent.value.trim();
+
+  // Look for selected recipe card
+  const selectedCard = document.querySelector(".recipe-card.selected");
+  let recipeText = "";
+
+  if (selectedCard) {
+    // Get all <p> tags inside the selected recipe card
+    const pTags = selectedCard.querySelectorAll("p");
+
+    // Combine all <p> text into one string
+    recipeText = Array.from(pTags)
+      .map(p => p.innerText.trim())
+      .filter(text => text.length > 0)
+      .join("\n"); // newline between <p> tags
+  }
+
+  // Combine recipe and user input into final content
+  const content = recipeText
+    ? `${contentInput}\n\n🍽️ Shared Recipe:\n${recipeText}`
+    : contentInput;
+
   if (!content) return alert("⚠️ Post content cannot be empty.");
 
   try {
@@ -136,10 +158,18 @@ sharePostBtn.addEventListener("click", async () => {
     });
 
     postContent.value = "";
+
+    // Deselect recipe card
+    const selectedCard = document.querySelector(".recipe-card.selected");
+    if (selectedCard) {
+      selectedCard.classList.remove("selected");
+    }
+
   } catch (error) {
     console.error("Error sharing post:", error);
   }
 });
+
 
 async function toggleLike(postId) {
   if (!currentUser) return alert("⚠️ You must be logged in to like posts.");
@@ -201,4 +231,24 @@ document.getElementById("savedRecipes").addEventListener("click", function (even
     console.log("Recipe card clicked:", card.classList);
   }
 });
+
+function toggleArrow() {
+  const arrow = document.getElementById("arrowIcon");
+  const savedSection = document.getElementById("saved-recipes-section");
+  const isDown = arrow.innerHTML === "▼" || !arrow.classList.contains("arrow-right");
+
+  if (isDown) {
+    arrow.innerHTML = "▶"; // Switch to right arrow
+    arrow.classList.add("arrow-right");
+    savedSection.style.display = "none"; // Collapse
+  } else {
+    arrow.innerHTML = "▼"; // Switch to down arrow
+    arrow.classList.remove("arrow-right");
+    savedSection.style.display = "block"; // Expand
+  }
+}
+
+document.getElementById("toggleArrow").addEventListener("click", toggleArrow);
+
+
 

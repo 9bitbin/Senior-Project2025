@@ -1428,6 +1428,28 @@ body {
     background-color: #c82333;
   }
   
+  .arrow-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .arrow-toggle span {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+  }
+  
+  .arrow-right {
+    transform: rotate(-90deg); /* Right arrow */
+  }
+
+  .community-page #saved-recipes-section {
+    display: none; /* hidden initially */
+    transition: all 0.3s ease; /* optional smooth effect */
+  }
+  
 
   #authForm {
     background: #ffffff;
