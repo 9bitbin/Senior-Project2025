@@ -187,10 +187,7 @@ async function endFasting() {
 }
 
 async function loadFastingHistory() {
-    const loadingEl = document.getElementById('history-loading');
-    if (!loadingEl || !fastingHistoryList) return;
-    
-    loadingEl.classList.remove('hidden');
+    if (!fastingHistoryList) return;
 
     try {
         const user = auth.currentUser;
@@ -313,7 +310,6 @@ async function loadFastingHistory() {
             }
 
             // Update history list with filtered data
-            // When adding new entries, add the 'new-entry' class
             fastingHistoryList.innerHTML = filteredHistory.length
                 ? filteredHistory.slice(0, 50).map((fast, index) => `
                     <li class="${index === 0 ? 'new-entry' : ''}">
@@ -326,8 +322,8 @@ async function loadFastingHistory() {
                 `).join("")
                 : "<li>No fasting history found.</li>";
         }
-    } finally {
-        loadingEl.classList.add('hidden');
+    } catch (error) {
+        console.error("Error loading fasting history:", error);
     }
 }
 

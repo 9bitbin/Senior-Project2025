@@ -797,6 +797,21 @@ body {
     height: 100% !important;
 }
 
+/* Fasting History Styles */
+
+.history-loading {
+    position: relative;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.fasting-history-list {
+    position: relative;
+    min-height: 50px;
+}
+
+
 /* 🔹 Fasting Tracker Container */
 .fasting-tracker {
 	background: white;
@@ -1022,7 +1037,8 @@ body {
 	margin-top: 5px;
 }
 
-* Enhanced Fasting Stats */ .fasting-stats {
+/* Enhanced Fasting Stats */ 
+.fasting-stats {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 	gap: 20px;
