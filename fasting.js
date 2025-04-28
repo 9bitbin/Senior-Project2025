@@ -9,10 +9,46 @@ const endFastingBtn = document.getElementById("end-fasting");
 const fastingStatusEl = document.getElementById("fasting-status");
 const fastingTimerEl = document.getElementById("fasting-timer");
 const fastingHistoryList = document.getElementById("fasting-history");
+const totalFastsEl = document.getElementById('total-fasts');
+const avgDurationEl = document.getElementById('avg-duration');
+const completionRateEl = document.getElementById('completion-rate');
+const ctx = document.getElementById('fastingChart')?.getContext('2d');
+const fastingTypeIndicator = document.querySelector(".fasting-type-indicator");
+const debugControlsDiv = document.createElement('div');
+let fastingChart;
 
 let fastingInterval = null; // Store timer interval
 
 // ✅ Start Fasting Function
+
+let totalPlannedDuration = 0;
+
+
+async function clearActiveFasting() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userDocRef = doc(db, "users", user.uid);
+    try {
+        await updateDoc(userDocRef, {
+            activeFasting: null
+        });
+        console.log("✅ Active fasting session cleared.");
+    } catch (error) {
+        console.error("❌ ERROR clearing active fasting:", error);
+    }
+}
+
+
+const filterStartDate = document.getElementById('filter-start-date');
+const filterEndDate = document.getElementById('filter-end-date');
+const filterBtn = document.querySelector('.filter-btn');
+const resetFilterBtn = document.querySelector('.reset-filter-btn');
+
+
+
+
+
 async function startFasting() {
     console.log("✅ Starting fast...");
 
@@ -22,17 +58,30 @@ async function startFasting() {
         return;
     }
 
-    if (!fastingWindowSelect || !fastingStatusEl || !startFastingBtn || !endFastingBtn) return;
+    if (!fastingWindowSelect || !fastingStatusEl || !startFastingBtn || !endFastingBtn) {
+        console.error("❌ Required elements not found!");
+        return;
+    }
 
     const fastingHours = parseInt(fastingWindowSelect.value);
+    if (isNaN(fastingHours)) {
+        console.error("❌ Invalid fasting hours!");
+        return;
+    }
+
+    totalPlannedDuration = fastingHours;
     const startTime = new Date().toISOString();
     const endTime = new Date(Date.now() + fastingHours * 60 * 60 * 1000).toISOString();
 
+    // Update UI first
     fastingStatusEl.innerText = `Fasting started! Ends at ${new Date(endTime).toLocaleTimeString()}`;
     startFastingBtn.disabled = true;
     endFastingBtn.disabled = false;
 
     // ✅ Save the active fasting session in Firebase
+    startCountdownTimer(new Date(endTime));
+
+    // Save to Firebase
     const userDocRef = doc(db, "users", user.uid);
     try {
         await updateDoc(userDocRef, {
@@ -42,9 +91,6 @@ async function startFasting() {
     } catch (error) {
         console.error("❌ ERROR saving active fasting session:", error);
     }
-
-    startCountdownTimer(new Date(endTime));
-    loadFastingHistory(); // ✅ Update fasting history instantly
 }
 
 // ✅ Start Countdown Timer
@@ -75,8 +121,7 @@ function startCountdownTimer(endTime) {
 }
 
 // ✅ End Fasting Function (Handles Early Ending)
-// Add this to your element selections at the top
-const eatingWindowInput = document.getElementById("eating-window");
+
 
 // In the endFasting function, update the eatingWindow value:
 async function endFasting() {
@@ -107,11 +152,17 @@ async function endFasting() {
         if (activeFasting) {
             const plannedEndTime = new Date(activeFasting.endTime);
             const actualEndTime = new Date();
-            const fastDuration = (actualEndTime - new Date(activeFasting.startTime)) / (1000 * 60 * 60);
+            
+            // Modified duration calculation for better visibility
+            const actualDuration = (actualEndTime - new Date(activeFasting.startTime)) / (1000 * 60 * 60);
+            const fastDuration = actualDuration;
 
-            let status = "Completed";
-            if (actualEndTime < plannedEndTime) {
-                status = "Ended Early";
+            // Change status logic to only show "Completed" when timer runs out naturally
+            let status = "Ended Early"; // Default to "Ended Early"
+
+            // Check if the current time is past or equal to the planned end time
+            if (actualEndTime >= new Date(activeFasting.endTime)) {
+                status = "Completed";
             }
 
             await updateDoc(userDocRef, {
@@ -119,76 +170,164 @@ async function endFasting() {
                     startTime: activeFasting.startTime,
                     plannedEndTime: activeFasting.endTime,
                     actualEndTime: endTime,
-                    duration: fastDuration.toFixed(2) + " hrs",
-                    status: status,
-                    eatingWindow: eatingWindowInput.value // Updated to use eating window input
+                    duration: fastDuration.toFixed(2),  // Store raw number without " hrs"
+                    status: status
                 }),
                 activeFasting: null
             });
-        }
 
-        console.log("✅ Fasting session ended and saved to history.");
+            // Add a small delay before reloading history
+            setTimeout(() => {
+                loadFastingHistory();
+            }, 500);
+        }
     } catch (error) {
         console.error("❌ ERROR ending fasting session:", error);
     }
-
-    loadFastingHistory(); // ✅ Update fasting history instantly
 }
 
-// ✅ Load Fasting History
-// Add these variables at the top with your other declarations
-const filterStartDate = document.getElementById('filter-start-date');
-const filterEndDate = document.getElementById('filter-end-date');
-const filterBtn = document.querySelector('.filter-btn');
-const resetFilterBtn = document.querySelector('.reset-filter-btn');
-
-// Modify your loadFastingHistory function
 async function loadFastingHistory() {
-    console.log("🔄 Loading fasting history...");
+    const loadingEl = document.getElementById('history-loading');
+    if (!loadingEl || !fastingHistoryList) return;
+    
+    loadingEl.classList.remove('hidden');
 
-    if (!fastingHistoryList) return;
-
-    const user = auth.currentUser;
-    if (!user) {
-        console.error("❌ User not logged in!");
-        return;
-    }
-
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
-
-    if (userDoc.exists()) {
-        let fastingHistory = userDoc.data().fastingHistory || [];
-
-        // Apply date filtering if dates are selected
-        if (filterStartDate.value && filterEndDate.value) {
-            const startDate = new Date(filterStartDate.value);
-            const endDate = new Date(filterEndDate.value);
-            endDate.setHours(23, 59, 59);
-
-            fastingHistory = fastingHistory.filter(fast => {
-                const fastDate = new Date(fast.startTime);
-                return fastDate >= startDate && fastDate <= endDate;
-            });
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            console.error("❌ User not logged in!");
+            return;
         }
 
-        fastingHistoryList.innerHTML = fastingHistory.length
-            ? fastingHistory.map(fast => `
-                <li>
-                    <strong>Start:</strong> ${new Date(fast.startTime).toLocaleString()}<br>
-                    <strong>Planned End:</strong> ${new Date(fast.plannedEndTime).toLocaleString()}<br>
-                    <strong>Actual End:</strong> ${new Date(fast.actualEndTime).toLocaleString()}<br>
-                    <strong>Duration:</strong> ${fast.duration}<br>
-                    <strong>Status:</strong> <span style="color: ${fast.status === "Ended Early" ? "red" : "green"}">${fast.status}</span>
-                    <span class="fasting-history-window">
-                        <span class="eating-window-display">
-                            <span class="eating-window-label">Eating Window:</span>
-                            ${fast.eatingWindow || eatingWindowInput.value} hours
-                        </span>
-                    </span>
-                </li>
-            `).join("")
-            : "<li>No fasting history found.</li>";
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+            let fastingHistory = userDoc.data().fastingHistory || [];
+            // Sort history by start time in descending order
+            fastingHistory.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+            
+            let filteredHistory = [...fastingHistory]; // Create a copy for filtering
+
+            // Calculate statistics from complete history
+            const totalFasts = fastingHistory.length;
+            const completedFasts = fastingHistory.filter(fast => fast.status === "Completed").length;
+            const completionRate = totalFasts ? ((completedFasts / totalFasts) * 100).toFixed(1) : 0;
+            const avgDuration = totalFasts ? 
+                fastingHistory.reduce((acc, fast) => acc + parseFloat(fast.duration), 0) / totalFasts : 0;
+
+            // Update statistics display
+            if (totalFastsEl) totalFastsEl.textContent = totalFasts;
+            if (avgDurationEl) avgDurationEl.textContent = `${avgDuration.toFixed(2)} hrs`;
+            if (completionRateEl) completionRateEl.textContent = `${completionRate}%`;
+
+            // Create/Update chart with last 7 fasts
+            const last7Fasts = fastingHistory
+                .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
+                .slice(0, 7)
+                .reverse();
+            
+            if (ctx) {
+                if (fastingChart) {
+                    fastingChart.destroy();
+                }
+                // Chart configuration
+                const chartData = {
+                    type: 'bar',
+                    data: {
+                        labels: last7Fasts.map(fast => {
+                            const date = new Date(fast.startTime);
+                            const month = date.getMonth() + 1;
+                            const day = date.getDate();
+                            // Fix the date formatting
+                            return `${month}/${day}`;
+                        }),
+                        datasets: [{
+                            label: 'Last 7 Fasting Sessions (in hours)',
+                            data: last7Fasts.map(fast => parseFloat(fast.duration)),
+                            backgroundColor: last7Fasts.map(fast => 
+                                fast.status === "Completed" ? '#10b981' : '#ef4444'
+                            ),
+                            borderColor: '#0f172a',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 24,
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: function(value) {
+                                        return value + ' hrs';
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Your Last 7 Fasting Sessions',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(context) {
+                                        const fast = last7Fasts[context[0].dataIndex];
+                                        return `Session on ${new Date(fast.startTime).toLocaleDateString()}`;
+                                    },
+                                    label: function(context) {
+                                        const fast = last7Fasts[context.dataIndex];
+                                        return [
+                                            `Duration: ${context.raw.toFixed(2)} hours`,
+                                            `Status: ${fast.status}`,
+                                            `Start: ${new Date(fast.startTime).toLocaleString()}`,
+                                            `End: ${new Date(fast.actualEndTime).toLocaleString()}`
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+                
+                // Create new chart instance
+                fastingChart = new Chart(ctx, chartData);
+            }
+
+            // Apply date filtering if dates are selected
+            if (filterStartDate.value && filterEndDate.value) {
+                const startDate = new Date(filterStartDate.value);
+                const endDate = new Date(filterEndDate.value);
+                endDate.setHours(23, 59, 59);
+
+                filteredHistory = filteredHistory.filter(fast => {
+                    const fastDate = new Date(fast.startTime);
+                    return fastDate >= startDate && fastDate <= endDate;
+                });
+            }
+
+            // Update history list with filtered data
+            // When adding new entries, add the 'new-entry' class
+            fastingHistoryList.innerHTML = filteredHistory.length
+                ? filteredHistory.slice(0, 50).map((fast, index) => `
+                    <li class="${index === 0 ? 'new-entry' : ''}">
+                        <strong>Start:</strong> ${new Date(fast.startTime).toLocaleString()}<br>
+                        <strong>Planned End:</strong> ${new Date(fast.plannedEndTime).toLocaleString()}<br>
+                        <strong>Actual End:</strong> ${new Date(fast.actualEndTime).toLocaleString()}<br>
+                        <strong>Duration:</strong> ${fast.duration} hrs<br>
+                        <strong>Status:</strong> <span style="color: ${fast.status === "Ended Early" ? "red" : "green"}">${fast.status}</span>
+                    </li>
+                `).join("")
+                : "<li>No fasting history found.</li>";
+        }
+    } finally {
+        loadingEl.classList.add('hidden');
     }
 }
 
@@ -200,7 +339,28 @@ resetFilterBtn?.addEventListener('click', () => {
     loadFastingHistory();
 });
 
-// ✅ Restore Active Fasting Session on Page Load
+// Add these near the bottom of the file, before the download event listener
+// ✅ Attach Event Listeners (Only if Elements Exist)
+if (startFastingBtn) startFastingBtn.addEventListener("click", startFasting);
+if (endFastingBtn) endFastingBtn.addEventListener("click", endFasting);
+
+// ✅ Restore fasting status & load history on page load
+document.addEventListener("DOMContentLoaded", () => {
+    // Set default text for fasting schedule
+    if (fastingTypeIndicator) {
+        fastingTypeIndicator.textContent = "12:12 (12 hours fasting, 12 hours eating)";
+    }
+
+    // Handle auth state changes
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            restoreActiveFasting();
+            loadFastingHistory();
+        }
+    });
+});
+
+// Add this function near the top with other functions
 async function restoreActiveFasting() {
     console.log("🔄 Checking for active fasting session...");
 
@@ -230,19 +390,7 @@ async function restoreActiveFasting() {
     }
 }
 
-// ✅ Attach Event Listeners (Only if Elements Exist)
-if (startFastingBtn) startFastingBtn.addEventListener("click", startFasting);
-if (endFastingBtn) endFastingBtn.addEventListener("click", endFasting);
 
-// ✅ Restore fasting status & load history on page load
-document.addEventListener("DOMContentLoaded", () => {
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            restoreActiveFasting();
-            loadFastingHistory();
-        }
-    });
-});
 
 document.getElementById("download-fasting")?.addEventListener("click", async () => {
     const user = auth.currentUser;
@@ -286,82 +434,24 @@ document.getElementById("download-fasting")?.addEventListener("click", async () 
     URL.revokeObjectURL(url);
   });
 
-// Water tracking functionality
-let waterIntake = 0;
-const maxWaterIntake = 2000; // 2L daily goal
 
-function addWater(amount) {
-    waterIntake += amount;
-    document.getElementById('water-intake').textContent = waterIntake;
     
-    // Update progress bar
-    const progress = (waterIntake / maxWaterIntake) * 100;
-    document.getElementById('water-progress-fill').style.setProperty('--progress', `${Math.min(progress, 100)}%`);
+ 
+
+
     
-    // Save to Firebase
-    const userId = auth.currentUser.uid;
-    const today = new Date().toISOString().split('T')[0];
-    
-    const waterRef = ref(database, `users/${userId}/waterIntake/${today}`);
-    set(waterRef, waterIntake);
-}
+ 
 
-// Mood tracking functionality
-function trackMood(mood) {
-    const userId = auth.currentUser.uid;
-    const timestamp = new Date().toISOString();
-    
-    const moodRef = ref(database, `users/${userId}/moods/${timestamp}`);
-    set(moodRef, {
-        mood: mood,
-        timestamp: timestamp,
-        fastingActive: fastingActive // Assuming you have this variable from fasting tracker
-    });
 
-    // Visual feedback
-    const buttons = document.querySelectorAll('.mood-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
 
-    // Show confirmation
-    Swal.fire({
-        icon: 'success',
-        title: 'Mood Tracked!',
-        text: `You're feeling ${mood}`,
-        timer: 1500,
-        showConfirmButton: false
-    });
-}
 
-// Add this to your window load or initialization code
-window.addEventListener('load', () => {
-    // Load today's water intake
-    const userId = auth.currentUser?.uid;
-    if (userId) {
-        const today = new Date().toISOString().split('T')[0];
-        const waterRef = ref(database, `users/${userId}/waterIntake/${today}`);
-        
-        get(waterRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                waterIntake = snapshot.val();
-                document.getElementById('water-intake').textContent = waterIntake;
-                const progress = (waterIntake / maxWaterIntake) * 100;
-                document.getElementById('water-progress-fill').style.setProperty('--progress', `${Math.min(progress, 100)}%`);
-            }
-        });
-    }
-});
-
-// Add this to your element selections at the top
-const fastingTypeIndicator = document.querySelector(".fasting-type-indicator");
-
-// Add this event listener after your other event listeners
+// Update the fasting window select event listener
 if (fastingWindowSelect) {
     fastingWindowSelect.addEventListener("change", (e) => {
         const schedule = e.target.options[e.target.selectedIndex].text;
         if (fastingTypeIndicator) {
-            fastingTypeIndicator.textContent = schedule;
+            fastingTypeIndicator.textContent = schedule || "Select a fasting schedule";
         }
     });
 }
-  
+

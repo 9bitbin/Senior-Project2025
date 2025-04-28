@@ -521,7 +521,7 @@ body {
 
 /* 🔹 General Layout */
 body {
-    background-color: #f4f4f4;
+    background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
     color: #333;
     text-align: center;
     padding: 20px;
@@ -780,6 +780,26 @@ body {
     display: block;
 }
 
+/* Fasting Chart Specific Styles */
+.fasting-chart-container {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin: 30px 0;
+    height: 400px;
+    transition: transform 0.2s ease;
+}
+
+.fasting-chart-container:hover {
+    transform: translateY(-2px);
+}
+
+.fasting-chart-container canvas {
+    max-width: 100%;
+    height: 100% !important;
+}
+
 /* 🔹 Fasting Tracker Container */
 .fasting-tracker {
     background: white;
@@ -789,6 +809,25 @@ body {
     text-align: center;
     max-width: 500px;
     margin: auto;
+}
+
+.timer-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+#fasting-timer {
+    font-size: 32px;
+    font-weight: bold;
+    color: #059669;
+    margin: 15px 0;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 /* 🔹 Center Timer Text */
@@ -1021,29 +1060,9 @@ body {
     }
 }
 
-/* Circular Progress */
-.circular-progress {
-    position: relative;
-    width: 200px;
-    height: 200px;
-    margin: 20px auto;
-    background: conic-gradient(#10b981 var(--progress, 0%), #f3f4f6 0deg);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
-.timer-wrapper {
-    background: white;
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
+
+
 
 .fasting-type-indicator {
     font-size: 14px;
@@ -1078,35 +1097,6 @@ body {
     display: block;
 }
 
-/* Quick Tips Section */
-.quick-tips {
-    background: #f0fdf4;
-    padding: 20px;
-    border-radius: 12px;
-    margin: 20px 0;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.tips-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 15px;
-}
-
-.tip-card {
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.tip-icon {
-    font-size: 20px;
-}
 
 /* Time Selector */
 .time-selector {
@@ -1158,68 +1148,10 @@ body {
         grid-template-columns: 1fr;
     }
 }
-/* Motivation Card */
-.motivation-card {
-    background: #f0fdf4;
-    padding: 15px;
-    border-radius: 10px;
-    margin: 20px 0;
-}
 
 
-/* Benefits Timeline */
-.benefits-section {
-    margin: 30px 0;
-    padding: 20px;
-    background: #f8fafc;
-    border-radius: 12px;
-}
 
-.benefits-timeline {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-    position: relative;
-}
 
-.benefits-timeline::before {
-    content: '';
-    position: absolute;
-    top: 25px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #e2e8f0;
-    z-index: 0;
-}
-
-.benefit-marker {
-    position: relative;
-    text-align: center;
-    z-index: 1;
-}
-
-.benefit-marker .time {
-    display: block;
-    width: 50px;
-    height: 50px;
-    line-height: 50px;
-    background: white;
-    border: 2px solid #10b981;
-    border-radius: 50%;
-    margin: 0 auto 10px;
-}
-
-.benefit-marker.active .time {
-    background: #10b981;
-    color: white;
-}
-
-.benefit-marker p {
-    font-size: 14px;
-    max-width: 120px;
-    margin: 0 auto;
-}
 
 /* Container alignment */
 .container {
