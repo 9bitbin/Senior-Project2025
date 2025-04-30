@@ -1,4 +1,3 @@
-
 // Merged VIDIA Script: Goals + Weight Tracker
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
@@ -19,6 +18,7 @@ const ctx = document.getElementById("weightChart")?.getContext("2d");
 // ---- DOM Elements (Goals Section) ----
 const goalType = document.getElementById("goal-type");
 const goalTarget = document.getElementById("goal-target");
+const goalStart = document.getElementById("goal-start");
 const goalDeadline = document.getElementById("goal-deadline");
 const saveGoalBtn = document.getElementById("save-goal");
 const goalTable = document.getElementById("goal-table");
@@ -31,7 +31,6 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) return window.location.href = "index.html";
   currentUser = user;
 
-  // Init Weight & Goals
   const docRef = doc(db, "users", user.uid);
   const docSnap = await getDoc(docRef);
   const data = docSnap.data() || {};
@@ -116,7 +115,7 @@ async function getAIInsight(logs) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"
+        "Authorization": "Bearer YOUR_API_KEY_HERE"
       },
       body: JSON.stringify({
         model: "mistralai/mistral-small-3.1-24b-instruct:free",
@@ -147,7 +146,7 @@ if (saveGoalBtn) {
     const data = snap.data() || {};
     const goals = data.goals || [];
 
-    goals.push({ type, target: Number(target), deadline });
+    goals.push({ type, target: Number(target), start: goalStart?.value ? Number(goalStart.value) : null, deadline });
     await updateDoc(userRef, { goals });
     await renderGoals();
     await fetchAIInsight();
@@ -167,15 +166,15 @@ async function renderGoals() {
   const weightLogs = data.weightLogs || [];
   const fastingLogs = data.fastingHistory || [];
 
-  goalTable.innerHTML = goals.length ? "" : `<tr><td colspan="6">No goals set yet.</td></tr>`;
+  goalTable.innerHTML = goals.length ? "" : `<tr><td colspan="7">No goals set yet.</td></tr>`;
 
   goals.forEach((goal, index) => {
     let progress = 0, status = "🟢 In Progress", progressText = "Tracking...";
     const now = new Date();
 
     if (goal.type === "weight") {
-      const start = weightLogs[0]?.weight || 0;
       const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
+      const start = goal.start != null && !isNaN(goal.start) ? goal.start : (weightLogs[0]?.weight || 0);
       const total = start - goal.target;
       const lost = start - latest;
       progress = total > 0 ? Math.min((lost / total) * 100, 100) : 0;
@@ -208,12 +207,20 @@ async function renderGoals() {
 
     goalTable.innerHTML += `
       <tr>
-        <td>${goal.type}</td><td>${goal.target}</td><td>${goal.deadline}</td>
-        <td>${progressText}
-          <div class="progress-bar"><div class="progress-bar-fill" style="width:${progress}%"></div></div>
+        <td>${goal.type}</td>
+        <td>${goal.start ?? '—'}</td>
+        <td>${goal.target}</td>
+        <td>${goal.deadline}</td>
+        <td>
+          ${progressText}
+          <div class="progress-bar">
+            <div class="progress-bar-fill" style="width:${progress}%"></div>
+          </div>
         </td>
         <td>${status}</td>
-        <td><button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;">🗑️</button></td>
+        <td>
+          <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;">🗑️</button>
+        </td>
       </tr>`;
   });
 }
@@ -259,7 +266,7 @@ Workouts:\n${workouts.slice(-3).map(w => `${w.type} - ${w.caloriesBurned} kcal`)
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"
+        "Authorization": "Bearer YOUR_API_KEY_HERE"
       },
       body: JSON.stringify({
         model: "mistralai/mistral-small-3.1-24b-instruct:free",

@@ -103,26 +103,27 @@
 
   <div class="main-content">
 
-    <!-- 🎯 Goal Setting -->
     <div class="card">
-      <h2>🎯 Set a Health Goal</h2>
-      <select id="goal-type">
-        <option value="weight">Lose Weight</option>
-        <option value="calories">Daily Calorie Limit</option>
-        <option value="workoutsPerWeek">Workouts Per Week</option>
-        <option value="fastingDays">Fasting Days Per Week</option>
-      </select>
-      <input type="number" id="goal-target" placeholder="Enter target value">
-      <input type="date" id="goal-deadline">
-      <button id="save-goal">Save Goal</button>
-    </div>
+        <h2>🎯 Set a Health Goal</h2>
+        <select id="goal-type">
+          <option value="weight">Lose Weight</option>
+          <option value="calories">Daily Calorie Limit</option>
+          <option value="workoutsPerWeek">Workouts Per Week</option>
+          <option value="fastingDays">Fasting Days Per Week</option>
+        </select>
+        <input type="number" id="goal-start" placeholder="Enter starting value (optional)" />
+        <input type="number" id="goal-target" placeholder="Enter target value" />
+        <input type="date" id="goal-deadline" />
+        <button id="save-goal">Save Goal</button>
+      </div>
+      
 
     <!-- 📋 Goal List -->
     <div class="card">
       <h2>📋 Your Goals</h2>
       <table>
         <thead>
-          <tr><th>Type</th><th>Target</th><th>Deadline</th><th>Progress</th><th>Status</th><th>Action</th></tr>
+            <tr><th>Type</th><th>Start</th><th>Target</th><th>Deadline</th><th>Progress</th><th>Status</th><th>Action</th></tr>
         </thead>
         <tbody id="goal-table">
           <tr><td colspan="6">Loading...</td></tr>
