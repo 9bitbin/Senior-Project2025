@@ -17,39 +17,42 @@
   <!-- 🔹 Main Content -->
   <div class="main-content">
     <div class="fasting-tracker">
-      <h2>⏳ Intermittent Fasting Tracker</h2>
+      <div class="section-box main-container">
+        <h2>⏳ Intermittent Fasting Tracker</h2>
     
-      
-      <div class="timer-wrapper">
-        <div id="fasting-timer">00h 00m 00s</div>
-        <div class="fasting-type-indicator">16:8 Intermittent Fasting</div>
-    </div>
+        <div class="timer-wrapper">
+            <div id="fasting-timer">00h 00m 00s</div>
+            <div class="fasting-type-indicator">16:8 Intermittent Fasting</div>
+        </div>
 
-    <div class="fasting-stats">
-        <div class="stat-card">
-            <span class="stat-icon">⭐</span>
-            <h4>Total Fasts</h4>
-            <p id="total-fasts">0</p>
+        <div class="fasting-stats">
+            <div class="stat-card">
+                <span class="stat-icon">⭐</span>
+                <h4>Total Fasts</h4>
+                <p id="total-fasts">0</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">⏱️</span>
+                <h4>Average Duration</h4>
+                <p id="avg-duration">0 hrs</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🎯</span>
+                <h4>Completion Rate</h4>
+                <p id="completion-rate">0%</p>
+            </div>
         </div>
-        <div class="stat-card">
-            <span class="stat-icon">⏱️</span>
-            <h4>Average Duration</h4>
-            <p id="avg-duration">0 hrs</p>
-        </div>
-        <div class="stat-card">
-            <span class="stat-icon">🎯</span>
-            <h4>Completion Rate</h4>
-            <p id="completion-rate">0%</p>
-        </div>
-    </div>
+      </div>
 
-    <div class="fasting-chart-container">
-        <canvas id="fastingChart"></canvas>
-    </div>
-     
-      <!-- Update the fasting window select -->
-      <label for="fasting-window">Choose Fasting Schedule:</label>
-      <select id="fasting-window">
+      <div class="section-box">
+        <div class="fasting-chart-container">
+            <h3>Last 7 Days of Fasting Activity</h3>
+            <canvas id="fastingChart"></canvas>
+        </div>
+
+        <div class="controls-section">
+            <label for="fasting-window">Choose Fasting Schedule:</label>
+            <select id="fasting-window">
           <option value="12">12:12 (12 hours fasting, 12 hours eating)</option>
           <option value="14">14:10 (14 hours fasting, 10 hours eating)</option>
           <option value="16">16:8 (16 hours fasting, 8 hours eating)</option>
@@ -57,99 +60,103 @@
           <option value="20">20:4 (20 hours fasting, 4 hours eating)</option>
           <option value="24">24 Hour Fast</option>
       </select>
+            
+            <div class="button-group">
+                <button id="start-fasting" class="start-btn">🚀 Start Fasting</button>
+                <button id="end-fasting" class="end-btn" disabled>⏹ End Fasting</button>
+                <button id="download-fasting">📥 Download Fasting History (CSV)</button>
+            </div>
+            
+            <p><strong>Status:</strong> <span id="fasting-status">Not Started</span></p>
+        </div>
+      </div>
 
-  
-    
+      <div class="section-box">
+        <h3>📜 Fasting History <button class="collapse-btn" onclick="toggleHistory()">▼</button></h3>
+        <div class="date-filter-container">
+            <div class="date-filter-inputs">
+                <div class="date-input-group">
+                    <label>Start Date</label>
+                    <input type="date" id="filter-start-date">
+                </div>
+                <div class="date-input-group">
+                    <label>End Date</label>
+                    <input type="date" id="filter-end-date">
+                </div>
+                <div>
+                    <button class="filter-btn">🔍 Filter</button>
+                    <button class="reset-filter-btn">↺ Reset</button>
+                </div>
+            </div>
+        </div>
+      </div>
 
-    
+      <div class="history-container collapsed" id="historyContainer">
+          <ul id="fasting-history" class="fasting-history-list"></ul>
+      </div>
 
       <style>
-          .fasting-stats {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-              gap: 15px;
-              margin: 20px 0;
-          }
-
-          .stat-card {
-              background: #f8f9fa;
-              padding: 20px;
-              border-radius: 10px;
-              text-align: center;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              transition: transform 0.2s;
-          }
-
-          .stat-card:hover {
-              transform: translateY(-2px);
-          }
-
-          .stat-icon {
-              font-size: 24px;
-              margin-bottom: 10px;
-              display: block;
-          }
-
-          /* Update existing chart styles */
+          /* Chart improvements */
           .fasting-chart-container {
-              background: white;
-              padding: 20px;
-              border-radius: 10px;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+              height: 350px;
               margin: 20px 0;
-              height: 300px;
-              min-height: 300px;
           }
 
           #fastingChart {
               width: 100% !important;
               height: 100% !important;
-              min-height: 250px;
+              image-rendering: -webkit-optimize-contrast;
+              image-rendering: crisp-edges;
           }
 
-          /* Add styles for empty state */
-          .fasting-chart-container:empty::after {
-              content: "No fasting data available";
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100%;
-              color: #666;
-              font-style: italic;
+          /* History section styling */
+          .history-container {
+              background: #f8f9fa;
+              border-radius: 8px;
+              padding: 15px;
+              margin-top: 15px;
+              max-height: 500px;
+              overflow-y: auto;
+              transition: max-height 0.3s ease-out;
+              border: 1px solid #e2e8f0;
+          }
+
+          .history-container.collapsed {
+              max-height: 0;
+              padding: 0;
+              overflow: hidden;
+              border: none;
+          }
+
+          .collapse-btn {
+              background: #f0f0f0;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 1.2em;
+              cursor: pointer;
+              padding: 2px 8px;
+              margin-left: 10px;
+              transition: transform 0.3s, background-color 0.2s;
+          }
+
+          .collapse-btn:hover {
+              background: #e0e0e0;
+          }
+
+          .collapse-btn.collapsed {
+              transform: rotate(-90deg);
           }
       </style>
-         
-      </style>
-      <button id="start-fasting" class="start-btn">🚀 Start Fasting</button>
-      <button id="end-fasting" class="end-btn" disabled>⏹ End Fasting</button>
-      <button id="download-fasting">📥 Download Fasting History (CSV)</button>
 
-
-      <p><strong>Status:</strong> <span id="fasting-status">Not Started</span></p>
-
-      <h3>📜 Fasting History</h3>
-      <div class="date-filter-container">
-          <div class="date-filter-inputs">
-              <div class="date-input-group">
-                  <label>Start Date</label>
-                  <input type="date" id="filter-start-date">
-              </div>
-              <div class="date-input-group">
-                  <label>End Date</label>
-                  <input type="date" id="filter-end-date">
-              </div>
-              <div>
-                  <button class="filter-btn">🔍 Filter</button>
-                  <button class="reset-filter-btn">↺ Reset</button>
-              </div>
-          </div>
-      </div>
-
-      <div class="history-container">
-          
-          <ul id="fasting-history" class="fasting-history-list"></ul>
-      </div>
-
+      <script>
+          function toggleHistory() {
+              const container = document.getElementById('historyContainer');
+              const btn = document.querySelector('.collapse-btn');
+              container.classList.toggle('collapsed');
+              btn.classList.toggle('collapsed');
+              btn.textContent = container.classList.contains('collapsed') ? '▶' : '▼';
+          }
+      </script>
       
     </div>
   </div>

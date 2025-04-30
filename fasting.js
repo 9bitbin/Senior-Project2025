@@ -219,72 +219,150 @@ async function loadFastingHistory() {
             if (completionRateEl) completionRateEl.textContent = `${completionRate}%`;
 
             // Create/Update chart with last 7 fasts
-            const last7Fasts = fastingHistory
-                .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
-                .slice(0, 7)
-                .reverse();
-            
+            // Get the last 7 days
+            const last7Days = Array.from({length: 7}, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                date.setHours(0, 0, 0, 0);
+                return date;
+            }).reverse();
+
+            // Group fasts by day
+            const groupedFasts = last7Days.map(day => {
+                const dayFasts = fastingHistory.filter(fast => {
+                    const fastDate = new Date(fast.startTime);
+                    return fastDate.toDateString() === day.toDateString();
+                });
+                return {
+                    date: day,
+                    fasts: dayFasts
+                };
+            });
+
+            // In the loadFastingHistory function, modify how we create datasets
             if (ctx) {
                 if (fastingChart) {
                     fastingChart.destroy();
                 }
-                // Chart configuration
+
+                // Create separate datasets for individual fasts
+                const datasets = [];
+                groupedFasts.forEach((group, groupIndex) => {
+                    // Sort fasts within each day to have most recent on top
+                    const sortedFasts = [...group.fasts].sort((a, b) => 
+                        new Date(b.startTime) - new Date(a.startTime)
+                    );
+
+                    sortedFasts.forEach((fast, fastIndex) => {
+                        const duration = parseFloat(fast.duration);
+                        const targetHours = parseInt(fastingWindowSelect.value);
+                        const isCompleted = duration >= targetHours;
+                        
+                        const data = Array(groupedFasts.length).fill(0);
+                        data[groupIndex] = duration;
+
+                        datasets.unshift({  // Changed push to unshift
+                            data: data,
+                            backgroundColor: isCompleted ? '#10b981' : '#ef4444',
+                            stack: `day${groupIndex}`,
+                            borderWidth: 1,
+                            borderColor: 'white',
+                            borderSkipped: false,
+                            fast: fast  // Store the fast data directly in the dataset
+                        });
+                    });
+                });
+
                 const chartData = {
                     type: 'bar',
                     data: {
-                        labels: last7Fasts.map(fast => {
-                            const date = new Date(fast.startTime);
-                            const month = date.getMonth() + 1;
-                            const day = date.getDate();
-                            // Fix the date formatting
-                            return `${month}/${day}`;
+                        labels: groupedFasts.map(group => {
+                            const date = group.date;
+                            return [
+                                date.toLocaleDateString('en-US', { weekday: 'short' }),
+                                `${date.getMonth() + 1}/${date.getDate()}`
+                            ];
                         }),
-                        datasets: [{
-                            label: 'Last 7 Fasting Sessions (in hours)',
-                            data: last7Fasts.map(fast => parseFloat(fast.duration)),
-                            backgroundColor: last7Fasts.map(fast => 
-                                fast.status === "Completed" ? '#10b981' : '#ef4444'
-                            ),
-                            borderColor: '#0f172a',
-                            borderWidth: 1
-                        }]
+                        datasets: datasets
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        categoryPercentage: 1.0,
+                        barPercentage: 0.95,
                         scales: {
                             y: {
+                                stacked: true,
                                 beginAtZero: true,
                                 max: 24,
+                                grid: {
+                                    display: true,
+                                    color: '#f0f0f0'
+                                },
                                 ticks: {
-                                    stepSize: 1,
+                                    stepSize: 3,
                                     callback: function(value) {
                                         return value + ' hrs';
                                     }
                                 }
+                            },
+                            x: {
+                                stacked: true,
+                                grid: {
+                                    display: false
+                                },
+                                offset: true
                             }
                         },
                         plugins: {
-                            title: {
+                            legend: {
                                 display: true,
-                                text: 'Your Last 7 Fasting Sessions',
-                                font: {
-                                    size: 16
+                                position: 'top',
+                                align: 'center',
+                                labels: {
+                                    generateLabels: function(chart) {
+                                        return [{
+                                            text: 'Completed Fast',
+                                            fillStyle: '#10b981',
+                                            strokeStyle: '#10b981',
+                                            lineWidth: 0
+                                        }, {
+                                            text: 'Ended Early',
+                                            fillStyle: '#ef4444',
+                                            strokeStyle: '#ef4444',
+                                            lineWidth: 0
+                                        }];
+                                    },
+                                    usePointStyle: true,
+                                    padding: 20
                                 }
                             },
                             tooltip: {
                                 callbacks: {
-                                    title: function(context) {
-                                        const fast = last7Fasts[context[0].dataIndex];
-                                        return `Session on ${new Date(fast.startTime).toLocaleDateString()}`;
+                                    title: (context) => {
+                                        const index = context[0].dataIndex;
+                                        const date = groupedFasts[index].date;
+                                        return date.toLocaleDateString('en-US', { 
+                                            weekday: 'long', 
+                                            month: 'long', 
+                                            day: 'numeric' 
+                                        });
                                     },
-                                    label: function(context) {
-                                        const fast = last7Fasts[context.dataIndex];
+                                    label: (context) => {
+                                        const fast = context.dataset.fast;
+                                        if (!fast) return '';
+                                        
+                                        const startTime = new Date(fast.startTime).toLocaleTimeString();
+                                        const endTime = new Date(fast.actualEndTime).toLocaleTimeString();
+                                        const duration = parseFloat(fast.duration);
+                                        const totalDatasets = context.chart.data.datasets.length;
+                                        const fastNumber = context.datasetIndex + 1;
+                                        
                                         return [
-                                            `Duration: ${context.raw.toFixed(2)} hours`,
-                                            `Status: ${fast.status}`,
-                                            `Start: ${new Date(fast.startTime).toLocaleString()}`,
-                                            `End: ${new Date(fast.actualEndTime).toLocaleString()}`
+                                            `Fast #${fastNumber}`,
+                                            `${startTime} - ${endTime}`,
+                                            `Duration: ${duration.toFixed(1)}h`,
+                                            `Status: ${fast.status}`
                                         ];
                                     }
                                 }
@@ -293,7 +371,6 @@ async function loadFastingHistory() {
                     }
                 };
                 
-                // Create new chart instance
                 fastingChart = new Chart(ctx, chartData);
             }
 
