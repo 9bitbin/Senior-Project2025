@@ -7,15 +7,14 @@ import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.3.
 let currentUser = null;
 let cachedLogs = [];
 
-// ---- DOM Elements (Weight Section) ----
+// ---- DOM Elements ----
 const weightInput = document.getElementById("weight-input");
 const dateInput = document.getElementById("weight-date");
 const logBtn = document.getElementById("log-weight");
-const aiResponseEl = document.getElementById("weight-ai-response");
 const downloadBtn = document.getElementById("download-weight");
+const aiResponseEl = document.getElementById("weight-ai-response");
 const ctx = document.getElementById("weightChart")?.getContext("2d");
 
-// ---- DOM Elements (Goals Section) ----
 const goalType = document.getElementById("goal-type");
 const goalTarget = document.getElementById("goal-target");
 const goalStart = document.getElementById("goal-start");
@@ -23,6 +22,7 @@ const goalDeadline = document.getElementById("goal-deadline");
 const saveGoalBtn = document.getElementById("save-goal");
 const goalTable = document.getElementById("goal-table");
 const aiGoalResponse = document.getElementById("goal-ai-response");
+const editStartToggle = document.getElementById("edit-start-toggle");
 
 let weightChart;
 
@@ -35,6 +35,19 @@ onAuthStateChanged(auth, async (user) => {
   const docSnap = await getDoc(docRef);
   const data = docSnap.data() || {};
   const weightLogs = data.weightLogs || [];
+
+  // ✅ Pre-fill goal-start from profile weight
+  if (data.weight && goalStart) {
+    goalStart.value = data.weight;
+    goalStart.readOnly = true;
+  }
+
+  // ✅ Allow user to toggle editing
+  if (editStartToggle) {
+    editStartToggle.addEventListener("change", () => {
+      goalStart.readOnly = !editStartToggle.checked;
+    });
+  }
 
   await renderWeightChart(weightLogs);
   await getAIInsight(weightLogs);
@@ -146,7 +159,13 @@ if (saveGoalBtn) {
     const data = snap.data() || {};
     const goals = data.goals || [];
 
-    goals.push({ type, target: Number(target), start: goalStart?.value ? Number(goalStart.value) : null, deadline });
+    goals.push({
+      type,
+      target: Number(target),
+      start: goalStart?.value ? Number(goalStart.value) : null,
+      deadline
+    });
+
     await updateDoc(userRef, { goals });
     await renderGoals();
     await fetchAIInsight();
@@ -166,7 +185,7 @@ async function renderGoals() {
   const weightLogs = data.weightLogs || [];
   const fastingLogs = data.fastingHistory || [];
 
-  goalTable.innerHTML = goals.length ? "" : `<tr><td colspan="7">No goals set yet.</td></tr>`;
+  goalTable.innerHTML = goals.length ? "" : `<tr><td colspan="6">No goals set yet.</td></tr>`;
 
   goals.forEach((goal, index) => {
     let progress = 0, status = "🟢 In Progress", progressText = "Tracking...";
@@ -208,7 +227,6 @@ async function renderGoals() {
     goalTable.innerHTML += `
       <tr>
         <td>${goal.type}</td>
-        <td>${goal.start ?? '—'}</td>
         <td>${goal.target}</td>
         <td>${goal.deadline}</td>
         <td>
