@@ -189,7 +189,7 @@ ${meals.slice(-5).map(m =>
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer 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",
         "HTTP-Referer": "http://localhost:5500",
         "X-Title": "VIDIA Goal Coach"
       },
