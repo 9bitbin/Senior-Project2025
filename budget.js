@@ -18,15 +18,12 @@ const remainingBudgetEl = document.getElementById("remaining-budget");
 const budgetAlertEl = document.getElementById("budget-alert");
 const budgetRangeDisplay = document.getElementById("budget-range-display");
 const budgetHistoryList = document.getElementById("budget-history-list");
+const showAllHistoryToggle = document.getElementById("show-all-history");
 
 const budgetStartDateInput = document.getElementById("budget-start-date");
 const budgetEndDateInput = document.getElementById("budget-end-date");
 const filterBudgetBtn = document.getElementById("filter-budget");
 const resetBudgetBtn = document.getElementById("reset-budget");
-
-const budgetChartCanvas = document.getElementById("budgetChart");
-const doughnutChartCanvas = document.getElementById("budgetDoughnutChart");
-const insightBox = document.getElementById("budget-insight");
 
 let budgetChartInstance = null;
 let doughnutChartInstance = null;
@@ -69,7 +66,7 @@ async function setBudget() {
                 startDate,
                 endDate
             }
-        });
+        }, { merge: true });
         fetchBudgetData();
     } catch (error) {
         console.error("❌ ERROR setting budget:", error);
@@ -95,6 +92,7 @@ async function logMealCost() {
 
     if (userDoc.exists()) {
         let budgetData = userDoc.data().mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
+        let allExpenses = userDoc.data().allMealExpenses || [];
 
         const expense = {
             id: Date.now().toString(),
@@ -105,9 +103,13 @@ async function logMealCost() {
 
         budgetData.expenses.push(expense);
         budgetData.totalSpent += mealCost;
+        allExpenses.push(expense);
 
         try {
-            await updateDoc(userDocRef, { mealBudget: budgetData });
+            await updateDoc(userDocRef, {
+                mealBudget: budgetData,
+                allMealExpenses: allExpenses
+            });
             fetchBudgetData();
         } catch (error) {
             console.error("❌ ERROR logging meal cost:", error);
@@ -125,23 +127,18 @@ async function fetchBudgetData(startDateFilter = null, endDateFilter = null) {
     const userDoc = await getDoc(userDocRef);
 
     if (userDoc.exists()) {
-        let budgetData = userDoc.data().mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
-        let remainingBudget = budgetData.amount - budgetData.totalSpent;
-        let filteredExpenses = [...budgetData.expenses];
+        const showAll = showAllHistoryToggle?.checked;
+        const data = userDoc.data();
+        const budgetData = data.mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
+        const allExpenses = data.allMealExpenses || [];
 
-        if (budgetData.startDate && budgetData.endDate) {
-            const start = new Date(budgetData.startDate);
-            const end = new Date(budgetData.endDate);
-            filteredExpenses = filteredExpenses.filter(exp => {
-                const date = new Date(exp.timestamp);
-                return date >= start && date <= end;
-            });
-        }
+        let expenses = showAll ? allExpenses : budgetData.expenses;
+        let remainingBudget = budgetData.amount - budgetData.totalSpent;
 
         if (startDateFilter && endDateFilter) {
             const start = new Date(startDateFilter);
             const end = new Date(endDateFilter);
-            filteredExpenses = filteredExpenses.filter(exp => {
+            expenses = expenses.filter(exp => {
                 const date = new Date(exp.timestamp);
                 return date >= start && date <= end;
             });
@@ -159,36 +156,38 @@ async function fetchBudgetData(startDateFilter = null, endDateFilter = null) {
             budgetRangeDisplay.innerText = `From ${formattedStart} to ${formattedEnd}`;
         }
 
-        generateBudgetChart(filteredExpenses);
-        renderBudgetHistoryList(filteredExpenses);
+        generateBudgetChart(expenses);
+        renderBudgetHistoryList(expenses);
         renderBudgetDoughnutChart(budgetData.totalSpent, budgetData.amount);
         updateSmartInsight(budgetData.totalSpent, budgetData.amount);
     }
 }
 
 function generateBudgetChart(expenses) {
-    if (!budgetChartCanvas) return;
-    const dailyExpenses = {};
+    const canvas = document.getElementById("budgetChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    const dailyTotals = {};
     expenses.forEach(exp => {
         const date = new Date(exp.timestamp).toISOString().split("T")[0];
-        dailyExpenses[date] = (dailyExpenses[date] || 0) + exp.cost;
+        dailyTotals[date] = (dailyTotals[date] || 0) + exp.cost;
     });
 
-    const labels = Object.keys(dailyExpenses).sort();
-    const data = labels.map(date => dailyExpenses[date]);
+    const labels = Object.keys(dailyTotals).sort();
+    const data = labels.map(d => dailyTotals[d]);
 
     if (budgetChartInstance) budgetChartInstance.destroy();
 
-    const ctx = budgetChartCanvas.getContext("2d");
     budgetChartInstance = new Chart(ctx, {
         type: "line",
         data: {
             labels,
             datasets: [{
-                label: "Meal Expenses Over Time",
+                label: "Meal Expenses",
                 data,
-                borderColor: "#f87171",
-                backgroundColor: "#fca5a5",
+                borderColor: "#10b981",
+                backgroundColor: "#a7f3d0",
                 fill: true,
                 tension: 0.3
             }]
@@ -201,8 +200,10 @@ function generateBudgetChart(expenses) {
 }
 
 function renderBudgetDoughnutChart(spent, budget) {
-    if (!doughnutChartCanvas) return;
-    const ctx = doughnutChartCanvas.getContext("2d");
+    const canvas = document.getElementById("budgetDoughnutChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
     const remaining = Math.max(0, budget - spent);
 
     if (doughnutChartInstance) doughnutChartInstance.destroy();
@@ -224,11 +225,8 @@ function renderBudgetDoughnutChart(spent, budget) {
 }
 
 function updateSmartInsight(spent, budget) {
-    if (!insightBox) return;
-    if (!budget) {
-        insightBox.textContent = "⚠️ Set a budget to begin tracking.";
-        return;
-    }
+    const box = document.getElementById("budget-insight");
+    if (!box) return;
 
     const pct = (spent / budget) * 100;
     let msg = `You've used ${pct.toFixed(1)}% of your budget.`;
@@ -237,7 +235,7 @@ function updateSmartInsight(spent, budget) {
     else if (pct >= 70) msg += " 🟡 You're on pace, monitor spending.";
     else msg += " ✅ Great job staying within limits!";
 
-    insightBox.textContent = msg;
+    box.textContent = msg;
 }
 
 function renderBudgetHistoryList(expenses) {
@@ -251,7 +249,7 @@ function renderBudgetHistoryList(expenses) {
     budgetHistoryList.innerHTML = expenses.map(exp => {
         const date = new Date(exp.timestamp).toLocaleString();
         const cat = exp.category || "Uncategorized";
-        return `<li>$${exp.cost.toFixed(2)} <em>on ${date}</em> — <strong>${cat}</strong></li>`;
+        return `<li>$${exp.cost.toFixed(2)} on ${date} — <strong>${cat}</strong></li>`;
     }).join("");
 }
 
@@ -265,9 +263,13 @@ if (resetBudgetBtn) resetBudgetBtn.addEventListener("click", () => {
     budgetEndDateInput.value = "";
     fetchBudgetData();
 });
+if (showAllHistoryToggle) showAllHistoryToggle.addEventListener("change", () => {
+    fetchBudgetData();
+});
 
 auth.onAuthStateChanged(user => {
     if (user) fetchBudgetData();
     else window.location.href = "index.html";
 });
+
 
