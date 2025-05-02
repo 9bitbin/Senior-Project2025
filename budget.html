@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -6,17 +6,49 @@
   <title>Vidia - Budget</title>
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       display: flex;
       font-family: 'Inter', sans-serif;
       background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background: #d8f3dc;
+      padding-top: 20px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+      position: fixed;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul { list-style: none; padding: 0; }
+
+    .sidebar ul li { padding: 12px 20px; }
+
+    .sidebar ul li a {
+      color: black;
+      font-weight: bold;
+      text-decoration: none;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .sidebar ul li a:hover {
+      background-color: #b7e4c7;
+      border-radius: 6px;
+      padding-left: 25px;
     }
 
     .main-content {
@@ -35,19 +67,13 @@
       border-radius: 16px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
       width: 100%;
-      max-width: 650px;
+      max-width: 700px;
       animation: fadeInUp 0.6s ease;
     }
 
     @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .card h2 {
@@ -56,17 +82,13 @@
       text-align: center;
     }
 
-    input[type="number"],
-    input[type="date"],
-    select,
-    button {
+    input, select, button {
       width: 100%;
       padding: 12px;
       margin-bottom: 15px;
       font-size: 14px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      transition: border 0.2s, box-shadow 0.2s;
     }
 
     input:focus, select:focus, button:focus {
@@ -89,15 +111,7 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-      
-    button.secondary {
-      background-color: #eb0000;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
+
     button:hover {
       background-color: #059669;
     }
@@ -109,6 +123,23 @@
       text-align: center;
     }
 
+    .budget-range {
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+      color: #333;
+    }
+
+    .insight {
+      margin-top: 15px;
+      padding: 12px;
+      background: #fef9c3;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #92400e;
+      text-align: center;
+    }
+
     ul#budget-history-list {
       padding-left: 20px;
       margin-top: 10px;
@@ -117,86 +148,118 @@
     ul#budget-history-list li {
       margin-bottom: 8px;
     }
+
+    canvas {
+      max-width: 400px;
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
-  <script src="sidebar.js" defer></script>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>VIDIA</h2>
+    <ul>
+      <li><a href="home.html">🏠 Dashboard</a></li>
+      <li><a href="profile.html">👤 Profile</a></li>
+      <li><a href="nutrition.html">🍎 Nutrition & Meals</a></li>
+      <li><a href="budget.html">💰 Budget</a></li>
+      <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
+      <li><a href="fasting.html">⏳ Fasting</a></li>
+      <li><a href="recipe.html">📖 Recipes</a></li>
+      <li><a href="community.html">🌍 Community</a></li>
+      <li><a href="messaging.html">💬 Messaging</a></li>
+      <li><a href="ai-meals.html">🤖 AI Meals</a></li>
+      <li><a href="ai-advice.html">🧠 AI Advisor</a></li>
+      <li><a href="weight.html">⚖️ Weight</a></li>
+      <li><a href="goals.html">🎯 Goals</a></li>
+      <li><a href="index.html">🚪 Logout</a></li>
+    </ul>
+  </div>
+
   <!-- Main Content -->
   <div class="main-content">
 
-    <!-- Budget Overview Card -->
-    <div class="card overview-card">
-        <h2>💰 Budget Overview</h2>
-        <div class="budget-stats-grid">
-            <div class="stat-box">
-                <span class="stat-label">Total Budget</span>
-                <span class="stat-value" id="budget-value">$0</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">Total Spent</span>
-                <span class="stat-value" id="total-spent">$0</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">Remaining</span>
-                <span class="stat-value" id="remaining-budget">$0</span>
-            </div>
-        </div>
-        <p id="budget-alert" class="budget-alert"></p>
+    <!-- Budget Setup + Logging -->
+    <div class="card">
+      <h2>💸 Meal Budget Tracking</h2>
+
+      <label for="budget-amount">Set Budget ($):</label>
+      <input type="number" id="budget-amount" placeholder="Enter budget">
+
+      <label for="budget-period">Budget Period:</label>
+      <select id="budget-period">
+        <option value="Daily">Daily</option>
+        <option value="Weekly">Weekly</option>
+        <option value="Monthly">Monthly</option>
+      </select>
+      <button id="set-budget">Set Budget</button>
+
+      <label for="meal-cost">Log Meal Cost ($):</label>
+      <input type="number" id="meal-cost" placeholder="Enter meal cost">
+
+      <label for="meal-category">Select Category:</label>
+      <select id="meal-category">
+        <option value="Groceries">Groceries</option>
+        <option value="Dining Out">Dining Out</option>
+        <option value="Snacks">Snacks</option>
+        <option value="Other">Other</option>
+      </select>
+      <button id="log-meal-cost">Log Cost</button>
+
+      <h3>Budget Overview</h3>
+      <p><strong>Budget:</strong> $<span id="budget-value">0</span></p>
+      <p><strong>Total Spent:</strong> $<span id="total-spent">0</span></p>
+      <p><strong>Remaining Budget:</strong> $<span id="remaining-budget">0</span></p>
+
+      <!-- ✅ FIXED Budget Period Display Placement -->
+      <div class="budget-range">
+        <p id="budget-range-display">Loading budget period...</p>
+      </div>
+
+      <p id="budget-alert"></p>
     </div>
 
-    <!-- Budget Setup Card -->
+    <!-- Doughnut Chart + Insight -->
     <div class="card">
-        <h2>⚙️ Budget Settings</h2>
-        <div class="form-grid">
-            <div class="form-group">
-                <label for="budget-amount">Set Budget ($)</label>
-                <input type="number" id="budget-amount" placeholder="Enter amount">
-            </div>
-            <div class="form-group">
-                <label for="budget-period">Budget Period</label>
-                <select id="budget-period">
-                    <option value="Daily">Daily</option>
-                    <option value="Weekly">Weekly</option>
-                    <option value="Monthly">Monthly</option>
-                </select>
-            </div>
-        </div>
-        <button id="set-budget" class="primary-btn">Set Budget</button>
+      <h2>🍩 Budget Utilization</h2>
+      <canvas id="budgetDoughnutChart" width="300" height="300"></canvas>
+      <div id="budget-insight" class="insight">Insight loading...</div>
     </div>
 
-    <!-- Expense Logging Card -->
+    <!-- Line Chart History -->
     <div class="card">
-        <h2>📝 Log Expense</h2>
-        <div class="form-group">
-            <label for="meal-cost">Meal Cost ($)</label>
-            <input type="number" id="meal-cost" placeholder="Enter cost">
-        </div>
-        <button id="log-meal-cost" class="primary-btn">Log Expense</button>
+      <h2>📈 Spending Over Time</h2>
+      <canvas id="budgetChart" width="400" height="300"></canvas>
     </div>
 
-    <!-- History Card -->
+
+    
+    <!-- Spending History -->
     <div class="card">
-        <h2>📊 Expense History</h2>
-        <div class="date-filter">
-            <div class="form-group">
-                <label for="budget-start-date">From</label>
-                <input type="date" id="budget-start-date">
-            </div>
-            <div class="form-group">
-                <label for="budget-end-date">To</label>
-                <input type="date" id="budget-end-date">
-            </div>
-        </div>
-        <div class="button-group">
-            <button id="filter-budget" class="primary-btn">Apply Filter</button>
-            <button id="reset-budget" class="end-btn">Reset</button>
-        </div>
-        <ul id="budget-history-list" class="history-list"></ul>
+      <h2>🗂️ Spending History</h2>
+
+      <label for="budget-start-date">Start Date:</label>
+      <input type="date" id="budget-start-date">
+
+      <label for="budget-end-date">End Date:</label>
+      <input type="date" id="budget-end-date">
+
+      <button id="filter-budget">Filter Budget</button>
+      <button id="reset-budget">Reset</button>
+      <label><input type="checkbox" id="show-all-history"> Show full history</label>
+
+
+      <h3>Meal Expenses</h3>
+      <ul id="budget-history-list">
+        <li>Loading...</li>
+      </ul>
     </div>
-</div>
+
+  </div>
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module" src="budget.js"></script>
 </body>
 </html>
-
