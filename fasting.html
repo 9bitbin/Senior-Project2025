@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
  
     
 </head>
@@ -16,196 +17,147 @@
   <!-- 🔹 Main Content -->
   <div class="main-content">
     <div class="fasting-tracker">
-      <h2>⏳ Intermittent Fasting Tracker</h2>
-      <!-- After the fasting timer div -->
-      <div class="circular-progress">
-          <div class="timer-wrapper">
-              <div id="fasting-timer">00h 00m 00s</div>
-              <div class="fasting-type-indicator">16:8 Intermittent Fasting</div>
-          </div>
-      </div>
-      
-      <!-- After the stats cards -->
-      <div class="motivation-card">
-          <h4>💡 Fasting Tip</h4>
-          <p id="fasting-tip">Stay hydrated! Drink water regularly during your fast.</p>
-      </div>
-      
-      <!-- After the progress tracking -->
+      <div class="section-box main-container">
+        <h2>⏳ Intermittent Fasting Tracker</h2>
     
-      <!-- Add benefits section -->
-      <div class="benefits-section">
-          <h4>✨ Benefits of your current fast</h4>
-          <div class="benefits-timeline">
-              <div class="benefit-marker active">
-                  <span class="time">12h</span>
-                  <p>Autophagy begins</p>
-              </div>
-              <div class="benefit-marker">
-                  <span class="time">16h</span>
-                  <p>Fat burning increases</p>
-              </div>
-              <div class="benefit-marker">
-                  <span class="time">24h</span>
-                  <p>Cellular repair peaks</p>
-              </div>
-          </div>
+        <div class="timer-wrapper">
+            <div id="fasting-timer">00h 00m 00s</div>
+            <div class="fasting-type-indicator">16:8 Intermittent Fasting</div>
+        </div>
+
+        <div class="fasting-stats">
+            <div class="stat-card">
+                <span class="stat-icon">⭐</span>
+                <h4>Total Fasts</h4>
+                <p id="total-fasts">0</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">⏱️</span>
+                <h4>Average Duration</h4>
+                <p id="avg-duration">0 hrs</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🎯</span>
+                <h4>Completion Rate</h4>
+                <p id="completion-rate">0%</p>
+            </div>
+        </div>
       </div>
-      <!-- Update the fasting window select -->
-      <label for="fasting-window">Choose Fasting Schedule:</label>
-      <select id="fasting-window">
+
+      <div class="section-box">
+        <div class="fasting-chart-container">
+            <h3>Last 7 Days of Fasting Activity</h3>
+            <canvas id="fastingChart"></canvas>
+        </div>
+
+        <div class="controls-section">
+            <label for="fasting-window">Choose Fasting Schedule:</label>
+            <select id="fasting-window">
+          <option value="12">12:12 (12 hours fasting, 12 hours eating)</option>
+          <option value="14">14:10 (14 hours fasting, 10 hours eating)</option>
           <option value="16">16:8 (16 hours fasting, 8 hours eating)</option>
           <option value="18">18:6 (18 hours fasting, 6 hours eating)</option>
           <option value="20">20:4 (20 hours fasting, 4 hours eating)</option>
           <option value="24">24 Hour Fast</option>
-          <option value="36">36 Hour Fast</option>
-          <option value="48">48 Hour Fast</option>
       </select>
-
-      <!-- Add progress tracking -->
-      <div class="progress-container">
-          <div class="progress-bar">
-              <div id="progress-fill" class="progress-fill"></div>
-          </div>
-          <p id="progress-text">0% Complete</p>
+            
+            <div class="button-group">
+                <button id="start-fasting" class="start-btn">🚀 Start Fasting</button>
+                <button id="end-fasting" class="end-btn" disabled>⏹ End Fasting</button>
+                <button id="download-fasting">📥 Download Fasting History (CSV)</button>
+            </div>
+            
+            <p><strong>Status:</strong> <span id="fasting-status">Not Started</span></p>
+        </div>
       </div>
 
-    
-
-      <!-- After the benefits section -->
-      <div class="quick-tips">
-          <h4>🎯 Quick Tips</h4>
-          <div class="tips-grid">
-              <div class="tip-card">
-                  <span class="tip-icon">💧</span>
-                  <p>Stay hydrated with water, black coffee, or tea</p>
-              </div>
-              <div class="tip-card">
-                  <span class="tip-icon">🚶‍♂️</span>
-                  <p>Take walks to manage hunger</p>
-              </div>
-              <div class="tip-card">
-                  <span class="tip-icon">⏰</span>
-                  <p>Plan your eating window around social activities</p>
-              </div>
-          </div>
+      <div class="section-box">
+        <h3>📜 Fasting History <button class="collapse-btn" onclick="toggleHistory()">▼</button></h3>
+        <div class="date-filter-container">
+            <div class="date-filter-inputs">
+                <div class="date-input-group">
+                    <label>Start Date</label>
+                    <input type="date" id="filter-start-date">
+                </div>
+                <div class="date-input-group">
+                    <label>End Date</label>
+                    <input type="date" id="filter-end-date">
+                </div>
+                <div>
+                    <button class="filter-btn">🔍 Filter</button>
+                    <button class="reset-filter-btn">↺ Reset</button>
+                </div>
+            </div>
+        </div>
       </div>
 
-      <!-- Before the fasting window select -->
-      <div class="time-selector">
-          <h4>⏰ Eating Window</h4>
-          <div class="time-inputs">
-              <div class="time-input-group">
-                  <label>Eating Window Duration</label>
-                  <input type="number" 
-                         id="eating-window" 
-                         min="1" 
-                         max="12" 
-                         value="8" 
-                         step="1">
-                  <span class="unit">hours</span>
-              </div>
-          </div>
+      <div class="history-container collapsed" id="historyContainer">
+          <ul id="fasting-history" class="fasting-history-list"></ul>
       </div>
-      
-      <!-- Add these styles to your existing style section -->
+
       <style>
-          .fasting-stats {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-              gap: 15px;
+          /* Chart improvements */
+          .fasting-chart-container {
+              height: 350px;
               margin: 20px 0;
           }
 
-          .stat-card {
+          #fastingChart {
+              width: 100% !important;
+              height: 100% !important;
+              image-rendering: -webkit-optimize-contrast;
+              image-rendering: crisp-edges;
+          }
+
+          /* History section styling */
+          .history-container {
               background: #f8f9fa;
+              border-radius: 8px;
               padding: 15px;
-              border-radius: 10px;
-              text-align: center;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+              margin-top: 15px;
+              max-height: 500px;
+              overflow-y: auto;
+              transition: max-height 0.3s ease-out;
+              border: 1px solid #e2e8f0;
           }
 
-          .progress-container {
-              margin: 20px 0;
-              text-align: center;
-          }
-
-          .progress-bar {
-              width: 100%;
-              height: 20px;
-              background-color: #f0f0f0;
-              border-radius: 10px;
+          .history-container.collapsed {
+              max-height: 0;
+              padding: 0;
               overflow: hidden;
-              margin: 10px 0;
+              border: none;
           }
 
-          .progress-fill {
-              height: 100%;
-              background-color: #10b981;
-              width: 0;
-              transition: width 0.3s ease;
-          }
-
-          #progress-text {
-              color: #059669;
-              font-weight: bold;
-              margin: 5px 0;
-          }
-
-          #fasting-history li {
-              position: relative;
-              padding-right: 80px;
-          }
-
-          .status-badge {
-              position: absolute;
-              right: 15px;
-              top: 15px;
-              padding: 4px 8px;
+          .collapse-btn {
+              background: #f0f0f0;
+              border: 1px solid #ddd;
               border-radius: 4px;
-              font-size: 12px;
-              font-weight: bold;
+              font-size: 1.2em;
+              cursor: pointer;
+              padding: 2px 8px;
+              margin-left: 10px;
+              transition: transform 0.3s, background-color 0.2s;
           }
 
-          .status-completed {
-              background-color: #d1fae5;
-              color: #059669;
+          .collapse-btn:hover {
+              background: #e0e0e0;
           }
 
-          .status-early {
-              background-color: #fee2e2;
-              color: #dc2626;
+          .collapse-btn.collapsed {
+              transform: rotate(-90deg);
           }
       </style>
-      <button id="start-fasting" class="start-btn">🚀 Start Fasting</button>
-      <button id="end-fasting" class="end-btn" disabled>⏹ End Fasting</button>
-      <button id="download-fasting">📥 Download Fasting History (CSV)</button>
 
-
-      <p><strong>Status:</strong> <span id="fasting-status">Not Started</span></p>
-
-      <h3>📜 Fasting History</h3>
-      <!-- Add Date Filter Section -->
-      <div class="date-filter-container">
-          <div class="date-filter-inputs">
-              <div class="date-input-group">
-                  <label>Start Date</label>
-                  <input type="date" id="filter-start-date">
-              </div>
-              <div class="date-input-group">
-                  <label>End Date</label>
-                  <input type="date" id="filter-end-date">
-              </div>
-              <div>
-                  <button class="filter-btn">🔍 Filter</button>
-                  <button class="reset-filter-btn">↺ Reset</button>
-              </div>
-          </div>
-      </div>
-
-      <ul id="fasting-history">
-        <li>Loading fasting history...</li>
-      </ul>
+      <script>
+          function toggleHistory() {
+              const container = document.getElementById('historyContainer');
+              const btn = document.querySelector('.collapse-btn');
+              container.classList.toggle('collapsed');
+              btn.classList.toggle('collapsed');
+              btn.textContent = container.classList.contains('collapsed') ? '▶' : '▼';
+          }
+      </script>
+      
     </div>
   </div>
 
