@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <li><a href="home.html">🏠 Dashboard</a></li>
           <li><a href="profile.html">👤 Profile</a></li>
           <li><a href="nutrition.html">🍎 Nutrition & Meals</a></li>
+          <li><a href="goalsweightpage.html">🎯Goals & ⚖️Weight</a></li>
           <li><a href="budget.html">💰 Budget</a></li>
           <li><a href="exercise.html">🏋️‍♂️ Exercise</a></li>
           <li><a href="fasting.html">⏳ Fasting</a></li>
