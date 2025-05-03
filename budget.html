@@ -90,6 +90,38 @@
       text-align: center;
     }
 
+    .budget-stats-grid {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+      text-align: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      background: #f0fdf4;
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 14px;
+      color: #065f46;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #064e3b;
+    }
+
     .budget-range {
       margin-top: 10px;
       font-weight: bold;
@@ -129,7 +161,30 @@
   <!-- Main Content -->
   <div class="main-content">
 
-    <!-- Budget Setup + Logging -->
+    <!-- ✅ Your Budget Overview with Stat Boxes -->
+    <div class="card">
+      <h2>💰 Budget Overview</h2>
+      <div class="budget-stats-grid">
+        <div class="stat-box">
+          <span class="stat-label">Total Budget</span>
+          <span class="stat-value" id="budget-value">$0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Total Spent</span>
+          <span class="stat-value" id="total-spent">$0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Remaining</span>
+          <span class="stat-value" id="remaining-budget">$0</span>
+        </div>
+      </div>
+      <div class="budget-range">
+        <p id="budget-range-display">Loading budget period...</p>
+      </div>
+      <p id="budget-alert"></p>
+    </div>
+
+    <!-- Budget Setup -->
     <div class="card">
       <h2>💸 Meal Budget Tracking</h2>
 
@@ -155,18 +210,6 @@
         <option value="Other">Other</option>
       </select>
       <button id="log-meal-cost">Log Cost</button>
-
-      <h3>Budget Overview</h3>
-      <p><strong>Budget:</strong> $<span id="budget-value">0</span></p>
-      <p><strong>Total Spent:</strong> $<span id="total-spent">0</span></p>
-      <p><strong>Remaining Budget:</strong> $<span id="remaining-budget">0</span></p>
-
-      <!-- ✅ FIXED Budget Period Display Placement -->
-      <div class="budget-range">
-        <p id="budget-range-display">Loading budget period...</p>
-      </div>
-
-      <p id="budget-alert"></p>
     </div>
 
     <!-- Doughnut Chart + Insight -->
@@ -176,15 +219,13 @@
       <div id="budget-insight" class="insight">Insight loading...</div>
     </div>
 
-    <!-- Line Chart History -->
+    <!-- Line Chart -->
     <div class="card">
       <h2>📈 Spending Over Time</h2>
       <canvas id="budgetChart" width="400" height="300"></canvas>
     </div>
 
-
-    
-    <!-- Spending History -->
+    <!-- History -->
     <div class="card">
       <h2>🗂️ Spending History</h2>
 
@@ -197,7 +238,6 @@
       <button id="filter-budget">Filter Budget</button>
       <button id="reset-budget">Reset</button>
       <label><input type="checkbox" id="show-all-history"> Show full history</label>
-
 
       <h3>Meal Expenses</h3>
       <ul id="budget-history-list">
