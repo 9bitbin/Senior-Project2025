@@ -15,6 +15,7 @@ const anonymousCheck = document.getElementById("anonymousCheck");
 const searchInput = document.getElementById("searchInput");
 const friendToggle = document.getElementById("friendToggle");
 const visibilityCheck = document.getElementById("visibilityCheck");
+const postFilter = document.getElementById("postFilter");
 
 let allPosts = [];
 let currentUser = null;
@@ -50,6 +51,7 @@ function listenForPosts() {
 function renderFilteredPosts() {
   const keyword = searchInput?.value?.toLowerCase?.() || "";
   const filterFriendsOnly = friendToggle?.checked;
+  const selectedType = postFilter?.value;
 
   const filtered = allPosts.filter(post => {
     const isSelf = post.userId === currentUser.uid;
@@ -57,7 +59,8 @@ function renderFilteredPosts() {
     const matchesSearch = post.content.toLowerCase().includes(keyword) || post.type.toLowerCase().includes(keyword);
     const isVisible = post.visibility === "public" || (post.visibility === "friends" && (isFriendPost || isSelf));
     const respectsToggle = !filterFriendsOnly || isFriendPost || isSelf;
-    return matchesSearch && isVisible && respectsToggle;
+    const matchesType = selectedType === 'all' || post.type === selectedType;
+    return matchesSearch && isVisible && respectsToggle && matchesType;
   });
 
   postsContainer.innerHTML = "";
@@ -190,6 +193,7 @@ async function deletePost(postId) {
 
 searchInput?.addEventListener("input", renderFilteredPosts);
 friendToggle?.addEventListener("change", renderFilteredPosts);
+postFilter?.addEventListener("change", renderFilteredPosts);
 
 
 
