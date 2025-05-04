@@ -1,10 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('body').insertAdjacentHTML('afterbegin', `
     <div class="sidebar">
-      <div class="logo">
-        <img src="images/vidia-logo.png" alt="VIDIA Logo" style="height: 100px; margin-right: 10px;" />
-       
-      </div>
+    <h2>VIDIA</h2>
       <ul>
         <li><a href="home.html">🏠 Dashboard</a></li>
         <li><a href="profile.html">👤 Profile</a></li>
