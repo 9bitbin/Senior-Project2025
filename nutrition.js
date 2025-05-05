@@ -25,6 +25,11 @@ const chartCtx = document.getElementById("calorieChart")?.getContext("2d");
 let calorieChart = null;
 
 // ✅ Ensure elements exist before adding event listeners
+
+
+// const mealDateInput = document.getElementById("meal-date");
+
+// Modify the fetchNutritionBtn event listener
 if (fetchNutritionBtn) {
   fetchNutritionBtn.addEventListener("click", async () => {
     if (!foodInput) return;
@@ -35,18 +40,18 @@ if (fetchNutritionBtn) {
     if (!data || data.items.length === 0) return alert("⚠️ No nutrition data found.");
 
     const foodItem = data.items[0];
-    const now = new Date().toISOString();
-
     const meal = {
       name: query,
       calories: foodItem.calories || 0,
       protein: foodItem.protein_g || 0,
       carbs: foodItem.carbohydrates_total_g || 0,
       fat: foodItem.fat_total_g || 0,
-      timestamp: now
+      timestamp: new Date().toISOString(),
+      localDate: new Date().toLocaleDateString('en-US') // <-- Add this line
     };
 
     saveMealToFirestore(meal);
+    foodInput.value = ""; // Clear input after successful save
   });
 }
 
@@ -75,63 +80,52 @@ async function saveMealToFirestore(meal) {
   const userDoc = await getDoc(userDocRef);
   let meals = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
 
-  meal.timestamp = new Date().toISOString();
   meals.push(meal);
 
   try {
-    await updateDoc(userDocRef, { mealLogs: meals });
-    fetchLoggedMeals(); // Refresh UI
+    // Update meal logs
+    await updateDoc(userDocRef, { 
+      mealLogs: meals,
+      lastMealUpdate: new Date().toISOString()
+    });
+
+    // Calculate total calories for today
+    const today = new Date().toISOString().split('T')[0];
+    const todayMeals = meals.filter(m => 
+      new Date(m.timestamp).toISOString().split('T')[0] === today
+    );
+    const todayCalories = todayMeals.reduce((sum, m) => sum + Number(m.calories || 0), 0);
+
+    // Update both displays with accurate total
+    await updateDoc(userDocRef, {
+      todayTotalCalories: todayCalories
+    });
+
+    fetchLoggedMeals();
+    
+    // Try to update goals page if available
+    if (typeof window.renderGoals === 'function') {
+      window.renderGoals();
+    }
   } catch (error) {
     console.error("❌ Error saving meal:", error);
   }
 }
 
-// ✅ Render Chart
-async function renderCalorieChart(dailyCalories, goal) {
-  if (!chartCtx) return;
+// At the bottom of the file, replace the existing export with:
+window.updateNutritionDisplay = fetchLoggedMeals;
+window.getCurrentDayCalories = async () => {
+  const user = auth.currentUser;
+  if (!user) return 0;
 
-  const labels = Object.keys(dailyCalories);
-  const values = Object.values(dailyCalories);
-  const backgroundColors = values.map(val => val > goal ? "#f87171" : "#34d399");
-
-  if (calorieChart) calorieChart.destroy();
-
-  calorieChart = new Chart(chartCtx, {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        {
-          label: "Calories",
-          data: values,
-          backgroundColor: backgroundColors,
-          borderRadius: 6
-        },
-        {
-          type: "line",
-          label: "Calorie Goal",
-          data: Array(labels.length).fill(goal),
-          borderColor: "#facc15",
-          borderWidth: 2,
-          fill: false,
-          pointRadius: 0
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: { display: true, text: "Calories" }
-        }
-      },
-      plugins: {
-        legend: { position: "top" }
-      }
-    }
-  });
-}
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  const meals = userDoc.data()?.mealLogs || [];
+  const today = new Date().toISOString().split('T')[0];
+  
+  return meals
+    .filter(meal => new Date(meal.timestamp).toISOString().split('T')[0] === today)
+    .reduce((sum, meal) => sum + Number(meal.calories || 0), 0);
+};
 
 // ✅ Fetch & Display Logged Meals
 async function fetchLoggedMeals(startDate = null, endDate = null) {
@@ -148,53 +142,62 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
   let totalCalories = 0;
   let dailyCalories = {};
 
-  // ✅ Filter by date range
+  // Filter by date range if provided
+  let start = null, end = null;
   if (startDate && endDate) {
-    const start = new Date(startDate).setHours(0, 0, 0, 0);
-    const end = new Date(endDate).setHours(23, 59, 59, 999);
+    start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
     meals = meals.filter(meal => {
-      const mealDate = new Date(meal.timestamp).getTime();
+      const mealDate = new Date(meal.timestamp);
       return mealDate >= start && mealDate <= end;
     });
   }
 
-  // ✅ Aggregate data
+  // Process meals
   meals.forEach(meal => {
-    totalCalories += meal.calories;
-    const date = new Date(meal.timestamp).toISOString().split("T")[0];
-    if (!dailyCalories[date]) dailyCalories[date] = 0;
-    dailyCalories[date] += meal.calories;
+    const calories = Number(meal.calories) || 0;
+    totalCalories += calories;
+    // Use local date string for grouping to avoid UTC/ISO issues
+    const dateKey = new Date(meal.timestamp).toLocaleDateString('en-US');
+    if (!dailyCalories[dateKey]) dailyCalories[dateKey] = 0;
+    dailyCalories[dateKey] += calories;
   });
 
-  // ✅ UI: totals
-  totalCaloriesEl.innerText = totalCalories;
-  averageCaloriesEl.innerText = Math.round(totalCalories / (Object.keys(dailyCalories).length || 1));
+  // Only include days within the filter range for chart and breakdown
+  let sortedDates = Object.keys(dailyCalories);
+  if (start && end) {
+    sortedDates = sortedDates.filter(dateStr => {
+      // Compare using local date objects
+      const d = new Date(dateStr);
+      d.setHours(0, 0, 0, 0);
+      return d >= start && d <= end;
+    });
+  }
+  sortedDates.sort((a, b) => new Date(a) - new Date(b));
 
-  // ✅ UI: Grouped by day
+  // Update meal history display
   if (dailyBreakdownEl) {
     dailyBreakdownEl.innerHTML = "";
-
-    const mealMap = {};
-    meals.forEach(meal => {
-      const date = new Date(meal.timestamp).toISOString().split("T")[0];
-      if (!mealMap[date]) mealMap[date] = [];
-      mealMap[date].push(meal);
-    });
-
-    Object.entries(mealMap).forEach(([date, mealsForDate]) => {
-      const formattedDate = new Date(date).toLocaleDateString();
-      const dailyKcal = Math.round(dailyCalories[date]);
+    sortedDates.slice().reverse().forEach(dateKey => {
+      const dayMeals = meals.filter(m =>
+        new Date(m.timestamp).toLocaleDateString('en-US') === dateKey
+      );
 
       const dayBlock = document.createElement("div");
       dayBlock.className = "day-block";
-      dayBlock.innerHTML = `<h4>📅 ${formattedDate} — ${dailyKcal} kcal</h4>`;
+      // dateKey is already in local format
+      const displayDate = dateKey;
+      dayBlock.innerHTML = `<h4>📅 ${displayDate} — ${Math.round(dailyCalories[dateKey])} kcal</h4>`;
 
-      mealsForDate.forEach(meal => {
+      dayMeals.forEach(meal => {
         const mealEl = document.createElement("div");
         mealEl.className = "meal-entry";
         mealEl.innerHTML = `
-          <strong>${meal.name}</strong>: ${meal.calories} kcal<br>
-          Protein: ${meal.protein} g, Carbs: ${meal.carbs} g, Fat: ${meal.fat} g
+          <strong>${meal.name}</strong>: ${Math.round(meal.calories)} kcal<br>
+          Protein: ${meal.protein.toFixed(1)} g, Carbs: ${meal.carbs.toFixed(1)} g, Fat: ${meal.fat.toFixed(1)} g
           <em>Logged on: ${new Date(meal.timestamp).toLocaleString()}</em>
         `;
         dayBlock.appendChild(mealEl);
@@ -204,10 +207,89 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
     });
   }
 
-  if (mealList) mealList.innerHTML = "";
+  // Render chart
+  if (chartCtx) {
+    await renderCalorieChart(
+      sortedDates, // Already local date strings
+      sortedDates.map(dateKey => Math.round(dailyCalories[dateKey])),
+      calorieGoal
+    );
+  }
+  // Update UI elements
+  if (totalCaloriesEl) totalCaloriesEl.textContent = Math.round(totalCalories) + " kcal";
+  if (averageCaloriesEl) {
+    if (sortedDates.length === 0) {
+      averageCaloriesEl.textContent = "0 kcal";
+    } else {
+      const avgCalories = totalCalories / sortedDates.length;
+      averageCaloriesEl.textContent = Math.round(avgCalories) + " kcal";
+    }
+  }
+}
 
-  // ✅ Render chart
-  await renderCalorieChart(dailyCalories, calorieGoal);
+// ✅ Render Chart
+async function renderCalorieChart(labels, values, goal) {
+  if (!chartCtx) return;
+
+  if (calorieChart) calorieChart.destroy();
+
+  calorieChart = new Chart(chartCtx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Calories",
+          data: values,
+          backgroundColor: values.map(val => val > goal ? "#f87171" : "#34d399"),
+          borderRadius: 6,
+          barPercentage: 0.8,
+          categoryPercentage: 0.9
+        },
+        {
+          type: "line",
+          label: "Calorie Goal",
+          data: Array(labels.length).fill(goal),
+          borderColor: "#facc15",
+          borderWidth: 3,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          min: 0,
+          max: Math.max(goal * 1.2, ...values, 2500),
+          grid: {
+            drawBorder: false
+          }
+        },
+        x: {
+          grid: {
+            display: false,
+            drawBorder: false
+          }
+        }
+      },
+      layout: {
+        padding: 0
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          align: 'center',
+          labels: {
+            boxWidth: 12,
+            padding: 15
+          }
+        }
+      }
+    }
+  });
 }
 
 // ✅ Date Filters
@@ -317,6 +399,15 @@ if (aiBtn) {
     }
   });
 }
+
+
+
+
+
+
+
+
+
 
 
 
