@@ -107,19 +107,21 @@
       <h2>🎯 Set a Health Goal</h2>
       <select id="goal-type">
         <option value="weight">Lose Weight</option>
-        <option value="calories">Daily Calorie Limit</option>
+        <option value="calories">Daily Calorie Intake</option>
         <option value="workoutsPerWeek">Workouts Per Week</option>
         <option value="fastingDays">Fasting Days Per Week</option>
       </select>
 
-      <input type="number" id="goal-start" placeholder="Starting weight" readonly />
-      <label style="font-size: 14px; display: block; margin-top: -5px;">
-        <input type="checkbox" id="edit-start-toggle" style="width:auto; margin-right: 6px;" />
-        Edit start weight
-      </label>
+      <div id="weight-section">
+        <input type="number" id="goal-start" placeholder="Starting weight" readonly />
+        <label style="font-size: 14px; display: block; margin-top: -5px;">
+          <input type="checkbox" id="edit-start-toggle" style="width:auto; margin-right: 6px;" />
+          Edit start weight
+        </label>
+      </div>
 
       <input type="number" id="goal-target" placeholder="Enter target value" />
-      <input type="date" id="goal-deadline" />
+      <input type="text" id="goal-deadline" value="Daily" readonly />
       <button id="save-goal">Save Goal</button>
     </div>
 
@@ -133,6 +135,30 @@
           <tr><td colspan="6">Loading...</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- New Calorie Goal Section -->
+    <div class="card" id="calorie-goal-section" style="display: none;">
+      <h2 style="text-align: center;">🎯 Your Calorie Goal</h2>
+      <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 20px;">
+        <div style="width: 150px;">
+          <strong>Date:</strong>
+          <span id="current-date"></span>
+        </div>
+        <div style="flex-grow: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th>Target</th>
+                <th>Cal Progress</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="calorie-goal-table">
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="card">
