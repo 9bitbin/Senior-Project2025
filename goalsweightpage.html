@@ -103,7 +103,6 @@
 
   <div class="main-content">
 
-<<<<<<< HEAD
         <div class="card">
             <h2>🎯 Set a Health Goal</h2>
             <select id="goal-type">
@@ -112,65 +111,6 @@
                 <option value="workoutsPerWeek">Workouts Per Week</option>
                 <option value="fastingDays">Fasting Days Per Week</option>
             </select>
-
-      <input type="number" id="goal-start" placeholder="Starting weight" readonly />
-      <label style="font-size: 14px; display: block; margin-top: -5px;">
-        <input type="checkbox" id="edit-start-toggle" style="width:auto; margin-right: 6px;" />
-        Edit start weight
-      </label>
-
-      <input type="number" id="goal-target" placeholder="Enter target value" />
-      <input type="date" id="goal-deadline" />
-      <button id="save-goal">Save Goal</button>
-    </div>
-
-    <div class="card">
-      <h2>📋 Your Goals</h2>
-      <table>
-        <thead>
-          <tr><th>Type</th><th>Target</th><th>Deadline</th><th>Progress</th><th>Status</th><th>Action</th></tr>
-        </thead>
-        <tbody id="goal-table">
-          <tr><td colspan="6">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card">
-      <h2>⚖️ Log Your Weight</h2>
-      <input type="number" id="weight-input" placeholder="Enter your weight (lbs)" step="0.1">
-      <input type="date" id="weight-date">
-      <button id="log-weight">Log Weight</button>
-      <button id="download-weight">📥 Download Weight Logs (CSV)</button>
-    </div>
-
-    <div class="card">
-      <h2>📈 Weight Trend</h2>
-      <canvas id="weightChart"></canvas>
-    </div>
-
-    <div class="card">
-      <h2>🧠 AI Goal Coach</h2>
-      <div id="goal-ai-response" class="ai-box">Thinking...</div>
-    </div>
-
-    <div class="card">
-      <h2>🧠 AI Weight Insight</h2>
-      <div id="weight-ai-response" class="ai-insight">AI interpretation will appear here...</div>
-    </div>
-  </div>
-
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="goalsweight.js" defer></script>
-=======
-    <div class="card">
-      <h2>🎯 Set a Health Goal</h2>
-      <select id="goal-type">
-        <option value="weight">Lose Weight</option>
-        <option value="calories">Daily Calorie Intake</option>
-        <option value="workoutsPerWeek">Workouts Per Week</option>
-        <option value="fastingDays">Fasting Days Per Week</option>
-      </select>
 
       <div id="weight-section">
         <input type="number" id="goal-start" placeholder="Starting weight" readonly />
@@ -245,8 +185,7 @@
     </div>
   </div>
 
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module" src="goalsweight.js" defer></script>
->>>>>>> da1914f2d23b13b87b4a4038e7c0b11c4b89f87f
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="goalsweight.js" defer></script>
 </body>
 </html>
