@@ -78,8 +78,11 @@ async function logWeight() {
   const existing = weightLogs.findIndex(w => w.date === date);
   existing !== -1 ? weightLogs[existing].weight = weight : weightLogs.push({ date, weight });
 
-  await updateDoc(docRef, { weightLogs });
-  await renderWeightChart(weightLogs);
+  await updateDoc(docRef, { 
+    weightLogs,
+    weight  // this adds the new/latest weight to the profile
+  });
+    await renderWeightChart(weightLogs);
   await getAIInsight(weightLogs);
   alert("✅ Weight logged!");
 }
