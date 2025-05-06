@@ -7,6 +7,7 @@ const goalTarget = document.getElementById("goal-target");
 const goalDeadline = document.getElementById("goal-deadline");
 const saveGoalBtn = document.getElementById("save-goal");
 const goalTable = document.getElementById("goal-table");
+const workoutTable = document.getElementById("workout-goal-table");
 const aiResponse = document.getElementById("goal-ai-response");
 
 let currentUser = null;
@@ -18,14 +19,34 @@ onAuthStateChanged(auth, async user => {
   await fetchAIInsight();
 });
 
+const warning = document.getElementById("goal-warning");
+
 saveGoalBtn.addEventListener("click", async () => {
   const type = goalType.value;
   const target = goalTarget.value.trim();
   const deadline = goalDeadline.value;
 
-  if (!type || !target || !deadline) {
+  const value = parseInt(goalTarget.value);
+
+  if (isNaN(value) || value < 1) {
+    warning.style.display = "block";
+    return;
+  } else {
+    warning.style.display = "none";
+  }
+
+  if (goalType.value === "weight"){
+    if (!type || !target || !deadline) {
     alert("Please fill in all fields.");
     return;
+  }
+  }
+  
+  if (goalType.value === "workoutsPerWeek"){
+    if (!type || !target) {
+    alert("Please fill in all fields.");
+    return;
+  }
   }
 
   const docRef = doc(db, "users", currentUser.uid);
@@ -42,6 +63,21 @@ saveGoalBtn.addEventListener("click", async () => {
   goalDeadline.value = "";
 });
 
+function getCurrentWeekRange() {
+  const today = new Date();
+  const sunday = new Date(today); // clone
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  sunday.setDate(sunday.getDate() - dayOfWeek);
+
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+
+  const formatDate = (date) =>
+    `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
+
+  return `${formatDate(sunday)} - ${formatDate(saturday)}`;
+}
+
 async function renderGoals() {
   const docRef = doc(db, "users", currentUser.uid);
   const docSnap = await getDoc(docRef);
@@ -54,17 +90,20 @@ async function renderGoals() {
   const fastingLogs = data.fastingHistory || [];
 
   goalTable.innerHTML = "";
+  workoutTable.innerHTML = "";
 
   if (!goals.length) {
-    goalTable.innerHTML = `<tr><td colspan="5">No goals set yet.</td></tr>`;
+    goalTable.innerHTML = `<tr><td colspan="6">No goals set yet.</td></tr>`;
+    workoutTable.innerHTML = `<tr><td colspan="5">No workout goals set yet.</td></tr>`;
     return;
   }
+
+  const now = new Date();
 
   goals.forEach((goal, index) => {
     let progressText = "Tracking...";
     let progressPercent = 0;
     let status = "🟢 In Progress";
-    const now = new Date();
 
     if (goal.type === "weight") {
       const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
@@ -76,7 +115,7 @@ async function renderGoals() {
       if (progressPercent >= 100) status = "✅ Achieved";
     }
 
-    if (goal.type === "calories") {
+    else if (goal.type === "calories") {
       const recentMeals = meals.slice(-7);
       const avgCalories = recentMeals.length
         ? recentMeals.reduce((a, b) => a + (b.calories || 0), 0) / recentMeals.length
@@ -86,14 +125,7 @@ async function renderGoals() {
       if (avgCalories <= goal.target) status = "✅ Achieved";
     }
 
-    if (goal.type === "workoutsPerWeek") {
-      const thisWeek = workouts.filter(w => isThisWeek(w.timestamp));
-      progressPercent = Math.min((thisWeek.length / goal.target) * 100, 100);
-      progressText = `${thisWeek.length}/${goal.target} workouts`;
-      if (progressPercent >= 100) status = "✅ Achieved";
-    }
-
-    if (goal.type === "fastingDays") {
+    else if (goal.type === "fastingDays") {
       const thisWeek = fastingLogs.filter(f => isThisWeek(f.timestamp || f.startTime));
       progressPercent = Math.min((thisWeek.length / goal.target) * 100, 100);
       progressText = `${thisWeek.length}/${goal.target} fasts`;
@@ -104,24 +136,57 @@ async function renderGoals() {
       status = "❌ Missed";
     }
 
-    goalTable.innerHTML += `
-      <tr>
-        <td>${goal.type}</td>
-        <td>${goal.target}</td>
-        <td>${goal.deadline}</td>
-        <td>
-          ${progressText}
-          <div style="margin-top:5px;background:#eee;border-radius:6px;overflow:hidden;">
-            <div style="height:10px;width:${progressPercent}%;background:#10b981;"></div>
-          </div>
-        </td>
-        <td>${status}</td>
-        <td>
-          <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;padding:6px 10px;border:none;border-radius:6px;cursor:pointer;">🗑️</button>
-        </td>
-      </tr>`;
+    if (goal.type === "workoutsPerWeek") {
+      const thisWeek = workouts.filter(w => isThisWeek(w.timestamp));
+      progressPercent = Math.min((thisWeek.length / goal.target) * 100, 100);
+      progressText = `${thisWeek.length}/${goal.target} workouts`;
+      if (progressPercent >= 100) status = "✅ Achieved";
+
+      const weekRange = getCurrentWeekRange();
+
+      const workoutRow = `
+        <tr>
+          <td>${weekRange}</td>
+          <td>${goal.target}</td>
+          <td>
+            ${progressText}
+            <div style="margin-top:5px;background:#eee;border-radius:6px;overflow:hidden;">
+              <div style="height:10px;width:${progressPercent}%;background:#10b981;"></div>
+            </div>
+          </td>
+          <td>${status}</td>
+          <td>
+            <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;padding:6px 10px;border:none;border-radius:6px;cursor:pointer;">🗑️</button>
+          </td>
+        </tr>`;
+      
+      workoutTable.innerHTML += workoutRow;
+    }
+
+    // 📋 For all other goals: render in main goal table
+    else {
+      const rowHTML = `
+        <tr>
+          <td>${goal.type}</td>
+          <td>${goal.target}</td>
+          <td>${goal.deadline || '-'}</td>
+          <td>
+            ${progressText}
+            <div style="margin-top:5px;background:#eee;border-radius:6px;overflow:hidden;">
+              <div style="height:10px;width:${progressPercent}%;background:#10b981;"></div>
+            </div>
+          </td>
+          <td>${status}</td>
+          <td>
+            <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;padding:6px 10px;border:none;border-radius:6px;cursor:pointer;">🗑️</button>
+          </td>
+        </tr>`;
+      
+      goalTable.innerHTML += rowHTML;
+    }
   });
 }
+
 
 // Utility to check if timestamp is from this week
 function isThisWeek(timestamp) {
@@ -218,4 +283,16 @@ ${meals.slice(-5).map(m =>
   }
 }
 
+const workoutRange = document.getElementById("goal-workout-range");
 
+workoutRange.style.display = "none";
+
+goalType.addEventListener("change", () => {
+  if (goalType.value === "workoutsPerWeek") {
+    workoutRange.style.display = "block";
+    goalDeadline.style.display = "none";
+  } else{
+    workoutRange.style.display = "none";
+    goalDeadline.style.display = "block";
+  }
+});

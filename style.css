@@ -1688,3 +1688,7 @@ button {
 	font-family: 'Inter', sans-serif;
   }
   
+  #goal-workout-range::placeholder {
+    color: black;
+    opacity: 1; /* Ensures full color visibility */
+  }
