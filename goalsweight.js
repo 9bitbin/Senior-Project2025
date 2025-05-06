@@ -1,7 +1,15 @@
 // Merged VIDIA Script: Goals + Weight Tracker
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
-import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+import { 
+    doc, 
+    getDoc, 
+    updateDoc,
+    collection,
+    query,
+    where,
+    getDocs 
+} from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
 
 // ---- Shared State ----
 let currentUser = null;
@@ -147,100 +155,209 @@ async function getAIInsight(logs) {
 }
 
 // ---- Goal Management ----
+document.getElementById('goal-type').addEventListener('change', async function() {
+    const weightSection = document.getElementById('weight-section');
+    const goalDeadline = document.getElementById('goal-deadline');
+    const goalTarget = document.getElementById('goal-target');
+
+    if (this.value === 'calories') {
+        // Get calorie target from profile
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        const profileData = userSnap.data();
+        
+        if (profileData?.calorieGoal) {
+            goalTarget.value = profileData.calorieGoal;
+        }
+        
+        weightSection.style.display = 'none';
+        goalDeadline.type = 'text';
+        goalDeadline.value = 'Daily';
+        goalDeadline.readOnly = true;
+    } else {
+        weightSection.style.display = 'block';
+        goalDeadline.type = 'date';
+        goalDeadline.value = '';
+        goalDeadline.readOnly = false;
+        goalTarget.value = '';
+    }
+});
+
+// Add this right after your DOM Elements section
+document.addEventListener('DOMContentLoaded', () => {
+    // Ensure proper initial state for weight goal type
+    const goalDeadline = document.getElementById('goal-deadline');
+    if (goalDeadline) {
+        goalDeadline.type = 'date';
+        goalDeadline.value = '';
+        goalDeadline.readOnly = false;
+    }
+});
+
+// Save goal button handler
 if (saveGoalBtn) {
-  saveGoalBtn.addEventListener("click", async () => {
-    const type = goalType.value;
-    const target = goalTarget.value.trim();
-    const deadline = goalDeadline.value;
-    if (!type || !target || !deadline) return alert("Please fill all fields.");
+    saveGoalBtn.addEventListener("click", async () => {
+        const type = goalType.value;
+        const target = goalTarget.value.trim();
+        const deadline = goalDeadline.value;
+        if (!type || !target || !deadline) return alert("Please fill all fields.");
 
-    const userRef = doc(db, "users", currentUser.uid);
-    const snap = await getDoc(userRef);
-    const data = snap.data() || {};
-    const goals = data.goals || [];
+        const userRef = doc(db, "users", currentUser.uid);
+        
+        try {
+            if (type === 'calories') {
+                // Only update calorie goal in profile
+                await updateDoc(userRef, {
+                    calorieGoal: Number(target)
+                });
+                // Keep the deadline as "Daily" for calories
+                goalDeadline.value = 'Daily';
+            } else {
+                // For non-calorie goals, add to goals array
+                const snap = await getDoc(userRef);
+                const data = snap.data() || {};
+                const goals = data.goals || [];
 
-    goals.push({
-      type,
-      target: Number(target),
-      start: goalStart?.value ? Number(goalStart.value) : null,
-      deadline
+                goals.push({
+                    type,
+                    target: Number(target),
+                    start: goalStart?.value ? Number(goalStart.value) : null,
+                    deadline
+                });
+
+                await updateDoc(userRef, { goals });
+                // Clear deadline only for non-calorie goals
+                goalDeadline.value = "";
+            }
+
+            await renderGoals();
+            await fetchAIInsight();
+
+            // Only clear target, keep deadline for calories
+            goalTarget.value = "";
+        } catch (error) {
+            console.error("Error saving goal:", error);
+            alert("❌ Failed to save goal");
+        }
     });
-
-    await updateDoc(userRef, { goals });
-    await renderGoals();
-    await fetchAIInsight();
-
-    goalTarget.value = "";
-    goalDeadline.value = "";
-  });
 }
 
 async function renderGoals() {
   const docRef = doc(db, "users", currentUser.uid);
   const docSnap = await getDoc(docRef);
-  const data = docSnap.data();
-  const goals = data.goals || [];
+  const data = docSnap.data() || {};
+  
+  // Get today's meals and calculate calories
+  const today = new Date().toISOString().split('T')[0];
+  const mealLogs = data.mealLogs || [];
+  
+  // Improved date comparison for today's meals
+  const todayMeals = mealLogs.filter(meal => {
+    const mealDate = new Date(meal.timestamp);
+    const mealDateStr = mealDate.toLocaleDateString();
+    const todayStr = new Date().toLocaleDateString();
+    const isToday = mealDateStr === todayStr;
+    return isToday;
+  });
+
+  // Calculate total calories for today (removed duplicate calculation)
+  let todayCalories = 0;
+  todayMeals.forEach(meal => {
+    todayCalories += Number(meal.calories || 0);
+  });
+
+  const calorieGoal = Number(data.calorieGoal) || 2000;
+
+  // Update calorie goal section
+  const calorieGoalSection = document.getElementById('calorie-goal-section');
+  const currentDate = document.getElementById('current-date');
+  const calorieGoalTable = document.getElementById('calorie-goal-table');
+
+  if (calorieGoalSection && currentDate && calorieGoalTable) {
+    calorieGoalSection.style.display = 'block';
+    currentDate.textContent = new Date().toLocaleDateString();
+    calorieGoalTable.innerHTML = `
+      <tr>
+        <td>${calorieGoal} kcal</td>
+        <td>
+          ${todayCalories.toFixed(1)}/${calorieGoal} kcal
+          <div class="progress-bar">
+            <div class="progress-bar-fill" style="width:${Math.min((todayCalories / calorieGoal) * 100, 100)}%"></div>
+          </div>
+        </td>
+        <td>${todayCalories >= calorieGoal ? '✅ Achieved' : '🟢 In Progress'}</td>
+      </tr>
+    `;
+  }
+
+  // Handle regular goals
+  const goals = (data.goals || []).filter(g => g.type !== 'calories');
   const workouts = data.workoutLogs || [];
-  const meals = data.mealLogs || [];
   const weightLogs = data.weightLogs || [];
   const fastingLogs = data.fastingHistory || [];
 
-  goalTable.innerHTML = goals.length ? "" : `<tr><td colspan="6">No goals set yet.</td></tr>`;
+  if (goalTable) {
+    goalTable.innerHTML = goals.length ? "" : `<tr><td colspan="6">No goals set yet.</td></tr>`;
 
-  goals.forEach((goal, index) => {
-    let progress = 0, status = "🟢 In Progress", progressText = "Tracking...";
-    const now = new Date();
+    goals.forEach((goal, index) => {
+      let progress = 0, status = "🟢 In Progress", progressText = "Tracking...";
+      const now = new Date();
 
-    if (goal.type === "weight") {
-      const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
-      const start = goal.start != null && !isNaN(goal.start) ? goal.start : (weightLogs[0]?.weight || 0);
-      const total = start - goal.target;
-      const lost = start - latest;
-      progress = total > 0 ? Math.min((lost / total) * 100, 100) : 0;
-      progressText = `${lost.toFixed(1)} lbs lost`;
-      if (progress >= 100) status = "✅ Achieved";
-    }
+      if (goal.type === "weight") {
+        const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
+        const start = goal.start != null && !isNaN(goal.start) ? goal.start : (weightLogs[0]?.weight || 0);
+        const total = start - goal.target;
+        const lost = start - latest;
+        progress = total > 0 ? Math.min((lost / total) * 100, 100) : 0;
+        progressText = `${lost.toFixed(1)} lbs lost`;
+        if (progress >= 100) status = "✅ Achieved";
+      }
 
-    if (goal.type === "calories") {
-      const avg = meals.slice(-7).reduce((sum, m) => sum + (m.calories || 0), 0) / 7;
-      progress = Math.min((goal.target / avg) * 100, 100);
-      progressText = `Avg ${avg.toFixed(0)} kcal`;
-      if (avg <= goal.target) status = "✅ Achieved";
-    }
+      if (goal.type === "calories") {
+        progress = (todayCalories / goal.target) * 100;
+        progressText = `${todayCalories.toFixed(1)}/${goal.target} kcal`;
+        
+        if (todayCalories >= goal.target && todayCalories <= goal.target * 1.1) {
+          status = "✅ Achieved";
+        } else if (todayCalories > goal.target * 1.1) {
+          status = "⚠️ Exceeded";
+        }
+      }
 
-    if (goal.type === "workoutsPerWeek") {
-      const count = workouts.filter(w => isThisWeek(w.timestamp)).length;
-      progress = Math.min((count / goal.target) * 100, 100);
-      progressText = `${count}/${goal.target} workouts`;
-      if (progress >= 100) status = "✅ Achieved";
-    }
+      if (goal.type === "workoutsPerWeek") {
+        const count = workouts.filter(w => isThisWeek(w.timestamp)).length;
+        progress = Math.min((count / goal.target) * 100, 100);
+        progressText = `${count}/${goal.target} workouts`;
+        if (progress >= 100) status = "✅ Achieved";
+      }
 
-    if (goal.type === "fastingDays") {
-      const count = fastingLogs.filter(f => isThisWeek(f.timestamp || f.startTime)).length;
-      progress = Math.min((count / goal.target) * 100, 100);
-      progressText = `${count}/${goal.target} fasts`;
-      if (progress >= 100) status = "✅ Achieved";
-    }
+      if (goal.type === "fastingDays") {
+        const count = fastingLogs.filter(f => isThisWeek(f.timestamp || f.startTime)).length;
+        progress = Math.min((count / goal.target) * 100, 100);
+        progressText = `${count}/${goal.target} fasts`;
+        if (progress >= 100) status = "✅ Achieved";
+      }
 
-    if (new Date(goal.deadline) < now && progress < 100) status = "❌ Missed";
+      if (new Date(goal.deadline) < now && progress < 100) status = "❌ Missed";
 
-    goalTable.innerHTML += `
-      <tr>
-        <td>${goal.type}</td>
-        <td>${goal.target}</td>
-        <td>${goal.deadline}</td>
-        <td>
-          ${progressText}
-          <div class="progress-bar">
-            <div class="progress-bar-fill" style="width:${progress}%"></div>
-          </div>
-        </td>
-        <td>${status}</td>
-        <td>
-          <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;">🗑️</button>
-        </td>
-      </tr>`;
-  });
+      goalTable.innerHTML += `
+        <tr>
+          <td>${goal.type}</td>
+          <td>${goal.target}</td>
+          <td>${goal.deadline}</td>
+          <td>
+            ${progressText}
+            <div class="progress-bar">
+              <div class="progress-bar-fill" style="width:${progress}%"></div>
+            </div>
+          </td>
+          <td>${status}</td>
+          <td>
+            <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;">🗑️</button>
+          </td>
+        </tr>`;
+    });
+  }
 }
 
 window.deleteGoal = async (index) => {
@@ -305,3 +422,53 @@ Workouts:\n${workouts.slice(-3).map(w => `${w.type} - ${w.caloriesBurned} kcal`)
 // ---- Event Listeners ----
 logBtn?.addEventListener("click", logWeight);
 downloadBtn?.addEventListener("click", downloadCSV);
+
+// Replace the updateCalorieGoalDisplay function with this simplified version
+async function updateCalorieGoalDisplay() {
+  const docRef = doc(db, "users", currentUser.uid);
+  const docSnap = await getDoc(docRef);
+  const data = docSnap.data() || {};
+  
+  const today = new Date().toISOString().split('T')[0];
+  const mealLogs = data.mealLogs || [];
+  
+  // Calculate today's calories
+  const todayCalories = mealLogs
+    .filter(meal => new Date(meal.timestamp).toISOString().split('T')[0] === today)
+    .reduce((sum, meal) => sum + Number(meal.calories || 0), 0);
+
+  const calorieGoal = data.calorieGoal || 2000;
+
+  // Update display
+  const calorieGoalTable = document.getElementById("calorie-goal-table");
+  if (calorieGoalTable) {
+    document.getElementById("current-date").textContent = new Date().toLocaleDateString();
+    calorieGoalTable.innerHTML = `
+      <tr>
+        <td>${calorieGoal}</td>
+        <td>${todayCalories}/${calorieGoal}</td>
+        <td>${todayCalories <= calorieGoal ? "✅ On Track" : "⚠️ Over"}</td>
+      </tr>
+    `;
+  }
+}
+
+// Add this to your existing event listeners
+document.addEventListener("DOMContentLoaded", () => {
+  updateCalorieGoalDisplay();
+});
+
+// Update the calorie display whenever calories are logged
+export function refreshCalorieDisplay() {
+  updateCalorieGoalDisplay();
+}
+
+// Add this at the bottom of the file
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    renderGoals();
+  } else {
+    window.location.href = "index.html";
+  }
+});
