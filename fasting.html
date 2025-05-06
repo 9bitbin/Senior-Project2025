@@ -13,6 +13,36 @@
 </head>
 <body>
 
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+        
+        const REQUIRED_FIELDS = [
+          "name", "age", "weight", "height", "dob", "sex", "calorieGoal", "exerciseType",
+          "healthGoals", "activityLevel", "dietType", "sleepHours", "waterIntakeGoal",
+          "preferredWorkoutTime", "mentalHealthFocus"
+        ];
+        
+        onAuthStateChanged(auth, async (user) => {
+          if (!user) {
+            window.location.href = "index.html";
+            return;
+          }
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (!userDoc.exists()) {
+            window.location.href = "profile.html";
+            return;
+          }
+          const data = userDoc.data();
+          const incomplete = REQUIRED_FIELDS.some(field => !data[field] || data[field] === "");
+          if (incomplete && !window.location.pathname.endsWith("profile.html")) {
+            window.location.href = "profile.html";
+          }
+        });
+        </script>
+
     <script src="sidebar.js" defer></script>
   <!-- 🔹 Main Content -->
   <div class="main-content">
@@ -22,7 +52,7 @@
     
         <div class="timer-wrapper">
             <div id="fasting-timer">00h 00m 00s</div>
-            <div class="fasting-type-indicator">16:8 Intermittent Fasting</div>
+            <div class="fasting-type-indicator">12:12 (12 hours fasting, 12 hours eating)</div>
         </div>
 
         <div class="fasting-stats">
@@ -64,10 +94,12 @@
             <div class="button-group">
                 <button id="start-fasting" class="start-btn">🚀 Start Fasting</button>
                 <button id="end-fasting" class="end-btn" disabled>⏹ End Fasting</button>
+                <button id="resume-fasting" class="resume-btn" disabled>▶️ Resume Fasting</button>
                 <button id="download-fasting">📥 Download Fasting History (CSV)</button>
             </div>
             
             <p><strong>Status:</strong> <span id="fasting-status">Not Started</span></p>
+            <p id="daily-fast-message" style="color: #e11d48; font-size: 0.9em; margin-top: 5px;"></p>
         </div>
       </div>
 
