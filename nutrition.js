@@ -143,16 +143,20 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
   let dailyCalories = {};
 
   // Filter by date range if provided
-  let start = null, end = null;
   if (startDate && endDate) {
-    start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-    end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+    // Convert filter dates to numbers in YYYYMMDD format
+    const startNum = Number(startDate.replace(/-/g, ''));
+    const endNum = Number(endDate.replace(/-/g, ''));
 
     meals = meals.filter(meal => {
-      const mealDate = new Date(meal.timestamp);
-      return mealDate >= start && mealDate <= end;
+      // Get the meal's local date in YYYY-MM-DD
+      const mealDateObj = new Date(meal.timestamp);
+      const year = mealDateObj.getFullYear();
+      const month = String(mealDateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(mealDateObj.getDate()).padStart(2, '0');
+      const mealLocalISO = `${year}-${month}-${day}`;
+      const mealNum = Number(mealLocalISO.replace(/-/g, ''));
+      return mealNum >= startNum && mealNum <= endNum;
     });
   }
 
@@ -166,29 +170,23 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
     dailyCalories[dateKey] += calories;
   });
 
-  // Only include days within the filter range for chart and breakdown
+  // Only show days present in filtered meals
   let sortedDates = Object.keys(dailyCalories);
-  if (start && end) {
-    sortedDates = sortedDates.filter(dateStr => {
-      // Compare using local date objects
-      const d = new Date(dateStr);
-      d.setHours(0, 0, 0, 0);
-      return d >= start && d <= end;
-    });
-  }
   sortedDates.sort((a, b) => new Date(a) - new Date(b));
 
   // Update meal history display
   if (dailyBreakdownEl) {
     dailyBreakdownEl.innerHTML = "";
     sortedDates.slice().reverse().forEach(dateKey => {
+      // Only use filtered meals for this day
       const dayMeals = meals.filter(m =>
         new Date(m.timestamp).toLocaleDateString('en-US') === dateKey
       );
 
+      if (dayMeals.length === 0) return; // Skip days with no meals in filtered range
+
       const dayBlock = document.createElement("div");
       dayBlock.className = "day-block";
-      // dateKey is already in local format
       const displayDate = dateKey;
       dayBlock.innerHTML = `<h4>📅 ${displayDate} — ${Math.round(dailyCalories[dateKey])} kcal</h4>`;
 
