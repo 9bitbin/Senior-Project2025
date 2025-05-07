@@ -184,33 +184,39 @@
       <p id="budget-alert"></p>
     </div>
 
-    <!-- Budget Setup -->
-    <div class="card">
-      <h2>💸 Meal Budget Tracking</h2>
+   <!-- Budget Setup -->
+<div class="card">
+  <h2>💸 Meal Budget Tracking</h2>
 
-      <label for="budget-amount">Set Budget ($):</label>
-      <input type="number" id="budget-amount" placeholder="Enter budget">
+  <label for="budget-amount">Set Budget ($):</label>
+  <input type="number" id="budget-amount" placeholder="Enter budget">
 
-      <label for="budget-period">Budget Period:</label>
-      <select id="budget-period">
-        <option value="Daily">Daily</option>
-        <option value="Weekly">Weekly</option>
-        <option value="Monthly">Monthly</option>
-      </select>
-      <button id="set-budget">Set Budget</button>
+  <label for="budget-period">Budget Period:</label>
+  <select id="budget-period">
+    <option value="Daily">Daily</option>
+    <option value="Weekly">Weekly</option>
+    <option value="Monthly">Monthly</option>
+  </select>
+  <button id="set-budget">Set Budget</button>
 
-      <label for="meal-cost">Log Meal Cost ($):</label>
-      <input type="number" id="meal-cost" placeholder="Enter meal cost">
+  <label for="meal-cost">Log Meal Cost ($):</label>
+  <input type="number" id="meal-cost" placeholder="Enter meal cost">
 
-      <label for="meal-category">Select Category:</label>
-      <select id="meal-category">
-        <option value="Groceries">Groceries</option>
-        <option value="Dining Out">Dining Out</option>
-        <option value="Snacks">Snacks</option>
-        <option value="Other">Other</option>
-      </select>
-      <button id="log-meal-cost">Log Cost</button>
-    </div>
+  <label for="meal-category">Select Category:</label>
+  <select id="meal-category">
+    <option value="Groceries">Groceries</option>
+    <option value="Dining Out">Dining Out</option>
+    <option value="Snacks">Snacks</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <!-- ✅ New field for custom date/time logging -->
+  <label for="meal-datetime">Date & Time (optional):</label>
+  <input type="datetime-local" id="meal-datetime" />
+
+  <button id="log-meal-cost">Log Cost</button>
+</div>
+
 
     <!-- Doughnut Chart + Insight -->
     <div class="card">
