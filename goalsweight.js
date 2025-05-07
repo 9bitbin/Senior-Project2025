@@ -305,6 +305,18 @@ async function renderGoals() {
     return isToday;
   });
 
+// new code to prevent peopel from making goals on the same datedeadline multiple times 
+  if (type === 'weight') {
+    const existingGoal = (data.goals || []).find(
+      g => g.type === 'weight' && g.deadline === deadline
+    );
+  
+    if (existingGoal) {
+      alert("⚠️ You already have a weight goal set for this deadline.");
+      return;
+    }
+  }
+  
   // Calculate total calories for today (removed duplicate calculation)
   let todayCalories = 0;
   todayMeals.forEach(meal => {
