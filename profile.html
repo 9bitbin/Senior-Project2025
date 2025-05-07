@@ -106,13 +106,22 @@
 <h1>👤🩺 Update Your Profile</h1>
 <form id="profileForm">
 
-  <!-- Existing Fields -->
+  <label for="name">Full Name</label>
   <input type="text" id="name" placeholder="Full Name" required />
+
+  <label for="age">Age</label>
   <input type="number" id="age" placeholder="Age" required />
+
+  <label for="weight">Weight (lbs)</label>
   <input type="number" id="weight" placeholder="Weight (lbs)" required />
+
+  <label for="height">Height (inches)</label>
   <input type="number" id="height" placeholder="Height (inches)" required />
+
+  <label for="dob">Date of Birth</label>
   <input type="date" id="dob" required />
 
+  <label for="sex">Sex</label>
   <select id="sex" required>
     <option value="" disabled selected>Select Sex</option>
     <option value="male">Male</option>
@@ -120,8 +129,10 @@
     <option value="other">Other</option>
   </select>
 
+  <label for="calorieGoal">Daily Calorie Goal (kcal)</label>
   <input type="number" id="calorieGoal" placeholder="Daily Calorie Goal (kcal)" required />
 
+  <label for="exerciseType">Exercise Type</label>
   <select id="exerciseType" required>
     <option value="" disabled selected>Select Exercise Type</option>
     <option value="cardio">Cardio</option>
@@ -130,19 +141,21 @@
     <option value="mixed">Mixed Workout</option>
   </select>
 
+  <label for="healthGoals">Health Goals</label>
   <textarea id="healthGoals" placeholder="Enter Your Health Goals" required></textarea>
 
-  <!-- 🔹 New Smart Fields -->
-  <select id="activityLevel">
-    <option value="">Activity Level</option>
+  <label for="activityLevel">Activity Level</label>
+  <select id="activityLevel" required>
+    <option value="" disabled selected>Activity Level</option>
     <option value="sedentary">Sedentary</option>
     <option value="lightly active">Lightly Active</option>
     <option value="active">Active</option>
     <option value="very active">Very Active</option>
   </select>
 
-  <select id="dietType">
-    <option value="">Diet Type</option>
+  <label for="dietType">Diet Type</label>
+  <select id="dietType" required>
+    <option value="" disabled selected>Diet Type</option>
     <option value="balanced">Balanced</option>
     <option value="vegan">Vegan</option>
     <option value="vegetarian">Vegetarian</option>
@@ -150,20 +163,29 @@
     <option value="halal">Halal</option>
   </select>
 
-  <input type="text" id="allergies" placeholder="Allergies (comma separated)">
-  <input type="text" id="budgetPreference" placeholder="Budget Preference (e.g. Low)">
-  <input type="number" id="sleepHours" placeholder="Sleep Hours Per Night">
-  <input type="number" id="waterIntakeGoal" placeholder="Water Intake Goal (oz)">
+  <label for="allergies">Allergies (comma separated)</label>
+  <input type="text" id="allergies" placeholder="Allergies (comma separated)" />
 
-  <select id="preferredWorkoutTime">
-    <option value="">Preferred Workout Time</option>
+  <label for="budgetPreference">Budget Preference (e.g. Low)</label>
+  <input type="text" id="budgetPreference" placeholder="Budget Preference (e.g. Low)" />
+
+  <label for="sleepHours">Sleep Hours Per Night</label>
+  <input type="number" id="sleepHours" placeholder="Sleep Hours Per Night" required />
+
+  <label for="waterIntakeGoal">Water Intake Goal (oz)</label>
+  <input type="number" id="waterIntakeGoal" placeholder="Water Intake Goal (oz)" required />
+
+  <label for="preferredWorkoutTime">Preferred Workout Time</label>
+  <select id="preferredWorkoutTime" required>
+    <option value="" disabled selected>Preferred Workout Time</option>
     <option value="morning">Morning</option>
     <option value="afternoon">Afternoon</option>
     <option value="evening">Evening</option>
   </select>
 
-  <select id="mentalHealthFocus">
-    <option value="">Mental Health Focus?</option>
+  <label for="mentalHealthFocus">Mental Health Focus?</label>
+  <select id="mentalHealthFocus" required>
+    <option value="" disabled selected>Mental Health Focus?</option>
     <option value="yes">Yes</option>
     <option value="no">No</option>
   </select>

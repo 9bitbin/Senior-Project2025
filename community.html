@@ -46,13 +46,40 @@
       margin-bottom: 15px;
     }
 
-    select, input[type="checkbox"], input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      font-size: 15px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-bottom: 15px;
+    /* Update the select and checkbox styles */
+    select, input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+    }
+
+    input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+    }
+
+    /* Add styles for the top controls */
+    .top-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .toggle-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #searchInput {
+        flex: 2;
+    }
+
+    #postFilter {
+        flex: 1;
     }
 
     label { font-weight: 600; display: block; margin: 10px 0 5px; }
@@ -78,32 +105,149 @@
       margin-bottom: 20px;
     }
 
-    .post strong { display: block; margin-bottom: 6px; color: #111; }
-    .post small { color: #666; font-size: 12px; }
-
-    .top-controls {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-      margin-bottom: 25px;
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
     }
 
-    .top-controls input[type="text"] {
-      flex: 1;
+    .post-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    .toggle-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .post-header-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    .toggle-wrapper input[type="checkbox"] {
-      width: auto;
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
     }
-  </style>
+
+    .post-tag {
+        background: #e2e8f0;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.9em;
+        color: #475569;
+    }
+
+    .post-visibility {
+        margin-left: auto;
+        color: #64748b;
+    }
+
+   
+   
+        .post-content {
+            position: relative;
+            max-height: 100px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    
+        .post-content:not(.expanded) {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            overflow: hidden;
+        }
+    
+        .post-content.expanded {
+            max-height: none;
+            display: block;
+        }
+    
+        .expand-btn {
+            display: none;
+            margin: 5px 0;
+            color: #10b981;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+    
+        .expand-btn:hover {
+            background: #f0fdf4;
+        }
+    
+    /* Remove duplicate .comments-container styles */
+
+   
+
+    /* Show expand button only when content is truncated */
+    .post-content[style*="height"] + .expand-btn {
+        display: block;
+    }
+
+    .comments-section {
+        margin-top: 15px;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
+
+    .comments-toggle {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #666;
+        cursor: pointer;
+        padding: 5px 0;
+    }
+
+    .comments-container {
+        display: none;
+        margin-top: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .comments-container.show {
+        display: block;
+    }
+
+    .comment {
+        padding: 10px;
+        margin: 5px 0;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+        .comments-container {
+            display: none;
+        }
+
+        .comments-container.show {
+            display: block;
+        }
+    </style>
+
+   
+</style>
 </head>
 <body>
+
+  <script type="module" src="profile.js"></script>
 
   <script src="sidebar.js" defer></script>
 

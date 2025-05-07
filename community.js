@@ -72,12 +72,21 @@ function renderFilteredPosts() {
   filtered.forEach(post => renderPost(post.id, post));
 }
 
-function renderPost(postId, post) {
+async function renderPost(postId, post) {
   const userLiked = post.likes?.includes(currentUser?.uid);
   const likeButtonText = userLiked ? "Unlike 👍" : "Like 👍";
   const avatarUrl = post.anonymous
     ? "https://i.pravatar.cc/40?u=anonymous"
     : `https://i.pravatar.cc/40?u=${post.userId}`;
+
+ 
+  let displayName = "User";
+  if (!post.anonymous) {
+    const userDoc = await getDoc(doc(db, "users", post.userId));
+    if (userDoc.exists()) {
+      displayName = userDoc.data().displayName || userDoc.data().email?.split("@")[0] || "User";
+    }
+  }
 
   const postElement = document.createElement("div");
   postElement.classList.add("post");
@@ -86,33 +95,82 @@ function renderPost(postId, post) {
 
   postElement.innerHTML = `
     <div class="post-header">
-        <img src="${avatarUrl}" alt="User Avatar" class="user-avatar">
-        <p><strong>${post.anonymous ? "Anonymous User" : "User"}</strong></p>
-        <p>📌 <strong>${post.type.toUpperCase()}</strong></p>
-        <p>${post.content}</p>
-        <p>${post.visibility === "friends" ? "👥 Friends Only" : "🌍 Public"}</p>
-        <p>🕒 <em>Shared on ${new Date(post.timestamp?.toDate?.() || post.timestamp).toLocaleString()}</em></p>
+        <div class="post-header-left">
+            <img src="${avatarUrl}" alt="User Avatar" class="user-avatar">
+            <strong>${post.anonymous ? "Anonymous User" : displayName}</strong>
+        </div>
+        <div class="post-header-right">
+            <span class="post-tag">${post.type.toUpperCase()}</span>
+            <span>${post.visibility === "friends" ? "👥 Friends Only" : "🌍 Public"}</span>
+        </div>
     </div>
 
-    <button class="like-btn" data-id="${postId}">${likeButtonText} (${post.likes?.length || 0})</button>
+    <div class="post-content">
+        ${post.content}
+    </div>
+    <button class="expand-btn" style="display: none;">Read more</button>
+
+    <div class="post-metadata">
+        <span>🕒 ${new Date(post.timestamp?.toDate?.() || post.timestamp).toLocaleString()}</span>
+        <span class="like-count">👍 ${post.likes?.length || 0}</span>
+        <span>💬 ${post.comments?.length || 0} comments</span>
+    </div>
+
+    <button class="like-btn" data-id="${postId}">${likeButtonText}</button>
 
     <div class="comments-section">
-        <h4>💬 Comments</h4>
-        <div id="comments-${postId}">
+        <button class="comments-toggle">
+            <span class="toggle-icon">▶</span>
+            Comments (${post.comments?.length || 0})
+        </button>
+        <div class="comments-container">
             ${post.comments?.map(comment => `
-                <p><strong>${comment.username || "Unknown User"}:</strong> ${comment.text}</p>
+                <div class="comment">
+                    <strong>${comment.username || "Unknown User"}</strong>
+                    <p>${comment.text}</p>
+                    <small>${new Date(comment.timestamp).toLocaleString()}</small>
+                </div>
             `).join("") || "<p>No comments yet.</p>"}
+            <div class="comment-input-area">
+                <input type="text" id="commentInput-${postId}" placeholder="Add a comment...">
+                <button class="comment-btn" data-id="${postId}">Comment 💬</button>
+            </div>
         </div>
-        <input type="text" id="commentInput-${postId}" placeholder="Add a comment...">
-        <button class="comment-btn" data-id="${postId}">Comment 💬</button>
     </div>
 
     ${currentUser?.uid === post.userId ? `<button class="delete-btn" data-id="${postId}">🗑️ Delete Post</button>` : ""}
-    <hr>
   `;
 
   postsContainer.appendChild(postElement);
 
+  // Remove duplicate event listeners and simplify the logic
+  const postContent = postElement.querySelector(".post-content");
+  const expandBtn = postElement.querySelector(".expand-btn");
+  const commentsToggle = postElement.querySelector(".comments-toggle");
+  const commentsContainer = postElement.querySelector(".comments-container");
+
+  // Single check for content overflow with increased timeout
+  setTimeout(() => {
+    const lineHeight = parseInt(window.getComputedStyle(postContent).lineHeight);
+    const maxLines = 3;
+    if (postContent.scrollHeight > (lineHeight * maxLines)) {
+      expandBtn.style.display = "block";
+    }
+  }, 300);
+
+  // Single event listener for expand button
+  expandBtn.addEventListener("click", () => {
+    const isExpanded = postContent.classList.toggle("expanded");
+    expandBtn.textContent = isExpanded ? "Show less" : "Read more";
+  });
+
+  commentsToggle.addEventListener("click", () => {
+    commentsContainer.classList.toggle("show");
+    const icon = commentsToggle.querySelector(".toggle-icon");
+    icon.textContent = commentsContainer.classList.contains("show") ? "▼" : "▶";
+  });
+
+  // Keep the like, comment, and delete button event listeners
   postElement.querySelector(".like-btn").addEventListener("click", () => toggleLike(postId));
   postElement.querySelector(".comment-btn").addEventListener("click", () => addComment(postId));
   if (postElement.querySelector(".delete-btn")) {
