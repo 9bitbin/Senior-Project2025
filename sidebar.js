@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <li><a href="fasting.html">⏳ Fasting</a></li>
         <li><a href="recipe.html">📖 Recipes</a></li>
         <li><a href="community.html">🌍 Community</a></li>
-        <li><a href="messaging.html">💬 Messaging</a></li>
         <li><a href="ai-advice.html">🧠 AI Advisor</a></li>
         <li><a href="ai-meals.html">🤖 AI Meals</a></li>
         <li><a href="index.html">🚪 Logout</a></li>
@@ -20,3 +19,4 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
   `);
 });
+// Removed Messaging <li><a href="messaging.html">💬 Messaging</a></li>
