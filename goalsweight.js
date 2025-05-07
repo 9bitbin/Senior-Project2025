@@ -29,8 +29,11 @@ const goalStart = document.getElementById("goal-start");
 const goalDeadline = document.getElementById("goal-deadline");
 const saveGoalBtn = document.getElementById("save-goal");
 const goalTable = document.getElementById("goal-table");
+const workoutTable = document.getElementById("workout-goal-table");
 const aiGoalResponse = document.getElementById("goal-ai-response");
 const editStartToggle = document.getElementById("edit-start-toggle");
+const warning = document.getElementById("goal-warning");
+
 
 let weightChart;
 
@@ -78,8 +81,11 @@ async function logWeight() {
   const existing = weightLogs.findIndex(w => w.date === date);
   existing !== -1 ? weightLogs[existing].weight = weight : weightLogs.push({ date, weight });
 
-  await updateDoc(docRef, { weightLogs });
-  await renderWeightChart(weightLogs);
+  await updateDoc(docRef, { 
+    weightLogs,
+    weight  // this adds the new/latest weight to the profile
+  });
+    await renderWeightChart(weightLogs);
   await getAIInsight(weightLogs);
   alert("✅ Weight logged!");
 }
@@ -155,10 +161,13 @@ async function getAIInsight(logs) {
 }
 
 // ---- Goal Management ----
+
 document.getElementById('goal-type').addEventListener('change', async function() {
     const weightSection = document.getElementById('weight-section');
     const goalDeadline = document.getElementById('goal-deadline');
     const goalTarget = document.getElementById('goal-target');
+    const calorieGoalSection = document.getElementById('calorie-goal-section');
+    const weeklyTimeframe = document.getElementById('weekly-timeframe');
 
     if (this.value === 'calories') {
         // Get calorie target from profile
@@ -170,15 +179,31 @@ document.getElementById('goal-type').addEventListener('change', async function()
             goalTarget.value = profileData.calorieGoal;
         }
         
+        // Show calorie section, hide weight section
         weightSection.style.display = 'none';
+        calorieGoalSection.style.display = 'block';
+        weeklyTimeframe.style.display = 'none';
+        
         goalDeadline.type = 'text';
         goalDeadline.value = 'Daily';
         goalDeadline.readOnly = true;
+        goalDeadline.style.display = 'block';
+    } else if (this.value === 'workoutsPerWeek') {
+        // For workout goals
+        weightSection.style.display = 'none';
+        calorieGoalSection.style.display = 'none';
+        weeklyTimeframe.style.display = 'block';
+        goalDeadline.style.display = 'none';
     } else {
+        // For weight goals
         weightSection.style.display = 'block';
+        calorieGoalSection.style.display = 'none';
+        weeklyTimeframe.style.display = 'none';
+        
         goalDeadline.type = 'date';
         goalDeadline.value = '';
         goalDeadline.readOnly = false;
+        goalDeadline.style.display = 'block';
         goalTarget.value = '';
     }
 });
@@ -200,10 +225,33 @@ if (saveGoalBtn) {
         const type = goalType.value;
         const target = goalTarget.value.trim();
         const deadline = goalDeadline.value;
-        if (!type || !target || !deadline) return alert("Please fill all fields.");
+        const value = parseInt(goalTarget.value);
+
+        //if (!type || !target || !deadline) return alert("Please fill all fields.");
+
+        if (goalType.value === "weight"){
+          if (!type || !target || !deadline) {
+            alert("Please fill in all fields.");
+            return;
+          }
+        }
+        
+        if (goalType.value === "workoutsPerWeek"){
+          if (!type || !target) {
+            alert("Please fill in all fields.");
+            return;
+          }
+        }
 
         const userRef = doc(db, "users", currentUser.uid);
         
+        if (isNaN(target) || target < 1) {
+          warning.style.display = "block";
+          return;
+        } else {
+          warning.style.display = "none";
+        }
+
         try {
             if (type === 'calories') {
                 // Only update calorie goal in profile
@@ -242,6 +290,22 @@ if (saveGoalBtn) {
     });
 }
 
+// Weekly Table Range
+function getCurrentWeekRange() {
+  const today = new Date();
+  const sunday = new Date(today); // clone
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  sunday.setDate(sunday.getDate() - dayOfWeek);
+
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+
+  const formatDate = (date) =>
+    `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`;
+
+  return `${formatDate(sunday)} - ${formatDate(saturday)}`;
+}
+
 async function renderGoals() {
   const docRef = doc(db, "users", currentUser.uid);
   const docSnap = await getDoc(docRef);
@@ -260,7 +324,7 @@ async function renderGoals() {
     return isToday;
   });
 
-  // Calculate total calories for today (removed duplicate calculation)
+  // Calculate today calories for today 
   let todayCalories = 0;
   todayMeals.forEach(meal => {
     todayCalories += Number(meal.calories || 0);
@@ -291,7 +355,11 @@ async function renderGoals() {
   }
 
   // Handle regular goals
-  const goals = (data.goals || []).filter(g => g.type !== 'calories');
+  //const goals = (data.goals || []).filter(g => g.type !== 'calories');
+  const goals = data.goals || [];
+  const regularGoals = goals.filter(g => g.type !== 'calories' && g.type !== 'workoutsPerWeek');
+  const workoutGoals = goals.filter(g => g.type === 'workoutsPerWeek');
+
   const workouts = data.workoutLogs || [];
   const weightLogs = data.weightLogs || [];
   const fastingLogs = data.fastingHistory || [];
@@ -299,7 +367,7 @@ async function renderGoals() {
   if (goalTable) {
     goalTable.innerHTML = goals.length ? "" : `<tr><td colspan="6">No goals set yet.</td></tr>`;
 
-    goals.forEach((goal, index) => {
+    regularGoals.forEach((goal, index) => {
       let progress = 0, status = "🟢 In Progress", progressText = "Tracking...";
       const now = new Date();
 
@@ -358,6 +426,38 @@ async function renderGoals() {
         </tr>`;
     });
   }
+
+  // Renders Workout Table
+  if (workoutTable) {
+    workoutTable.innerHTML = workoutGoals.length ? "" : `<tr><td colspan="5">No workout goals set yet.</td></tr>`;
+  
+    const weekRange = getCurrentWeekRange();
+  
+    workoutGoals.forEach((goal, index) => {
+      const target = goal.target || "—";
+      const count = workouts.filter(w => isThisWeek(w.timestamp)).length;
+      const progress = Math.min((count / target) * 100, 100);
+      const progressText = `${count}/${target} workouts`;
+      const status = progress >= 100 ? "✅ Achieved" : "🟢 In Progress";
+  
+      workoutTable.innerHTML += `
+        <tr>
+          <td>${weekRange}</td>
+          <td>${target}</td>
+          <td>
+            ${progressText}
+            <div class="progress-bar">
+              <div class="progress-bar-fill" style="width:${progress}%"></div>
+            </div>
+          </td>
+          <td>${status}</td>
+          <td>
+            <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;">🗑️</button>
+          </td>
+        </tr>`;
+    });
+  }  
+
 }
 
 window.deleteGoal = async (index) => {
@@ -378,6 +478,25 @@ function isThisWeek(timestamp) {
   end.setDate(start.getDate() + 6);
   return date >= start && date <= end;
 }
+
+// WEEKLY WORKOUT
+
+
+// Keep the event listener but remove the duplicate variable declarations
+goalType.addEventListener("change", () => {
+  if (goalType.value === "workoutsPerWeek") {
+    workoutTimeframe.style.display = "block";
+    goalDeadline.style.display = "none";
+    weightSection.style.display = "none";
+    
+  } else{
+    workoutTimeframe.style.display = "none";
+    goalDeadline.style.display = "block";
+    weightSection.style.display = "block";
+  }
+  warning.style.display = "none";
+});
+// WEEKLY WORKOUT
 
 // ---- AI Goal Insight ----
 async function fetchAIInsight() {
@@ -463,7 +582,7 @@ export function refreshCalorieDisplay() {
   updateCalorieGoalDisplay();
 }
 
-// Add this at the bottom of the file
+// Remove this duplicate auth state listener at the bottom of the file
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;

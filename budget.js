@@ -10,6 +10,7 @@ const setBudgetBtn = document.getElementById("set-budget");
 
 const mealCostInput = document.getElementById("meal-cost");
 const mealCategoryInput = document.getElementById("meal-category");
+const mealDateTimeInput = document.getElementById("meal-datetime"); // ✅ NEW
 const logMealCostBtn = document.getElementById("log-meal-cost");
 
 const budgetValueEl = document.getElementById("budget-value");
@@ -81,6 +82,8 @@ async function logMealCost() {
 
     const mealCost = parseFloat(mealCostInput.value);
     const category = mealCategoryInput?.value || "Uncategorized";
+    const customDateTime = mealDateTimeInput?.value;
+
     if (isNaN(mealCost) || mealCost <= 0) {
         alert("❌ Please enter a valid meal cost.");
         return;
@@ -98,7 +101,7 @@ async function logMealCost() {
             id: Date.now().toString(),
             cost: mealCost,
             category,
-            timestamp: new Date().toISOString()
+            timestamp: customDateTime ? new Date(customDateTime).toISOString() : new Date().toISOString()
         };
 
         budgetData.expenses.push(expense);

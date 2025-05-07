@@ -30,35 +30,22 @@ let calorieChart = null;
 // const mealDateInput = document.getElementById("meal-date");
 
 // Modify the fetchNutritionBtn event listener
+
+
+// const mealDateInput = document.getElementById("meal-date");
+
+// Modify the fetchNutritionBtn event listener
 if (fetchNutritionBtn) {
+  // In the fetchNutritionBtn event listener
   fetchNutritionBtn.addEventListener("click", async () => {
     if (!foodInput) return;
     const query = foodInput.value.trim();
     if (!query) return alert("❌ Please enter a food item.");
-
+  
     const data = await fetchNutritionData(query);
     if (!data || data.items.length === 0) return alert("⚠️ No nutrition data found.");
-
+  
     const foodItem = data.items[0];
-
-    // --- Try a different approach to fix the calories display
-    const caloriesEl = document.getElementById("calories");
-    
-    if (caloriesEl) {
-      // Create a temporary div to hold our new paragraph
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = `<p><strong>Calories:</strong> <span id="calories">${Math.round(foodItem.calories)}</span> kcal</p>`;
-      
-      // Replace the old paragraph with the new one
-      const newParagraph = tempDiv.firstChild;
-      caloriesEl.parentElement.replaceWith(newParagraph);
-    }
-    
-    document.getElementById("protein").textContent = foodItem.protein_g.toFixed(1);
-    document.getElementById("carbs").textContent = foodItem.carbohydrates_total_g.toFixed(1);
-    document.getElementById("fat").textContent = foodItem.fat_total_g.toFixed(1);
-    // ------------------------------------------------------
-
     const meal = {
       name: query,
       calories: foodItem.calories || 0,
@@ -66,9 +53,9 @@ if (fetchNutritionBtn) {
       carbs: foodItem.carbohydrates_total_g || 0,
       fat: foodItem.fat_total_g || 0,
       timestamp: new Date().toISOString(),
-      localDate: new Date().toLocaleDateString('en-US') // <-- Add this line
+      localDate: new Date().toLocaleDateString('en-US') // Add local date
     };
-
+  
     saveMealToFirestore(meal);
     foodInput.value = ""; // Clear input after successful save
   });
@@ -131,22 +118,7 @@ async function saveMealToFirestore(meal) {
   }
 }
 
-// At the bottom of the file, replace the existing export with:
-window.updateNutritionDisplay = fetchLoggedMeals;
-window.getCurrentDayCalories = async () => {
-  const user = auth.currentUser;
-  if (!user) return 0;
-
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-  const meals = userDoc.data()?.mealLogs || [];
-  const today = new Date().toISOString().split('T')[0];
-  
-  return meals
-    .filter(meal => new Date(meal.timestamp).toISOString().split('T')[0] === today)
-    .reduce((sum, meal) => sum + Number(meal.calories || 0), 0);
-};
-
-// ✅ Fetch & Display Logged Meals
+// In the fetchLoggedMeals function
 async function fetchLoggedMeals(startDate = null, endDate = null) {
   const user = auth.currentUser;
   if (!user) return;
@@ -190,12 +162,13 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
   });
 
   // Only show days present in filtered meals
-  let sortedDates = Object.keys(dailyCalories);
+  const sortedDates = Object.keys(dailyCalories);
   sortedDates.sort((a, b) => new Date(a) - new Date(b));
 
   // Update meal history display
   if (dailyBreakdownEl) {
     dailyBreakdownEl.innerHTML = "";
+    
     sortedDates.slice().reverse().forEach(dateKey => {
       // Only use filtered meals for this day
       const dayMeals = meals.filter(m =>
@@ -206,6 +179,7 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
 
       const dayBlock = document.createElement("div");
       dayBlock.className = "day-block";
+
       const displayDate = dateKey;
       dayBlock.innerHTML = `<h4>📅 ${displayDate} — ${Math.round(dailyCalories[dateKey])} kcal</h4>`;
 
@@ -232,14 +206,15 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
       calorieGoal
     );
   }
-  // Update UI elements - Fix double kcal issue
-  if (totalCaloriesEl) totalCaloriesEl.textContent = Math.round(totalCalories);
+  
+  // Update UI elements
+  if (totalCaloriesEl) totalCaloriesEl.textContent = Math.round(totalCalories) + " kcal";
   if (averageCaloriesEl) {
     if (sortedDates.length === 0) {
-      averageCaloriesEl.textContent = "0";
+      averageCaloriesEl.textContent = "0 kcal";
     } else {
       const avgCalories = totalCalories / sortedDates.length;
-      averageCaloriesEl.textContent = Math.round(avgCalories);
+      averageCaloriesEl.textContent = Math.round(avgCalories) + " kcal";
     }
   }
 }
@@ -416,6 +391,8 @@ if (aiBtn) {
     }
   });
 }
+
+
 
 
 

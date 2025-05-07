@@ -147,6 +147,8 @@ profileForm.addEventListener("submit", async (e) => {
         return;
     }
 
+    const calorieGoalValue = Number(document.getElementById("calorieGoal").value);
+    
     const updatedData = {
         name: document.getElementById("name").value,
         age: document.getElementById("age").value,
@@ -154,7 +156,7 @@ profileForm.addEventListener("submit", async (e) => {
         height: document.getElementById("height").value,
         dob: document.getElementById("dob").value,
         sex: document.getElementById("sex").value,
-        calorieGoal: document.getElementById("calorieGoal").value,
+        calorieGoal: Number(document.getElementById("calorieGoal").value), // Convert to number
         exerciseType: document.getElementById("exerciseType").value,
         healthGoals: document.getElementById("healthGoals").value,
         activityLevel: document.getElementById("activityLevel").value,
@@ -170,13 +172,28 @@ profileForm.addEventListener("submit", async (e) => {
     const userDocRef = doc(db, "users", user.uid);
 
     try {
-        // 🔐 Merge with existing profile
         const existingDoc = await getDoc(userDocRef);
         const existingData = existingDoc.exists() ? existingDoc.data() : {};
 
+        // Create a new goals array if it doesn't exist
+        const goals = existingData.goals || [];
+        
+        // Remove any existing calorie goals
+        const filteredGoals = goals.filter(g => g.type !== 'calories');
+        
+        // Add the new calorie goal
+        filteredGoals.push({
+            type: 'calories',
+            target: calorieGoalValue,
+            deadline: 'Daily',
+            start: null
+        });
+
         const mergedData = {
             ...existingData,
-            ...updatedData
+            ...updatedData,
+            goals: filteredGoals,
+            lastUpdate: new Date().toISOString()
         };
 
         await setDoc(userDocRef, mergedData);
