@@ -9,7 +9,7 @@ const userInput = document.getElementById("user-input");
 const chatOutput = document.getElementById("chat-output");
 const voiceStatus = document.getElementById("voice-status");
 
-const API_KEY = "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";
+const API_KEY = "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";
 
 let userContext = "User profile not available yet.";
 
@@ -83,7 +83,7 @@ async function askAI(prompt) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer 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",
         "HTTP-Referer": "http://localhost:5500",
         "X-Title": "VIDIA AI Health Advisor"
       },
