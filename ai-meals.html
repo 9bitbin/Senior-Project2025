@@ -67,36 +67,8 @@
 </head>
 <body>
 
-  <script type="module">
-    import { auth, db } from "./firebase-config.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
-    
-    const REQUIRED_FIELDS = [
-      "name", "age", "weight", "height", "dob", "sex", "calorieGoal", "exerciseType",
-      "healthGoals", "activityLevel", "dietType", "sleepHours", "waterIntakeGoal",
-      "preferredWorkoutTime", "mentalHealthFocus"
-    ];
-    
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "index.html";
-        return;
-      }
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) {
-        window.location.href = "profile.html";
-        return;
-      }
-      const data = userDoc.data();
-      const incomplete = REQUIRED_FIELDS.some(field => !data[field] || data[field] === "");
-      if (incomplete && !window.location.pathname.endsWith("profile.html")) {
-        window.location.href = "profile.html";
-      }
-    });
-    </script>
-
+  <script type="module" src="profile.js"></script>
+  
   <script src="sidebar.js" defer></script>
 
   <!-- Main Content -->
