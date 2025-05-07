@@ -266,6 +266,15 @@ if (saveGoalBtn) {
                 const data = snap.data() || {};
                 const goals = data.goals || [];
 
+                //this code is for preventing duplicate goals on the same deadline
+                if (type === 'weight') {
+                  const existingGoal = goals.find(g => g.type === 'weight' && g.deadline === deadline);
+                  if (existingGoal) {
+                    alert("⚠️ A weight goal already exists for this deadline.");
+                    return;
+                  }
+                }
+                
                 goals.push({
                     type,
                     target: Number(target),
