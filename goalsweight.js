@@ -161,10 +161,13 @@ async function getAIInsight(logs) {
 }
 
 // ---- Goal Management ----
+
 document.getElementById('goal-type').addEventListener('change', async function() {
     const weightSection = document.getElementById('weight-section');
     const goalDeadline = document.getElementById('goal-deadline');
     const goalTarget = document.getElementById('goal-target');
+    const calorieGoalSection = document.getElementById('calorie-goal-section');
+    const weeklyTimeframe = document.getElementById('weekly-timeframe');
 
     if (this.value === 'calories') {
         // Get calorie target from profile
@@ -176,15 +179,31 @@ document.getElementById('goal-type').addEventListener('change', async function()
             goalTarget.value = profileData.calorieGoal;
         }
         
+        // Show calorie section, hide weight section
         weightSection.style.display = 'none';
+        calorieGoalSection.style.display = 'block';
+        weeklyTimeframe.style.display = 'none';
+        
         goalDeadline.type = 'text';
         goalDeadline.value = 'Daily';
         goalDeadline.readOnly = true;
+        goalDeadline.style.display = 'block';
+    } else if (this.value === 'workoutsPerWeek') {
+        // For workout goals
+        weightSection.style.display = 'none';
+        calorieGoalSection.style.display = 'none';
+        weeklyTimeframe.style.display = 'block';
+        goalDeadline.style.display = 'none';
     } else {
+        // For weight goals
         weightSection.style.display = 'block';
+        calorieGoalSection.style.display = 'none';
+        weeklyTimeframe.style.display = 'none';
+        
         goalDeadline.type = 'date';
         goalDeadline.value = '';
         goalDeadline.readOnly = false;
+        goalDeadline.style.display = 'block';
         goalTarget.value = '';
     }
 });
@@ -305,7 +324,7 @@ async function renderGoals() {
     return isToday;
   });
 
-  // Calculate total calories for today (removed duplicate calculation)
+  // Calculate today calories for today 
   let todayCalories = 0;
   todayMeals.forEach(meal => {
     todayCalories += Number(meal.calories || 0);
@@ -461,9 +480,9 @@ function isThisWeek(timestamp) {
 }
 
 // WEEKLY WORKOUT
-const workoutTimeframe = document.getElementById("weekly-timeframe");
-const weightSection = document.getElementById("weight-section");
 
+
+// Keep the event listener but remove the duplicate variable declarations
 goalType.addEventListener("change", () => {
   if (goalType.value === "workoutsPerWeek") {
     workoutTimeframe.style.display = "block";
@@ -563,7 +582,7 @@ export function refreshCalorieDisplay() {
   updateCalorieGoalDisplay();
 }
 
-// Add this at the bottom of the file
+// Remove this duplicate auth state listener at the bottom of the file
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
