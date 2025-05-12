@@ -17,6 +17,39 @@ const endDateInput = document.getElementById("end-date");
 const filterMealsBtn = document.getElementById("filter-meals");
 const resetMealsBtn = document.getElementById("reset-meals");
 const dailyBreakdownEl = document.getElementById("daily-calorie-breakdown");
+const mealDateInput = document.getElementById("meal-date"); 
+
+// ✅ Set max date for meal date input to today
+// Add this after setting the max date for meal date input
+if (mealDateInput) {
+  const today = new Date().toISOString().split('T')[0];
+  mealDateInput.setAttribute('max', today);
+  mealDateInput.value = today;
+  
+  // Add event listener to show/hide time input based on selected date
+  mealDateInput.addEventListener('change', () => {
+    const mealTimeInput = document.getElementById("meal-time");
+    if (!mealTimeInput) return;
+    
+    const selectedDate = mealDateInput.value;
+    const isToday = selectedDate === today;
+    
+    // Show time input only for past dates
+    if (isToday) {
+      mealTimeInput.style.display = 'none';
+      document.querySelector('label[for="meal-time"]').style.display = 'none';
+    } else {
+      mealTimeInput.style.display = 'block';
+      document.querySelector('label[for="meal-time"]').style.display = 'block';
+      
+      // Default to noon
+      mealTimeInput.value = '12:00';
+    }
+  });
+  
+  // Trigger the change event to set initial state
+  mealDateInput.dispatchEvent(new Event('change'));
+}
 
 const aiBtn = document.getElementById("ai-feedback-btn");
 const aiOutput = document.getElementById("ai-feedback-output");
@@ -36,7 +69,6 @@ let calorieChart = null;
 
 // Modify the fetchNutritionBtn event listener
 if (fetchNutritionBtn) {
-  // In the fetchNutritionBtn event listener
   fetchNutritionBtn.addEventListener("click", async () => {
     if (!foodInput) return;
     const query = foodInput.value.trim();
@@ -45,6 +77,39 @@ if (fetchNutritionBtn) {
     const data = await fetchNutritionData(query);
     if (!data || data.items.length === 0) return alert("⚠️ No nutrition data found.");
   
+    // Get the selected date or default to today
+    let mealDate;
+    const now = new Date();
+    
+    if (mealDateInput && mealDateInput.value) {
+      // Get today's date in YYYY-MM-DD format for comparison
+      const todayStr = new Date().toISOString().split('T')[0];
+      const selectedDateStr = mealDateInput.value;
+      
+      // Check if selected date is today
+      if (selectedDateStr === todayStr) {
+        // For today, use current time
+        mealDate = now;
+        console.log("Using current time for today:", mealDate);
+      } else {
+        // For past dates, use the selected time or default to noon
+        const mealTimeInput = document.getElementById("meal-time");
+        if (mealTimeInput && mealTimeInput.value) {
+          const [hours, minutes] = mealTimeInput.value.split(':').map(Number);
+          mealDate = new Date(selectedDateStr + "T00:00:00"); // Create date with midnight time
+          mealDate.setHours(hours, minutes, 0, 0);
+          console.log("Using selected time for past date:", mealDate);
+        } else {
+          // Default to noon if no time selected
+          mealDate = new Date(selectedDateStr + "T12:00:00");
+          console.log("Using default noon time for past date:", mealDate);
+        }
+      }
+    } else {
+      mealDate = now; // Use current date and time
+      console.log("No date selected, using current time:", mealDate);
+    }
+    
     const foodItem = data.items[0];
     const meal = {
       name: query,
@@ -52,8 +117,8 @@ if (fetchNutritionBtn) {
       protein: foodItem.protein_g || 0,
       carbs: foodItem.carbohydrates_total_g || 0,
       fat: foodItem.fat_total_g || 0,
-      timestamp: new Date().toISOString(),
-      localDate: new Date().toLocaleDateString('en-US') // Add local date
+      timestamp: mealDate.toISOString(),
+      localDate: mealDate.toLocaleDateString('en-US')
     };
   
     saveMealToFirestore(meal);
