@@ -5,7 +5,7 @@ import { doc, updateDoc, getDoc, arrayUnion } from "https://www.gstatic.com/fire
 // ✅ Select Elements Safely
 const fastingWindowSelect = document.getElementById("fasting-window");
 const startFastingBtn = document.getElementById("start-fasting");
-const endFastingBtn = document.getElementById("end-fasting");
+const endFastingBtn = document.getElementById("end-fasting"); 
 const fastingStatusEl = document.getElementById("fasting-status");
 const fastingTimerEl = document.getElementById("fasting-timer");
 const fastingHistoryList = document.getElementById("fasting-history");
@@ -14,6 +14,7 @@ const avgDurationEl = document.getElementById('avg-duration');
 const completionRateEl = document.getElementById('completion-rate');
 const ctx = document.getElementById('fastingChart')?.getContext('2d');
 const fastingTypeIndicator = document.querySelector(".fasting-type-indicator");
+const dailyFastMessage = document.getElementById('daily-fast-message');
 const debugControlsDiv = document.createElement('div');
 let fastingChart;
 
@@ -82,7 +83,7 @@ function startCountdownTimer(endTime, elapsedHours = 0) {
     fastingInterval = setInterval(updateTimer, 1000);
 }
 
-// Update the startFasting function
+// Update the startFasting function to show a message when a user tries to start a new fast after stopping one
 async function startFasting() {
     console.log("✅ Starting fast...");
     const user = auth.currentUser;
@@ -91,21 +92,14 @@ async function startFasting() {
         return;
     }
 
-    // Check if user already has a fast started today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
-    const fastingHistory = userDoc.data()?.fastingHistory || [];
-    
-    const hasFastedToday = fastingHistory.some(fast => {
-        const fastDate = new Date(fast.startTime);
-        fastDate.setHours(0, 0, 0, 0);
-        return fastDate.getTime() === today.getTime();
-    });
-
+    // Check if user has fasted today (either from local state or database)
     if (hasFastedToday) {
+        if (dailyFastMessage) {
+            dailyFastMessage.textContent = "You've already completed a fast today. Please wait until tomorrow to start a new fast.";
+            setTimeout(() => {
+                dailyFastMessage.textContent = "";
+            }, 10000);
+        }
         alert("❌ You've already started a fast today. Please wait until tomorrow to start a new fast.");
         return;
     }
@@ -146,12 +140,13 @@ function stopTimer() {
     fastingTimerEl.innerText = "00h 00m 00s";
 }
 
-
-const resumeFastingBtn = document.getElementById("resume-fasting");
+// Simplified endFasting function (now acts as stopFasting)
+// Add this variable at the top of the file with other variables
+let hasFastedToday = false;
 
 // Update the endFasting function
 async function endFasting(isAutomatic = false, isCompleted = false) {
-    console.log("✅ Ending fast...");
+    console.log("✅ Stopping fast...");
     const user = auth.currentUser;
     if (!user) return;
 
@@ -170,112 +165,40 @@ async function endFasting(isAutomatic = false, isCompleted = false) {
             const actualEndTime = new Date();
             const startTime = new Date(activeFasting.startTime);
             const currentElapsedHours = (actualEndTime - startTime) / (1000 * 60 * 60);
-            const totalElapsedHours = (activeFasting.totalElapsedHours || 0) + currentElapsedHours;
-
+            
             const plannedEndTime = new Date(activeFasting.endTime).toISOString();
-            // --- FIX: define originalStart before using it ---
-            const originalStart = activeFasting.originalStartTime || activeFasting.startTime;
-
-            if (isCompleted) {
-                fastingHistory = fastingHistory.filter(fast =>
-                    !(fast.startTime === originalStart && (fast.status === "Paused" || fast.status === "Completed"))
-                );
-                fastingHistory.push({
-                    startTime: originalStart,
-                    plannedEndTime: plannedEndTime,
-                    actualEndTime: endTime,
-                    duration: totalElapsedHours.toFixed(2),
-                    status: "Completed"
-                });
-                await updateDoc(userDocRef, {
-                    fastingHistory: fastingHistory,
-                    activeFasting: null
-                });
-                fastingStatusEl.innerText = "Fasting completed successfully!";
-                stopTimer();
-                startFastingBtn.disabled = true;
-                endFastingBtn.disabled = true;
-                resumeFastingBtn.disabled = true;
-                loadFastingHistory();
-            } else {
-                fastingHistory = fastingHistory.filter(fast =>
-                    !(fast.startTime === originalStart && (fast.status === "Paused" || fast.status === "Completed"))
-                );
-                fastingHistory.push({
-                    startTime: originalStart,
-                    plannedEndTime: plannedEndTime,
-                    actualEndTime: endTime,
-                    duration: totalElapsedHours.toFixed(2),
-                    status: "Paused"
-                });
-                await updateDoc(userDocRef, {
-                    activeFasting: {
-                        ...activeFasting,
-                        pausedAt: endTime,
-                        totalElapsedHours: totalElapsedHours,
-                        originalStartTime: originalStart
-                    },
-                    fastingHistory: fastingHistory
-                });
-                fastingStatusEl.innerText = `Fasting paused (${totalElapsedHours.toFixed(1)}h completed)`;
-                stopTimer();
-                startFastingBtn.disabled = true;
-                endFastingBtn.disabled = true;
-                resumeFastingBtn.disabled = false;
-                loadFastingHistory();
-            }
-        }
-    } catch (error) {
-        console.error("❌ ERROR ending fasting session:", error);
-    }
-}
-
-// Update the resumeFasting function
-async function resumeFasting() {
-    console.log("✅ Resuming fast...");
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const userDocRef = doc(db, "users", user.uid);
-
-    try {
-        const userDoc = await getDoc(userDocRef);
-        const userData = userDoc.data();
-        const activeFasting = userData?.activeFasting;
-        let fastingHistory = userData?.fastingHistory || [];
-
-        if (activeFasting) {
-            const totalElapsedHours = activeFasting.totalElapsedHours || 0;
-            const remainingHours = activeFasting.targetHours - totalElapsedHours;
-            const newStartTime = new Date();
-            const newEndTime = new Date(newStartTime.getTime() + (remainingHours * 60 * 60 * 1000));
-
-           
-          
-            await updateDoc(userDocRef, {
-                activeFasting: {
-                    ...activeFasting,
-                    startTime: newStartTime.toISOString(),
-                    endTime: newEndTime.toISOString(),
-                    pausedAt: null,
-                    totalElapsedHours: totalElapsedHours
-                }
-               
+            
+            // Add to history with appropriate status
+            fastingHistory.push({
+                startTime: activeFasting.startTime,
+                plannedEndTime: plannedEndTime,
+                actualEndTime: endTime,
+                duration: currentElapsedHours.toFixed(2),
+                status: isCompleted ? "Completed" : "Stopped"
             });
-
-            fastingStatusEl.innerText = `Fasting resumed! Ends at ${newEndTime.toLocaleTimeString()} (${totalElapsedHours.toFixed(1)}h completed)`;
-            startCountdownTimer(newEndTime);
-            startFastingBtn.disabled = true;
-            endFastingBtn.disabled = false;
-            resumeFastingBtn.disabled = true;
-            loadFastingHistory(); // <-- Ensure chart/history update after resume
+            
+            // Set hasFastedToday to true when a fast ends
+            hasFastedToday = true;
+            
+            await updateDoc(userDocRef, {
+                fastingHistory: fastingHistory,
+                activeFasting: null
+            });
+            
+            const statusMessage = isCompleted ? 
+                "Fasting completed successfully!" : 
+                `Fasting stopped (${currentElapsedHours.toFixed(1)}h elapsed)`;
+            
+            fastingStatusEl.innerText = statusMessage;
+            stopTimer();
+            startFastingBtn.disabled = false; // Enable the start button
+            endFastingBtn.disabled = true;
+            loadFastingHistory();
         }
     } catch (error) {
-        console.error("❌ ERROR resuming fasting session:", error);
+        console.error("❌ ERROR stopping fasting session:", error);
     }
 }
-
-
 
 // Update the loadFastingHistory function's chart section
 async function loadFastingHistory() {
@@ -342,8 +265,6 @@ async function loadFastingHistory() {
                     if (group.fasts.length === 0) return null;
                     // Most recent fast:
                     return group.fasts.reduce((a, b) => new Date(a.startTime) > new Date(b.startTime) ? a : b);
-                    // Or, for longest fast:
-                    // return group.fasts.reduce((a, b) => parseFloat(a.duration) > parseFloat(b.duration) ? a : b);
                 });
 
                 const data = dailyFasts.map(fast => fast ? parseFloat(fast.duration) : 0);
@@ -367,7 +288,7 @@ async function loadFastingHistory() {
                             borderColor: 'white',
                             borderSkipped: false,
                             barThickness: 32,
-                            minBarLength: 4 // <-- Add this line to ensure even tiny bars are visible and hoverable
+                            minBarLength: 4
                         }]
                     },
                     options: {
@@ -396,18 +317,18 @@ async function loadFastingHistory() {
                                 grid: {
                                     display: false
                                 },
-                                offset: true, // Center bars on each label
+                                offset: true,
                                 ticks: {
                                     font: {
                                         size: 15
                                     },
-                                    padding: 8 // Shift x-axis labels up/down (increase for more space)
+                                    padding: 8
                                 }
                             }
                         },
                         plugins: {
                             legend: {
-                                display: true, // <-- Restore legend
+                                display: true,
                                 position: 'top',
                                 labels: {
                                     generateLabels: function(chart) {
@@ -419,7 +340,7 @@ async function loadFastingHistory() {
                                                 lineWidth: 0
                                             },
                                             {
-                                                text: 'Paused Fast',
+                                                text: 'Stopped Fast',
                                                 fillStyle: '#ef4444',
                                                 strokeStyle: '#ef4444',
                                                 lineWidth: 0
@@ -474,16 +395,15 @@ async function loadFastingHistory() {
                 });
             }
 
-            // Update history list with filtered data
-            // Fix status color in history rendering
+            // Update history list with filtered data - updated to show "Stopped" instead of "Paused"
             fastingHistoryList.innerHTML = filteredHistory.length
                 ? filteredHistory.slice(0, 50).map((fast, index) => `
                     <li class="${index === 0 ? 'new-entry' : ''}">
-                        <strong>Start:</strong> ${new Date(fast.originalStartTime || fast.startTime).toLocaleString()}<br>
+                        <strong>Start:</strong> ${new Date(fast.startTime).toLocaleString()}<br>
                         <strong>Planned End:</strong> ${new Date(fast.plannedEndTime).toLocaleString()}<br>
                         <strong>Actual End:</strong> ${new Date(fast.actualEndTime).toLocaleString()}<br>
                         <strong>Duration:</strong> ${fast.duration} hrs<br>
-                        <strong>Status:</strong> <span style="color: ${fast.status === "Paused" ? "red" : "green"}">${fast.status}</span>
+                        <strong>Status:</strong> <span style="color: ${fast.status === "Stopped" ? "red" : "green"}">${fast.status}</span>
                     </li>
                 `).join("")
                 : "<li>No fasting history found.</li>";
@@ -501,14 +421,16 @@ resetFilterBtn?.addEventListener('click', () => {
     loadFastingHistory();
 });
 
-// Update the DOMContentLoaded event listener section
+
 document.addEventListener("DOMContentLoaded", () => {
     if (startFastingBtn) startFastingBtn.addEventListener("click", startFasting);
-    if (endFastingBtn) endFastingBtn.addEventListener("click", endFasting);
-    if (resumeFastingBtn) resumeFastingBtn.addEventListener("click", async () => {
-        await resumeFasting();
-        await restoreActiveFasting(); // --- ensure UI updates after resume ---
-    });
+    if (endFastingBtn) {
+        
+        if (endFastingBtn.textContent === "End Fasting" || endFastingBtn.textContent === "Pause Fasting") {
+            endFastingBtn.textContent = "Stop Fasting";
+        }
+        endFastingBtn.addEventListener("click", () => endFasting(false, false));
+    }
     
     // Set default text for fasting schedule
     if (fastingTypeIndicator) {
@@ -531,7 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Update the restoreActiveFasting function
+
 async function restoreActiveFasting() {
     console.log("🔄 Checking for active fasting session...");
     const user = auth.currentUser;
@@ -544,36 +466,25 @@ async function restoreActiveFasting() {
         const activeFasting = userDoc.data().activeFasting;
 
         if (activeFasting) {
-            if (activeFasting.pausedAt) {
-                // --- UI updates for paused state ---
-                fastingStatusEl.innerText = "Fasting paused - you can resume today's fast";
+            const endTime = new Date(activeFasting.endTime);
+            if (new Date() < endTime) {
+                fastingStatusEl.innerText = `Fasting in progress! Ends at ${endTime.toLocaleTimeString()}`;
                 startFastingBtn.disabled = true;
-                endFastingBtn.disabled = true;
-                resumeFastingBtn.disabled = false;
+                endFastingBtn.disabled = false;
+                startCountdownTimer(endTime);
             } else {
-                const endTime = new Date(activeFasting.endTime);
-                if (new Date() < endTime) {
-                    fastingStatusEl.innerText = `Fasting in progress! Ends at ${endTime.toLocaleTimeString()}`;
-                    startFastingBtn.disabled = true;
-                    endFastingBtn.disabled = false;
-                    resumeFastingBtn.disabled = true;
-                    startCountdownTimer(endTime);
-                } else {
-                    await clearActiveFasting();
-                }
+                await clearActiveFasting();
             }
         } else {
             // No active fasting session
             fastingStatusEl.innerText = "";
             startFastingBtn.disabled = false;
             endFastingBtn.disabled = true;
-            resumeFastingBtn.disabled = true;
         }
     }
 }
 
-
-
+// CSV download function
 document.getElementById("download-fasting")?.addEventListener("click", async () => {
     const user = auth.currentUser;
     if (!user) return;
@@ -614,30 +525,9 @@ document.getElementById("download-fasting")?.addEventListener("click", async () 
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-  });
-
-
-    
- 
-
-
-    
- 
-
-
-
-
-
-
-fastingWindowSelect?.addEventListener('change', (e) => {
-    const selectedValue = e.target.value;
-    const selectedText = e.target.options[e.target.selectedIndex].text;
-    if (fastingTypeIndicator) {
-        fastingTypeIndicator.textContent = selectedText;
-    }
 });
 
-
+// Fasting window select event listener
 fastingWindowSelect?.addEventListener('change', (e) => {
     const selectedValue = e.target.value;
     const selectedText = e.target.options[e.target.selectedIndex].text;

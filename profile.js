@@ -2,9 +2,81 @@ import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-const profileForm = document.getElementById("profileForm");
+let profileForm;
 
-// Add profile check functionality
+// Update the DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', () => {
+  // Profile form handling
+  profileForm = document.getElementById("profileForm");
+  
+  if (profileForm) {
+    profileForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+          alert("You must be logged in to save your profile!");
+          return;
+      }
+
+      const calorieGoalValue = Number(document.getElementById("calorieGoal").value);
+      
+      const updatedData = {
+          name: document.getElementById("name").value,
+          age: document.getElementById("age").value,
+          weight: document.getElementById("weight").value,
+          height: document.getElementById("height").value,
+          dob: document.getElementById("dob").value,
+          sex: document.getElementById("sex").value,
+          calorieGoal: Number(document.getElementById("calorieGoal").value), // Convert to number
+          exerciseType: document.getElementById("exerciseType").value,
+          healthGoals: document.getElementById("healthGoals").value,
+          activityLevel: document.getElementById("activityLevel").value,
+          dietType: document.getElementById("dietType").value,
+          allergies: document.getElementById("allergies").value,
+          budgetPreference: document.getElementById("budgetPreference").value,
+          sleepHours: document.getElementById("sleepHours").value,
+          waterIntakeGoal: document.getElementById("waterIntakeGoal").value,
+          preferredWorkoutTime: document.getElementById("preferredWorkoutTime").value,
+          mentalHealthFocus: document.getElementById("mentalHealthFocus").value,
+      };
+
+      const userDocRef = doc(db, "users", user.uid);
+
+      // Inside the profileForm submit handler, update the try block
+      try {
+          const existingDoc = await getDoc(userDocRef);
+          const existingData = existingDoc.exists() ? existingDoc.data() : {};
+          
+          // Ensure email is always saved
+          updatedData.email = user.email || existingData.email || '';
+          updatedData.name = document.getElementById("name").value;
+          updatedData.displayName = updatedData.name;
+          
+          // Add timestamp for tracking updates
+          const mergedData = {
+              ...existingData,
+              ...updatedData,
+              email: updatedData.email, // Ensure email is not overwritten
+              lastUpdate: new Date().toISOString()
+          };
+      
+          await setDoc(userDocRef, mergedData);
+          
+          // Update email in community data
+          if (window.updateUserEmail) {
+              await window.updateUserEmail(user.uid, updatedData.email);
+          }
+          
+          alert("✅ Profile saved successfully!");
+          window.location.href = "home.html";
+      } catch (error) {
+          alert("❌ Error saving profile: " + error.message);
+      }
+    }); 
+  }
+});
+
 // Function to check if profile is complete
 function isProfileComplete(userData) {
   return userData && 
@@ -85,121 +157,46 @@ window.checkProfileCompletion = async function() {
   return false;
 };
 
-// M<ake sure the profile check runs on all pages
+// Second DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', () => {
-  // Only run on non-profile pages
   if (!window.location.pathname.endsWith('profile.html')) {
-    // Small delay to ensure auth state is ready
-    setTimeout(() => {
-      if (window.checkProfileCompletion) {
-        window.checkProfileCompletion();
-      }
-    }, 500);
+    if (window.checkProfileCompletion) {
+      window.checkProfileCompletion();
+    }
   }
 });
 
-// 🔹 Check if user is logged in
+// Auth state change listener
 onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        // 🔹 If user profile exists, pre-fill the form
-        if (userDoc.exists()) {
-            const data = userDoc.data();
-            document.getElementById("name").value = data.name || "";
-            document.getElementById("age").value = data.age || "";
-            document.getElementById("weight").value = data.weight || "";
-            document.getElementById("height").value = data.height || "";
-            document.getElementById("dob").value = data.dob || "";
-            document.getElementById("sex").value = data.sex || "";
-            document.getElementById("calorieGoal").value = data.calorieGoal || "";
-            document.getElementById("exerciseType").value = data.exerciseType || "";
-            document.getElementById("healthGoals").value = data.healthGoals || "";
-
-            document.getElementById("activityLevel").value = data.activityLevel || "";
-            document.getElementById("dietType").value = data.dietType || "";
-            document.getElementById("allergies").value = data.allergies || "";
-            document.getElementById("budgetPreference").value = data.budgetPreference || "";
-            document.getElementById("sleepHours").value = data.sleepHours || "";
-            document.getElementById("waterIntakeGoal").value = data.waterIntakeGoal || "";
-            document.getElementById("preferredWorkoutTime").value = data.preferredWorkoutTime || "";
-            document.getElementById("mentalHealthFocus").value = data.mentalHealthFocus || "";
-        }
-        
-        // Run profile check if we're not on the profile page
-        if (!window.location.pathname.endsWith('profile.html')) {
-            window.checkProfileCompletion();
-        }
-    } else {
-        window.location.href = "index.html"; // Redirect if not logged in
-    }
-});
-
-// Rest of your code remains unchanged
-// 🔹 Save user profile data (merged safely)
-profileForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const user = auth.currentUser;
-    if (!user) {
-        alert("You must be logged in to save your profile!");
-        return;
-    }
-
-    const calorieGoalValue = Number(document.getElementById("calorieGoal").value);
-    
-    const updatedData = {
-        name: document.getElementById("name").value,
-        age: document.getElementById("age").value,
-        weight: document.getElementById("weight").value,
-        height: document.getElementById("height").value,
-        dob: document.getElementById("dob").value,
-        sex: document.getElementById("sex").value,
-        calorieGoal: Number(document.getElementById("calorieGoal").value), // Convert to number
-        exerciseType: document.getElementById("exerciseType").value,
-        healthGoals: document.getElementById("healthGoals").value,
-        activityLevel: document.getElementById("activityLevel").value,
-        dietType: document.getElementById("dietType").value,
-        allergies: document.getElementById("allergies").value,
-        budgetPreference: document.getElementById("budgetPreference").value,
-        sleepHours: document.getElementById("sleepHours").value,
-        waterIntakeGoal: document.getElementById("waterIntakeGoal").value,
-        preferredWorkoutTime: document.getElementById("preferredWorkoutTime").value,
-        mentalHealthFocus: document.getElementById("mentalHealthFocus").value,
-    };
-
+  if (user) {
     const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
 
-    try {
-        const existingDoc = await getDoc(userDocRef);
-        const existingData = existingDoc.exists() ? existingDoc.data() : {};
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      if (!data.email && user.email) {
+        await setDoc(userDocRef, { ...data, email: user.email }, { merge: true });
+      }
+      const formFields = [
+        "name", "age", "weight", "height", "dob", "sex", "calorieGoal",
+        "exerciseType", "healthGoals", "activityLevel", "dietType",
+        "allergies", "budgetPreference", "sleepHours", "waterIntakeGoal",
+        "preferredWorkoutTime", "mentalHealthFocus"
+      ];
 
-        // Create a new goals array if it doesn't exist
-        const goals = existingData.goals || [];
-        
-        // Remove any existing calorie goals
-        const filteredGoals = goals.filter(g => g.type !== 'calories');
-        
-        // Add the new calorie goal
-        filteredGoals.push({
-            type: 'calories',
-            target: calorieGoalValue,
-            deadline: 'Daily',
-            start: null
-        });
-
-        const mergedData = {
-            ...existingData,
-            ...updatedData,
-            goals: filteredGoals,
-            lastUpdate: new Date().toISOString()
-        };
-
-        await setDoc(userDocRef, mergedData);
-        alert("✅ Profile saved successfully!");
-        window.location.href = "home.html";
-    } catch (error) {
-        alert("❌ Error saving profile: " + error.message);
+      formFields.forEach(field => {
+        const element = document.getElementById(field);
+        if (element) {
+          element.value = data[field] || "";
+        }
+      });
+    } else {
+      // If no user document exists, check profile completion
+      if (!window.location.pathname.endsWith('profile.html')) {
+        disablePageWithMessage();
+      }
     }
-});
+  } else {
+    window.location.href = "index.html";
+  }
+}); // End of auth state change listener
