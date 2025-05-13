@@ -419,11 +419,11 @@ async function renderGoals() {
 
       if (new Date(goal.deadline) < now && progress < 100) status = "❌ Missed";
 
-      goalTable.innerHTML += `
-        <tr>
-          <td>${goal.type}</td>
-          <td>${goal.target}</td>
-          <td>${goal.deadline}</td>
+     goalTable.innerHTML += `
+    <tr>
+      <td>${goal.start || '—'}</td>
+      <td>${goal.target}</td>
+      <td>${goal.deadline}</td>
           <td>
             ${progressText}
             <div class="progress-bar">
