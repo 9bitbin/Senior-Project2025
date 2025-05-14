@@ -46,13 +46,40 @@
       margin-bottom: 15px;
     }
 
-    select, input[type="checkbox"], input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      font-size: 15px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-bottom: 15px;
+    /* Update the select and checkbox styles */
+    select, input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        margin-bottom: 15px;
+    }
+
+    input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+    }
+
+    /* Add styles for the top controls */
+    .top-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .toggle-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #searchInput {
+        flex: 2;
+    }
+
+    #postFilter {
+        flex: 1;
     }
 
     label { font-weight: 600; display: block; margin: 10px 0 5px; }
@@ -78,37 +105,120 @@
       margin-bottom: 20px;
     }
 
-    .post strong { display: block; margin-bottom: 6px; color: #111; }
-    .post small { color: #666; font-size: 12px; }
-
-    .top-controls {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-      margin-bottom: 25px;
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
     }
 
-    .top-controls input[type="text"] {
-      flex: 1;
+    .post-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    .toggle-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .post-header-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    .toggle-wrapper input[type="checkbox"] {
-      width: auto;
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
     }
-  </style>
+
+    .post-tag {
+        background: #e2e8f0;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.9em;
+        color: #475569;
+    }
+
+    .post-visibility {
+        margin-left: auto;
+        color: #64748b;
+    }
+
+    .post-content {
+        position: relative;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin-bottom: 20px;
+        overflow: visible;
+        max-height: none;
+        padding-bottom: 25px;
+    }
+
+    .content-text {
+        margin-bottom: 10px;
+        display: block;
+        overflow: visible;
+        white-space: pre-wrap;
+    }
+
+    .content-text.truncated {
+        max-height: 4.5em;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+
+    .read-more-btn {
+        display: inline-block;
+        color: #10b981;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px 0;
+        font-size: 14px;
+        margin-top: 8px;
+        text-decoration: underline;
+    }
+
+    .full-content {
+        display: none;
+        white-space: pre-wrap;
+    }
+    .read-more-btn.visible {
+        display: block;  /* Only show when needed */
+    }
+
+    .post-tag {
+        background: #e2e8f0;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.9em;
+        color: #475569;
+        text-transform: capitalize;
+    }
+</style>
+
+   
+</style>
 </head>
 <body class="community-page">
+
+  <script type="module" src="profile.js"></script>
 
   <script src="sidebar.js" defer></script>
 
 <!-- Main Content -->
 <div class="main-content">
+  <!-- Community Header -->
+  <div class="community-header">
+    <h2>Community</h2>
+    <div class="community-header-icons">
+      <!-- Icons will be added by JavaScript -->
+    </div>
+  </div>
 
   <!-- 🔹 Share Your Progress -->
   <div class="card" data-aos="fade-up">
@@ -193,5 +303,63 @@
 <script>
   AOS.init({ duration: 800, offset: 100, once: true });
 </script>
+
+
 </body>
 </html>
+
+
+<style>
+  .community-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    z-index: 1000;
+  }
+
+  .community-header-icons {
+    display: flex;
+    gap: 15px;
+  }
+
+  .post-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 15px 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .content-text {
+    margin-bottom: 10px;
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    -webkit-box-orient: unset;
+    overflow: visible;
+  }
+
+ 
+    .read-more-btn {
+    color: #10b981;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 0;
+    font-size: 14px;
+    display: block;
+    margin-top: 8px;
+  }
+
+  .post-tag {
+    background: #e2e8f0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    color: #475569;
+    text-transform: capitalize;
+  }
+</style>

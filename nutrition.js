@@ -17,6 +17,39 @@ const endDateInput = document.getElementById("end-date");
 const filterMealsBtn = document.getElementById("filter-meals");
 const resetMealsBtn = document.getElementById("reset-meals");
 const dailyBreakdownEl = document.getElementById("daily-calorie-breakdown");
+const mealDateInput = document.getElementById("meal-date"); 
+
+// ✅ Set max date for meal date input to today
+// Add this after setting the max date for meal date input
+if (mealDateInput) {
+  const today = new Date().toISOString().split('T')[0];
+  mealDateInput.setAttribute('max', today);
+  mealDateInput.value = today;
+  
+  // Add event listener to show/hide time input based on selected date
+  mealDateInput.addEventListener('change', () => {
+    const mealTimeInput = document.getElementById("meal-time");
+    if (!mealTimeInput) return;
+    
+    const selectedDate = mealDateInput.value;
+    const isToday = selectedDate === today;
+    
+    // Show time input only for past dates
+    if (isToday) {
+      mealTimeInput.style.display = 'none';
+      document.querySelector('label[for="meal-time"]').style.display = 'none';
+    } else {
+      mealTimeInput.style.display = 'block';
+      document.querySelector('label[for="meal-time"]').style.display = 'block';
+      
+      // Default to noon
+      mealTimeInput.value = '12:00';
+    }
+  });
+  
+  // Trigger the change event to set initial state
+  mealDateInput.dispatchEvent(new Event('change'));
+}
 
 const aiBtn = document.getElementById("ai-feedback-btn");
 const aiOutput = document.getElementById("ai-feedback-output");
@@ -25,28 +58,71 @@ const chartCtx = document.getElementById("calorieChart")?.getContext("2d");
 let calorieChart = null;
 
 // ✅ Ensure elements exist before adding event listeners
+
+
+// const mealDateInput = document.getElementById("meal-date");
+
+// Modify the fetchNutritionBtn event listener
+
+
+// const mealDateInput = document.getElementById("meal-date");
+
+// Modify the fetchNutritionBtn event listener
 if (fetchNutritionBtn) {
   fetchNutritionBtn.addEventListener("click", async () => {
     if (!foodInput) return;
     const query = foodInput.value.trim();
     if (!query) return alert("❌ Please enter a food item.");
-
+  
     const data = await fetchNutritionData(query);
     if (!data || data.items.length === 0) return alert("⚠️ No nutrition data found.");
-
+  
+    // Get the selected date or default to today
+    let mealDate;
+    const now = new Date();
+    
+    if (mealDateInput && mealDateInput.value) {
+      // Get today's date in YYYY-MM-DD format for comparison
+      const todayStr = new Date().toISOString().split('T')[0];
+      const selectedDateStr = mealDateInput.value;
+      
+      // Check if selected date is today
+      if (selectedDateStr === todayStr) {
+        // For today, use current time
+        mealDate = now;
+        console.log("Using current time for today:", mealDate);
+      } else {
+        // For past dates, use the selected time or default to noon
+        const mealTimeInput = document.getElementById("meal-time");
+        if (mealTimeInput && mealTimeInput.value) {
+          const [hours, minutes] = mealTimeInput.value.split(':').map(Number);
+          mealDate = new Date(selectedDateStr + "T00:00:00"); // Create date with midnight time
+          mealDate.setHours(hours, minutes, 0, 0);
+          console.log("Using selected time for past date:", mealDate);
+        } else {
+          // Default to noon if no time selected
+          mealDate = new Date(selectedDateStr + "T12:00:00");
+          console.log("Using default noon time for past date:", mealDate);
+        }
+      }
+    } else {
+      mealDate = now; // Use current date and time
+      console.log("No date selected, using current time:", mealDate);
+    }
+    
     const foodItem = data.items[0];
-    const now = new Date().toISOString();
-
     const meal = {
       name: query,
       calories: foodItem.calories || 0,
       protein: foodItem.protein_g || 0,
       carbs: foodItem.carbohydrates_total_g || 0,
       fat: foodItem.fat_total_g || 0,
-      timestamp: now
+      timestamp: mealDate.toISOString(),
+      localDate: mealDate.toLocaleDateString('en-US')
     };
-
+  
     saveMealToFirestore(meal);
+    foodInput.value = ""; // Clear input after successful save
   });
 }
 
@@ -75,65 +151,39 @@ async function saveMealToFirestore(meal) {
   const userDoc = await getDoc(userDocRef);
   let meals = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
 
-  meal.timestamp = new Date().toISOString();
   meals.push(meal);
 
   try {
-    await updateDoc(userDocRef, { mealLogs: meals });
-    fetchLoggedMeals(); // Refresh UI
+    // Update meal logs
+    await updateDoc(userDocRef, { 
+      mealLogs: meals,
+      lastMealUpdate: new Date().toISOString()
+    });
+
+    // Calculate total calories for today
+    const today = new Date().toISOString().split('T')[0];
+    const todayMeals = meals.filter(m => 
+      new Date(m.timestamp).toISOString().split('T')[0] === today
+    );
+    const todayCalories = todayMeals.reduce((sum, m) => sum + Number(m.calories || 0), 0);
+
+    // Update both displays with accurate total
+    await updateDoc(userDocRef, {
+      todayTotalCalories: todayCalories
+    });
+
+    fetchLoggedMeals();
+    
+    // Try to update goals page if available
+    if (typeof window.renderGoals === 'function') {
+      window.renderGoals();
+    }
   } catch (error) {
     console.error("❌ Error saving meal:", error);
   }
 }
 
-// ✅ Render Chart
-async function renderCalorieChart(dailyCalories, goal) {
-  if (!chartCtx) return;
-
-  const labels = Object.keys(dailyCalories);
-  const values = Object.values(dailyCalories);
-  const backgroundColors = values.map(val => val > goal ? "#f87171" : "#34d399");
-
-  if (calorieChart) calorieChart.destroy();
-
-  calorieChart = new Chart(chartCtx, {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        {
-          label: "Calories",
-          data: values,
-          backgroundColor: backgroundColors,
-          borderRadius: 6
-        },
-        {
-          type: "line",
-          label: "Calorie Goal",
-          data: Array(labels.length).fill(goal),
-          borderColor: "#facc15",
-          borderWidth: 2,
-          fill: false,
-          pointRadius: 0
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: { display: true, text: "Calories" }
-        }
-      },
-      plugins: {
-        legend: { position: "top" }
-      }
-    }
-  });
-}
-
-// ✅ Fetch & Display Logged Meals
+// In the fetchLoggedMeals function
 async function fetchLoggedMeals(startDate = null, endDate = null) {
   const user = auth.currentUser;
   if (!user) return;
@@ -148,53 +198,62 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
   let totalCalories = 0;
   let dailyCalories = {};
 
-  // ✅ Filter by date range
+  // Filter by date range if provided
   if (startDate && endDate) {
-    const start = new Date(startDate).setHours(0, 0, 0, 0);
-    const end = new Date(endDate).setHours(23, 59, 59, 999);
+    // Convert filter dates to numbers in YYYYMMDD format
+    const startNum = Number(startDate.replace(/-/g, ''));
+    const endNum = Number(endDate.replace(/-/g, ''));
+
     meals = meals.filter(meal => {
-      const mealDate = new Date(meal.timestamp).getTime();
-      return mealDate >= start && mealDate <= end;
+      // Get the meal's local date in YYYY-MM-DD
+      const mealDateObj = new Date(meal.timestamp);
+      const year = mealDateObj.getFullYear();
+      const month = String(mealDateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(mealDateObj.getDate()).padStart(2, '0');
+      const mealLocalISO = `${year}-${month}-${day}`;
+      const mealNum = Number(mealLocalISO.replace(/-/g, ''));
+      return mealNum >= startNum && mealNum <= endNum;
     });
   }
 
-  // ✅ Aggregate data
+  // Process meals
   meals.forEach(meal => {
-    totalCalories += meal.calories;
-    const date = new Date(meal.timestamp).toISOString().split("T")[0];
-    if (!dailyCalories[date]) dailyCalories[date] = 0;
-    dailyCalories[date] += meal.calories;
+    const calories = Number(meal.calories) || 0;
+    totalCalories += calories;
+    // Use local date string for grouping to avoid UTC/ISO issues
+    const dateKey = new Date(meal.timestamp).toLocaleDateString('en-US');
+    if (!dailyCalories[dateKey]) dailyCalories[dateKey] = 0;
+    dailyCalories[dateKey] += calories;
   });
 
-  // ✅ UI: totals
-  totalCaloriesEl.innerText = totalCalories;
-  averageCaloriesEl.innerText = Math.round(totalCalories / (Object.keys(dailyCalories).length || 1));
+  // Only show days present in filtered meals
+  const sortedDates = Object.keys(dailyCalories);
+  sortedDates.sort((a, b) => new Date(a) - new Date(b));
 
-  // ✅ UI: Grouped by day
+  // Update meal history display
   if (dailyBreakdownEl) {
     dailyBreakdownEl.innerHTML = "";
+    
+    sortedDates.slice().reverse().forEach(dateKey => {
+      // Only use filtered meals for this day
+      const dayMeals = meals.filter(m =>
+        new Date(m.timestamp).toLocaleDateString('en-US') === dateKey
+      );
 
-    const mealMap = {};
-    meals.forEach(meal => {
-      const date = new Date(meal.timestamp).toISOString().split("T")[0];
-      if (!mealMap[date]) mealMap[date] = [];
-      mealMap[date].push(meal);
-    });
-
-    Object.entries(mealMap).forEach(([date, mealsForDate]) => {
-      const formattedDate = new Date(date).toLocaleDateString();
-      const dailyKcal = Math.round(dailyCalories[date]);
+      if (dayMeals.length === 0) return; // Skip days with no meals in filtered range
 
       const dayBlock = document.createElement("div");
       dayBlock.className = "day-block";
-      dayBlock.innerHTML = `<h4>📅 ${formattedDate} — ${dailyKcal} kcal</h4>`;
 
-      mealsForDate.forEach(meal => {
+      const displayDate = dateKey;
+      dayBlock.innerHTML = `<h4>📅 ${displayDate} — ${Math.round(dailyCalories[dateKey])} kcal</h4>`;
+
+      dayMeals.forEach(meal => {
         const mealEl = document.createElement("div");
         mealEl.className = "meal-entry";
         mealEl.innerHTML = `
-          <strong>${meal.name}</strong>: ${meal.calories} kcal<br>
-          Protein: ${meal.protein} g, Carbs: ${meal.carbs} g, Fat: ${meal.fat} g
+          <strong>${meal.name}</strong>: ${Math.round(meal.calories)} kcal<br>
+          Protein: ${meal.protein.toFixed(1)} g, Carbs: ${meal.carbs.toFixed(1)} g, Fat: ${meal.fat.toFixed(1)} g
           <em>Logged on: ${new Date(meal.timestamp).toLocaleString()}</em>
         `;
         dayBlock.appendChild(mealEl);
@@ -204,10 +263,90 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
     });
   }
 
-  if (mealList) mealList.innerHTML = "";
+  // Render chart
+  if (chartCtx) {
+    await renderCalorieChart(
+      sortedDates, // Already local date strings
+      sortedDates.map(dateKey => Math.round(dailyCalories[dateKey])),
+      calorieGoal
+    );
+  }
+  
+  // Update UI elements
+  if (totalCaloriesEl) totalCaloriesEl.textContent = Math.round(totalCalories) + " kcal";
+  if (averageCaloriesEl) {
+    if (sortedDates.length === 0) {
+      averageCaloriesEl.textContent = "0 kcal";
+    } else {
+      const avgCalories = totalCalories / sortedDates.length;
+      averageCaloriesEl.textContent = Math.round(avgCalories) + " kcal";
+    }
+  }
+}
 
-  // ✅ Render chart
-  await renderCalorieChart(dailyCalories, calorieGoal);
+// ✅ Render Chart
+async function renderCalorieChart(labels, values, goal) {
+  if (!chartCtx) return;
+
+  if (calorieChart) calorieChart.destroy();
+
+  calorieChart = new Chart(chartCtx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Calories",
+          data: values,
+          backgroundColor: values.map(val => val > goal ? "#f87171" : "#34d399"),
+          borderRadius: 6,
+          barPercentage: 0.8,
+          categoryPercentage: 0.9
+        },
+        {
+          type: "line",
+          label: "Calorie Goal",
+          data: Array(labels.length).fill(goal),
+          borderColor: "#facc15",
+          borderWidth: 3,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          min: 0,
+          max: Math.max(goal * 1.2, ...values, 2500),
+          grid: {
+            drawBorder: false
+          }
+        },
+        x: {
+          grid: {
+            display: false,
+            drawBorder: false
+          }
+        }
+      },
+      layout: {
+        padding: 0
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          align: 'center',
+          labels: {
+            boxWidth: 12,
+            padding: 15
+          }
+        }
+      }
+    }
+  });
 }
 
 // ✅ Date Filters
@@ -317,6 +456,12 @@ if (aiBtn) {
     }
   });
 }
+
+
+
+
+
+
 
 
 

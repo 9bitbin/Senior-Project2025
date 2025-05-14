@@ -5,7 +5,7 @@ import { doc, updateDoc, getDoc, arrayUnion } from "https://www.gstatic.com/fire
 // ✅ Select Elements Safely
 const fastingWindowSelect = document.getElementById("fasting-window");
 const startFastingBtn = document.getElementById("start-fasting");
-const endFastingBtn = document.getElementById("end-fasting");
+const endFastingBtn = document.getElementById("end-fasting"); 
 const fastingStatusEl = document.getElementById("fasting-status");
 const fastingTimerEl = document.getElementById("fasting-timer");
 const fastingHistoryList = document.getElementById("fasting-history");
@@ -14,6 +14,7 @@ const avgDurationEl = document.getElementById('avg-duration');
 const completionRateEl = document.getElementById('completion-rate');
 const ctx = document.getElementById('fastingChart')?.getContext('2d');
 const fastingTypeIndicator = document.querySelector(".fasting-type-indicator");
+const dailyFastMessage = document.getElementById('daily-fast-message');
 const debugControlsDiv = document.createElement('div');
 let fastingChart;
 
@@ -49,43 +50,80 @@ const resetFilterBtn = document.querySelector('.reset-filter-btn');
 
 
 
+
+let currentFastStart = null;
+let currentFastDuration = 0;
+
+
+// Update the startCountdownTimer function
+function startCountdownTimer(endTime, elapsedHours = 0) {
+    if (fastingInterval) clearInterval(fastingInterval);
+    
+    function updateTimer() {
+        const now = new Date();
+        const timeDiff = endTime - now;
+        
+        if (timeDiff <= 0) {
+            clearInterval(fastingInterval);
+            fastingTimerEl.innerText = "00h 00m 00s";
+            endFasting(false, true); // Pass completed=true
+            return;
+        }
+
+        // Calculate remaining time
+        const remainingSeconds = Math.floor(timeDiff / 1000);
+        const hours = Math.floor(remainingSeconds / 3600);
+        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+        const seconds = remainingSeconds % 60;
+
+        fastingTimerEl.innerText = `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+    }
+
+    updateTimer();
+    fastingInterval = setInterval(updateTimer, 1000);
+}
+
+// Update the startFasting function to show a message when a user tries to start a new fast after stopping one
 async function startFasting() {
     console.log("✅ Starting fast...");
-
     const user = auth.currentUser;
     if (!user) {
         alert("❌ Please log in to start fasting.");
         return;
     }
 
-    if (!fastingWindowSelect || !fastingStatusEl || !startFastingBtn || !endFastingBtn) {
-        console.error("❌ Required elements not found!");
+    // Check if user has fasted today (either from local state or database)
+    if (hasFastedToday) {
+        if (dailyFastMessage) {
+            dailyFastMessage.textContent = "You've already completed a fast today. Please wait until tomorrow to start a new fast.";
+            setTimeout(() => {
+                dailyFastMessage.textContent = "";
+            }, 10000);
+        }
+        alert("❌ You've already started a fast today. Please wait until tomorrow to start a new fast.");
         return;
     }
 
+    // Continue with starting the fast...
     const fastingHours = parseInt(fastingWindowSelect.value);
-    if (isNaN(fastingHours)) {
-        console.error("❌ Invalid fasting hours!");
-        return;
-    }
+    currentFastStart = new Date();
+    const startTime = currentFastStart.toISOString();
+    const endTime = new Date(currentFastStart.getTime() + fastingHours * 60 * 60 * 1000);
 
-    totalPlannedDuration = fastingHours;
-    const startTime = new Date().toISOString();
-    const endTime = new Date(Date.now() + fastingHours * 60 * 60 * 1000).toISOString();
-
-    // Update UI first
-    fastingStatusEl.innerText = `Fasting started! Ends at ${new Date(endTime).toLocaleTimeString()}`;
+    // Update UI and save to Firebase
+    fastingStatusEl.innerText = `Fasting started! Ends at ${endTime.toLocaleTimeString()}`;
     startFastingBtn.disabled = true;
     endFastingBtn.disabled = false;
 
-    // ✅ Save the active fasting session in Firebase
-    startCountdownTimer(new Date(endTime));
+    startCountdownTimer(endTime);
 
-    // Save to Firebase
-    const userDocRef = doc(db, "users", user.uid);
     try {
-        await updateDoc(userDocRef, {
-            activeFasting: { startTime, endTime }
+        await updateDoc(doc(db, "users", user.uid), {
+            activeFasting: { 
+                startTime, 
+                endTime: endTime.toISOString(),
+                targetHours: fastingHours
+            }
         });
         console.log("✅ Active fasting session saved.");
     } catch (error) {
@@ -93,99 +131,76 @@ async function startFasting() {
     }
 }
 
-// ✅ Start Countdown Timer
-function startCountdownTimer(endTime) {
-    clearInterval(fastingInterval);
-
-    if (!fastingTimerEl) return;
-
-    fastingInterval = setInterval(() => {
-        const now = new Date();
-        const timeLeft = new Date(endTime) - now;
-
-        if (timeLeft <= 0) {
-            clearInterval(fastingInterval);
-            fastingTimerEl.innerText = "Fasting completed!";
-            startFastingBtn.disabled = false;
-            endFastingBtn.disabled = true;
-            clearActiveFasting();
-            return;
-        }
-
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-        fastingTimerEl.innerText = `${hours}h ${minutes}m ${seconds}s`;
-    }, 1000);
+// Add this helper function
+function stopTimer() {
+    if (fastingInterval) {
+        clearInterval(fastingInterval);
+        fastingInterval = null;
+    }
+    fastingTimerEl.innerText = "00h 00m 00s";
 }
 
-// ✅ End Fasting Function (Handles Early Ending)
+// Simplified endFasting function (now acts as stopFasting)
+// Add this variable at the top of the file with other variables
+let hasFastedToday = false;
 
-
-// In the endFasting function, update the eatingWindow value:
-async function endFasting() {
-    console.log("✅ Ending fast...");
-
+// Update the endFasting function
+async function endFasting(isAutomatic = false, isCompleted = false) {
+    console.log("✅ Stopping fast...");
     const user = auth.currentUser;
-    if (!user) {
-        alert("❌ Please log in to end fasting.");
-        return;
-    }
-
-    if (!fastingStatusEl || !fastingTimerEl || !startFastingBtn || !endFastingBtn) return;
+    if (!user) return;
 
     clearInterval(fastingInterval);
-    fastingStatusEl.innerText = "Fasting ended!";
-    fastingTimerEl.innerText = "--:--:--";
-    startFastingBtn.disabled = false;
-    endFastingBtn.disabled = true;
 
     const endTime = new Date().toISOString();
-
-    // ✅ Save completed fast to Firebase history
     const userDocRef = doc(db, "users", user.uid);
+
     try {
         const userDoc = await getDoc(userDocRef);
-        const activeFasting = userDoc.exists() ? userDoc.data().activeFasting : null;
+        const userData = userDoc.data();
+        const activeFasting = userData?.activeFasting;
+        let fastingHistory = userData?.fastingHistory || [];
 
         if (activeFasting) {
-            const plannedEndTime = new Date(activeFasting.endTime);
             const actualEndTime = new Date();
+            const startTime = new Date(activeFasting.startTime);
+            const currentElapsedHours = (actualEndTime - startTime) / (1000 * 60 * 60);
             
-            // Modified duration calculation for better visibility
-            const actualDuration = (actualEndTime - new Date(activeFasting.startTime)) / (1000 * 60 * 60);
-            const fastDuration = actualDuration;
-
-            // Change status logic to only show "Completed" when timer runs out naturally
-            let status = "Ended Early"; // Default to "Ended Early"
-
-            // Check if the current time is past or equal to the planned end time
-            if (actualEndTime >= new Date(activeFasting.endTime)) {
-                status = "Completed";
-            }
-
+            const plannedEndTime = new Date(activeFasting.endTime).toISOString();
+            
+            // Add to history with appropriate status
+            fastingHistory.push({
+                startTime: activeFasting.startTime,
+                plannedEndTime: plannedEndTime,
+                actualEndTime: endTime,
+                duration: currentElapsedHours.toFixed(2),
+                status: isCompleted ? "Completed" : "Stopped"
+            });
+            
+            // Set hasFastedToday to true when a fast ends
+            hasFastedToday = true;
+            
             await updateDoc(userDocRef, {
-                fastingHistory: arrayUnion({
-                    startTime: activeFasting.startTime,
-                    plannedEndTime: activeFasting.endTime,
-                    actualEndTime: endTime,
-                    duration: fastDuration.toFixed(2),  // Store raw number without " hrs"
-                    status: status
-                }),
+                fastingHistory: fastingHistory,
                 activeFasting: null
             });
-
-            // Add a small delay before reloading history
-            setTimeout(() => {
-                loadFastingHistory();
-            }, 500);
+            
+            const statusMessage = isCompleted ? 
+                "Fasting completed successfully!" : 
+                `Fasting stopped (${currentElapsedHours.toFixed(1)}h elapsed)`;
+            
+            fastingStatusEl.innerText = statusMessage;
+            stopTimer();
+            startFastingBtn.disabled = false; // Enable the start button
+            endFastingBtn.disabled = true;
+            loadFastingHistory();
         }
     } catch (error) {
-        console.error("❌ ERROR ending fasting session:", error);
+        console.error("❌ ERROR stopping fasting session:", error);
     }
 }
 
+// Update the loadFastingHistory function's chart section
 async function loadFastingHistory() {
     if (!fastingHistoryList) return;
 
@@ -245,32 +260,18 @@ async function loadFastingHistory() {
                     fastingChart.destroy();
                 }
 
-                // Create separate datasets for individual fasts
-                const datasets = [];
-                groupedFasts.forEach((group, groupIndex) => {
-                    // Sort fasts within each day to have most recent on top
-                    const sortedFasts = [...group.fasts].sort((a, b) => 
-                        new Date(b.startTime) - new Date(a.startTime)
-                    );
+                // For each day, pick the most recent fast (or the longest, if you prefer)
+                const dailyFasts = groupedFasts.map(group => {
+                    if (group.fasts.length === 0) return null;
+                    // Most recent fast:
+                    return group.fasts.reduce((a, b) => new Date(a.startTime) > new Date(b.startTime) ? a : b);
+                });
 
-                    sortedFasts.forEach((fast, fastIndex) => {
-                        const duration = parseFloat(fast.duration);
-                        const targetHours = parseInt(fastingWindowSelect.value);
-                        const isCompleted = duration >= targetHours;
-                        
-                        const data = Array(groupedFasts.length).fill(0);
-                        data[groupIndex] = duration;
-
-                        datasets.unshift({  // Changed push to unshift
-                            data: data,
-                            backgroundColor: isCompleted ? '#10b981' : '#ef4444',
-                            stack: `day${groupIndex}`,
-                            borderWidth: 1,
-                            borderColor: 'white',
-                            borderSkipped: false,
-                            fast: fast  // Store the fast data directly in the dataset
-                        });
-                    });
+                const data = dailyFasts.map(fast => fast ? parseFloat(fast.duration) : 0);
+                const backgroundColors = dailyFasts.map(fast => {
+                    if (!fast) return "#e5e7eb";
+                    const targetHours = parseInt(fastingWindowSelect.value);
+                    return parseFloat(fast.duration) >= targetHours ? "#10b981" : "#ef4444";
                 });
 
                 const chartData = {
@@ -278,21 +279,26 @@ async function loadFastingHistory() {
                     data: {
                         labels: groupedFasts.map(group => {
                             const date = group.date;
-                            return [
-                                date.toLocaleDateString('en-US', { weekday: 'short' }),
-                                `${date.getMonth() + 1}/${date.getDate()}`
-                            ];
+                            return `${date.toLocaleDateString('en-US', { weekday: 'short' })} ${date.getMonth() + 1}/${date.getDate()}`;
                         }),
-                        datasets: datasets
+                        datasets: [{
+                            data: data,
+                            backgroundColor: backgroundColors,
+                            borderWidth: 1,
+                            borderColor: 'white',
+                            borderSkipped: false,
+                            barThickness: 32,
+                            minBarLength: 4
+                        }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        categoryPercentage: 1.0,
+                        categoryPercentage: 0.95,
                         barPercentage: 0.95,
                         scales: {
                             y: {
-                                stacked: true,
+                                stacked: false,
                                 beginAtZero: true,
                                 max: 24,
                                 grid: {
@@ -307,31 +313,39 @@ async function loadFastingHistory() {
                                 }
                             },
                             x: {
-                                stacked: true,
+                                stacked: false,
                                 grid: {
                                     display: false
                                 },
-                                offset: true
+                                offset: true,
+                                ticks: {
+                                    font: {
+                                        size: 15
+                                    },
+                                    padding: 8
+                                }
                             }
                         },
                         plugins: {
                             legend: {
                                 display: true,
                                 position: 'top',
-                                align: 'center',
                                 labels: {
                                     generateLabels: function(chart) {
-                                        return [{
-                                            text: 'Completed Fast',
-                                            fillStyle: '#10b981',
-                                            strokeStyle: '#10b981',
-                                            lineWidth: 0
-                                        }, {
-                                            text: 'Ended Early',
-                                            fillStyle: '#ef4444',
-                                            strokeStyle: '#ef4444',
-                                            lineWidth: 0
-                                        }];
+                                        return [
+                                            {
+                                                text: 'Completed Fast',
+                                                fillStyle: '#10b981',
+                                                strokeStyle: '#10b981',
+                                                lineWidth: 0
+                                            },
+                                            {
+                                                text: 'Stopped Fast',
+                                                fillStyle: '#ef4444',
+                                                strokeStyle: '#ef4444',
+                                                lineWidth: 0
+                                            }
+                                        ];
                                     },
                                     usePointStyle: true,
                                     padding: 20
@@ -349,17 +363,12 @@ async function loadFastingHistory() {
                                         });
                                     },
                                     label: (context) => {
-                                        const fast = context.dataset.fast;
-                                        if (!fast) return '';
-                                        
+                                        const fast = dailyFasts[context.dataIndex];
+                                        if (!fast) return 'No fast logged';
                                         const startTime = new Date(fast.startTime).toLocaleTimeString();
                                         const endTime = new Date(fast.actualEndTime).toLocaleTimeString();
                                         const duration = parseFloat(fast.duration);
-                                        const totalDatasets = context.chart.data.datasets.length;
-                                        const fastNumber = context.datasetIndex + 1;
-                                        
                                         return [
-                                            `Fast #${fastNumber}`,
                                             `${startTime} - ${endTime}`,
                                             `Duration: ${duration.toFixed(1)}h`,
                                             `Status: ${fast.status}`
@@ -370,7 +379,7 @@ async function loadFastingHistory() {
                         }
                     }
                 };
-                
+
                 fastingChart = new Chart(ctx, chartData);
             }
 
@@ -386,7 +395,7 @@ async function loadFastingHistory() {
                 });
             }
 
-            // Update history list with filtered data
+            // Update history list with filtered data - updated to show "Stopped" instead of "Paused"
             fastingHistoryList.innerHTML = filteredHistory.length
                 ? filteredHistory.slice(0, 50).map((fast, index) => `
                     <li class="${index === 0 ? 'new-entry' : ''}">
@@ -394,7 +403,7 @@ async function loadFastingHistory() {
                         <strong>Planned End:</strong> ${new Date(fast.plannedEndTime).toLocaleString()}<br>
                         <strong>Actual End:</strong> ${new Date(fast.actualEndTime).toLocaleString()}<br>
                         <strong>Duration:</strong> ${fast.duration} hrs<br>
-                        <strong>Status:</strong> <span style="color: ${fast.status === "Ended Early" ? "red" : "green"}">${fast.status}</span>
+                        <strong>Status:</strong> <span style="color: ${fast.status === "Stopped" ? "red" : "green"}">${fast.status}</span>
                     </li>
                 `).join("")
                 : "<li>No fasting history found.</li>";
@@ -412,17 +421,28 @@ resetFilterBtn?.addEventListener('click', () => {
     loadFastingHistory();
 });
 
-// Add these near the bottom of the file, before the download event listener
-// ✅ Attach Event Listeners (Only if Elements Exist)
-if (startFastingBtn) startFastingBtn.addEventListener("click", startFasting);
-if (endFastingBtn) endFastingBtn.addEventListener("click", endFasting);
 
-// ✅ Restore fasting status & load history on page load
 document.addEventListener("DOMContentLoaded", () => {
+    if (startFastingBtn) startFastingBtn.addEventListener("click", startFasting);
+    if (endFastingBtn) {
+        
+        if (endFastingBtn.textContent === "End Fasting" || endFastingBtn.textContent === "Pause Fasting") {
+            endFastingBtn.textContent = "Stop Fasting";
+        }
+        endFastingBtn.addEventListener("click", () => endFasting(false, false));
+    }
+    
     // Set default text for fasting schedule
     if (fastingTypeIndicator) {
-        fastingTypeIndicator.textContent = "12:12 (12 hours fasting, 12 hours eating)";
+        fastingTypeIndicator.textContent = fastingWindowSelect.options[fastingWindowSelect.selectedIndex].text;
     }
+
+    // Update fasting type indicator when schedule changes
+    fastingWindowSelect?.addEventListener('change', (e) => {
+        if (fastingTypeIndicator) {
+            fastingTypeIndicator.textContent = e.target.options[e.target.selectedIndex].text;
+        }
+    });
 
     // Handle auth state changes
     auth.onAuthStateChanged(user => {
@@ -433,10 +453,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Add this function near the top with other functions
+
 async function restoreActiveFasting() {
     console.log("🔄 Checking for active fasting session...");
-
     const user = auth.currentUser;
     if (!user) return;
 
@@ -448,23 +467,24 @@ async function restoreActiveFasting() {
 
         if (activeFasting) {
             const endTime = new Date(activeFasting.endTime);
-
             if (new Date() < endTime) {
-                fastingStatusEl.innerText = `Fasting started! Ends at ${endTime.toLocaleTimeString()}`;
+                fastingStatusEl.innerText = `Fasting in progress! Ends at ${endTime.toLocaleTimeString()}`;
                 startFastingBtn.disabled = true;
                 endFastingBtn.disabled = false;
                 startCountdownTimer(endTime);
-                console.log("✅ Restored fasting session from Firebase.");
             } else {
-                console.log("✅ Previous fasting session completed.");
-                clearActiveFasting();
+                await clearActiveFasting();
             }
+        } else {
+            // No active fasting session
+            fastingStatusEl.innerText = "";
+            startFastingBtn.disabled = false;
+            endFastingBtn.disabled = true;
         }
     }
 }
 
-
-
+// CSV download function
 document.getElementById("download-fasting")?.addEventListener("click", async () => {
     const user = auth.currentUser;
     if (!user) return;
@@ -505,26 +525,14 @@ document.getElementById("download-fasting")?.addEventListener("click", async () 
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-  });
+});
 
-
-    
- 
-
-
-    
- 
-
-
-
-
-// Update the fasting window select event listener
-if (fastingWindowSelect) {
-    fastingWindowSelect.addEventListener("change", (e) => {
-        const schedule = e.target.options[e.target.selectedIndex].text;
-        if (fastingTypeIndicator) {
-            fastingTypeIndicator.textContent = schedule || "Select a fasting schedule";
-        }
-    });
-}
+// Fasting window select event listener
+fastingWindowSelect?.addEventListener('change', (e) => {
+    const selectedValue = e.target.value;
+    const selectedText = e.target.options[e.target.selectedIndex].text;
+    if (fastingTypeIndicator) {
+        fastingTypeIndicator.textContent = selectedText;
+    }
+});
 

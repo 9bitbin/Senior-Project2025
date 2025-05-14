@@ -142,6 +142,8 @@
 </head>
 <body>
 
+  <script type="module" src="profile.js"></script>
+
   <!-- Sidebar Navigation -->
   <script src="sidebar.js" defer></script>
 
@@ -152,7 +154,19 @@
     <div class="nutrition-card">
       <h2>🍽 Food Logging & Meal History</h2>
       
-      <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)">
+      <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+        <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)" style="flex-grow: 1;">
+      </div>
+      
+      <!-- Adds meal date input field -->
+      <div style="margin-bottom: 15px;">
+        <label for="meal-date">Meal Date:</label>
+        <input type="date" id="meal-date">
+        
+        <label for="meal-time">Meal Time (for past dates):</label>
+        <input type="time" id="meal-time">
+      </div>
+      
       <button id="fetch-nutrition">Log Food</button>
 
       <div id="nutrition-results">
@@ -174,8 +188,8 @@
       <button id="download-meals">📥 Download Meal Data (CSV)</button>
 
       <h3>📅 Meal History</h3>
-      <p><strong>Average Daily Calories:</strong> <span id="average-calories">Calculating...</span> kcal</p>
-      <p><strong>Total Calories:</strong> <span id="total-calories">0</span> kcal</p>
+      <p><strong>Average Daily Calories:</strong> <span id="average-calories">Calculating...</span></p>
+      <p><strong>Total Calories:</strong> <span id="total-calories">0</span></p>
 
       <!-- Grouped meal breakdown -->
       <div id="daily-calorie-breakdown"></div>
@@ -184,7 +198,9 @@
     <!-- 📊 Daily Calorie Chart -->
     <div class="nutrition-card">
       <h2>📊 Daily Calorie Intake</h2>
-      <canvas id="calorieChart" height="150"></canvas>
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="calorieChart" style="width: 100%; height: 100%;"></canvas>
+      </div>
     </div>
 
     <!-- 🧠 AI Meal Feedback -->
@@ -212,4 +228,6 @@
   <script type="module" src="nutrition.js"></script>
 </body>
 </html>
+
+
 

@@ -251,9 +251,175 @@ body {
 	justify-content: space-between;
 }
 
+.post-content {
+    word-wrap: break-word;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.post-content.expanded {
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    -webkit-box-orient: unset;
+    overflow: visible;
+    text-overflow: unset;
+}
+
 .post p {
 	margin: 5px 0;
 }
+
+.content-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.content-text.truncated {
+    max-height: 4.5em;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 10px;
+    display: block;  /* Add this */
+}
+
+.read-more-btn {
+    display: inline-block !important;  /* Force display with !important */
+    color: #3b82f6;
+    background: none !important;  /* Override any other background */
+    border: none;
+    cursor: pointer;
+    padding: 5px 0;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+.read-more-btn:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.full-content {
+    display: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+
+/* Friend list and notification styles */
+.community-header-icons {
+	display: flex;
+	align-items: center;
+	margin-bottom: 20px;
+  }
+  
+ 
+  
+  .notification-badge {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	background-color: #ef4444;
+	color: white;
+	border-radius: 50%;
+	width: 18px;
+	height: 18px;
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+  }
+  
+  .friend-requests-popup,
+  .friend-list-popup {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background-color: white;
+	border-radius: 8px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+	width: 350px;
+	max-height: 500px;
+	overflow-y: auto;
+	z-index: 1000;
+  }
+  
+  .popup-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 15px;
+	border-bottom: 1px solid #eee;
+	background-color: #f9fafb;
+  }
+  
+  .popup-header h3 {
+	margin: 0;
+	color: #111827;
+  }
+  
+  .close-popup {
+	background: none;
+	border: none;
+	font-size: 24px;
+	cursor: pointer;
+	color: #6b7280;
+  }
+  
+  .popup-content {
+	padding: 15px;
+  }
+  
+  .friend-request,
+  .friend-item {
+	display: flex;
+	align-items: center;
+	margin-bottom: 15px;
+	padding-bottom: 15px;
+	border-bottom: 1px solid #eee;
+  }
+  
+  .friend-request:last-child,
+  .friend-item:last-child {
+	margin-bottom: 0;
+	padding-bottom: 0;
+	border-bottom: none;
+  }
+  
+  .user-avatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	margin-right: 10px;
+  }
+  
+  .request-actions {
+	margin-left: auto;
+  }
+  
+  .accept-request,
+  .deny-request,
+  .remove-friend {
+	padding: 5px 10px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	margin-left: 5px;
+	font-weight: 500;
+  }
+  
+  .accept-request {
+	background-color: #10b981;
+	color: white;
+  }
+  
+  .deny-request,
+  .remove-friend {
+	background-color: #ef4444;
+	color: white;
+  }
 
 /* 🔹 Buttons */
 button {
