@@ -382,15 +382,53 @@ async function renderGoals() {
       let progress = 0, status = "🟢 In Progress", progressText = "Tracking...";
       const now = new Date();
 
-      if (goal.type === "weight") {
-        const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
-        const start = goal.start != null && !isNaN(goal.start) ? goal.start : (weightLogs[0]?.weight || 0);
-        const total = start - goal.target;
-        const lost = start - latest;
-        progress = total > 0 ? Math.min((lost / total) * 100, 100) : 0;
-        progressText = `${lost.toFixed(1)} lbs lost`;
-        if (progress >= 100) status = "✅ Achieved";
-      }
+if (goal.type === "weight") {
+    const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
+    const start = goal.start != null && !isNaN(goal.start) ? goal.start : (weightLogs[0]?.weight || 0);
+
+    const isLosing = start > goal.target;
+    let directionIndicator = isLosing ? "⬇️ Losing" : "⬆️ Gaining";
+
+    if (isLosing) {
+        const totalToLose = start - goal.target;
+        const lostSoFar = Math.max(0, start - latest); // Never negative
+
+        progress = Math.min((lostSoFar / totalToLose) * 100, 100);
+        progressText = `${Math.min(lostSoFar, totalToLose).toFixed(1)} lbs lost <span style="font-size: 12px; color: gray;">${directionIndicator}</span>`;
+    } else {
+        const totalToGain = goal.target - start;
+        const gainedSoFar = Math.max(0, latest - start);
+
+        progress = Math.min((gainedSoFar / totalToGain) * 100, 100);
+        progressText = `${Math.min(gainedSoFar, totalToGain).toFixed(1)} lbs gained <span style="font-size: 12px; color: gray;">${directionIndicator}</span>`;
+    }
+
+    if (progress >= 100) status = "✅ Achieved";
+    else if (new Date(goal.deadline) < new Date()) status = "❌ Missed";
+    else status = "🟢 In Progress";
+
+    goalTable.innerHTML += `
+    <tr>
+        <td>${goal.start || '—'}</td>
+        <td>${goal.target}</td>
+        <td>${goal.deadline}</td>
+        <td>
+            ${progressText}
+            <div class="progress-bar">
+                <div class="progress-bar-fill" style="width:${progress}%"></div>
+            </div>
+        </td>
+        <td>${status}</td>
+        <td>
+            <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;">🗑️</button>
+        </td>
+    </tr>`;
+    return;
+}
+
+
+
+
 
       if (goal.type === "calories") {
         progress = (todayCalories / goal.target) * 100;
