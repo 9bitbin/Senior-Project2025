@@ -157,6 +157,16 @@
       <div style="display: flex; gap: 15px; margin-bottom: 15px;">
         <input type="text" id="food-input" placeholder="Enter food (e.g., 2 eggs, 1 toast)" style="flex-grow: 1;">
       </div>
+      
+      <!-- Adds meal date input field -->
+      <div style="margin-bottom: 15px;">
+        <label for="meal-date">Meal Date:</label>
+        <input type="date" id="meal-date">
+        
+        <label for="meal-time">Meal Time (for past dates):</label>
+        <input type="time" id="meal-time">
+      </div>
+      
       <button id="fetch-nutrition">Log Food</button>
 
       <div id="nutrition-results">
