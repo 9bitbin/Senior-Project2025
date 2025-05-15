@@ -1,14 +1,14 @@
 // Merged VIDIA Script: Goals + Weight Tracker
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
-import { 
-    doc, 
-    getDoc, 
-    updateDoc,
-    collection,
-    query,
-    where,
-    getDocs 
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs
 } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
 
 // ---- Shared State ----
@@ -81,11 +81,11 @@ async function logWeight() {
   const existing = weightLogs.findIndex(w => w.date === date);
   existing !== -1 ? weightLogs[existing].weight = weight : weightLogs.push({ date, weight });
 
-  await updateDoc(docRef, { 
+  await updateDoc(docRef, {
     weightLogs,
     weight  // this adds the new/latest weight to the profile
   });
-    await renderWeightChart(weightLogs);
+  await renderWeightChart(weightLogs);
   await getAIInsight(weightLogs);
   alert("✅ Weight logged!");
 }
@@ -160,145 +160,183 @@ async function getAIInsight(logs) {
   }
 }
 
+function setFutureDateOnly(inputId) {
+  const input = document.getElementById(inputId);
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const formattedToday = `${yyyy}-${mm}-${dd}`;
+
+  input.value = formattedToday;
+  input.min = formattedToday; // Disable past dates
+}
+
+
 // ---- Goal Management ----
 
-document.getElementById('goal-type').addEventListener('change', async function() {
-    const weightSection = document.getElementById('weight-section');
-    const goalDeadline = document.getElementById('goal-deadline');
-    const goalTarget = document.getElementById('goal-target');
-    const calorieGoalSection = document.getElementById('calorie-goal-section');
-    const weeklyTimeframe = document.getElementById('weekly-timeframe');
+document.getElementById('goal-type').addEventListener('change', async function () {
+  const weightSection = document.getElementById('weight-section');
+  const goalDeadline = document.getElementById('goal-deadline');
+  const goalTarget = document.getElementById('goal-target');
+  const calorieGoalSection = document.getElementById('calorie-goal-section');
+  const weeklyTimeframe = document.getElementById('weekly-timeframe');
 
-    if (this.value === 'calories') {
-        // Get calorie target from profile
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const profileData = userSnap.data();
-        
-        if (profileData?.calorieGoal) {
-            goalTarget.value = profileData.calorieGoal;
-        }
-        
-        // Show calorie section, hide weight section
-        weightSection.style.display = 'none';
-        calorieGoalSection.style.display = 'block';
-        weeklyTimeframe.style.display = 'none';
-        
-        goalDeadline.type = 'text';
-        goalDeadline.value = 'Daily';
-        goalDeadline.readOnly = true;
-        goalDeadline.style.display = 'block';
-    } else if (this.value === 'workoutsPerWeek') {
-        // For workout goals
-        weightSection.style.display = 'none';
-        calorieGoalSection.style.display = 'none';
-        weeklyTimeframe.style.display = 'block';
-        goalDeadline.style.display = 'none';
-    } else {
-        // For weight goals
-        weightSection.style.display = 'block';
-        calorieGoalSection.style.display = 'none';
-        weeklyTimeframe.style.display = 'none';
-        
-        goalDeadline.type = 'date';
-        goalDeadline.value = '';
-        goalDeadline.readOnly = false;
-        goalDeadline.style.display = 'block';
-        goalTarget.value = '';
+  if (this.value === 'calories') {
+    // Get calorie target from profile
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const profileData = userSnap.data();
+
+    if (profileData?.calorieGoal) {
+      goalTarget.value = profileData.calorieGoal;
     }
+
+    // Show calorie section, hide weight section
+    weightSection.style.display = 'none';
+    calorieGoalSection.style.display = 'block';
+    weeklyTimeframe.style.display = 'none';
+
+    goalDeadline.type = 'text';
+    goalDeadline.value = 'Daily';
+    goalDeadline.readOnly = true;
+    goalDeadline.style.display = 'block';
+  } else if (this.value === 'workoutsPerWeek') {
+    // For workout goals
+    weightSection.style.display = 'none';
+    calorieGoalSection.style.display = 'none';
+    weeklyTimeframe.style.display = 'block';
+    goalDeadline.style.display = 'none';
+  } else {
+    // For weight goals
+    weightSection.style.display = 'block';
+    calorieGoalSection.style.display = 'none';
+    weeklyTimeframe.style.display = 'none';
+
+    goalDeadline.type = 'date';
+    goalDeadline.value = '';
+    goalDeadline.readOnly = false;
+    goalDeadline.style.display = 'block';
+    goalTarget.value = '';
+  }
 });
 
 // Add this right after your DOM Elements section
 document.addEventListener('DOMContentLoaded', () => {
-    // Ensure proper initial state for weight goal type
-    const goalDeadline = document.getElementById('goal-deadline');
-    if (goalDeadline) {
-        goalDeadline.type = 'date';
-        goalDeadline.value = '';
-        goalDeadline.readOnly = false;
-    }
+  // Ensure proper initial state for weight goal type
+  const goalDeadline = document.getElementById('goal-deadline');
+  if (goalDeadline) {
+    goalDeadline.type = 'date';
+    goalDeadline.value = '';
+    goalDeadline.readOnly = false;
+  }
 });
 
 // Save goal button handler
 if (saveGoalBtn) {
-    saveGoalBtn.addEventListener("click", async () => {
-        const type = goalType.value;
-        const target = goalTarget.value.trim();
-        const deadline = goalDeadline.value;
-        const value = parseInt(goalTarget.value);
+  saveGoalBtn.addEventListener("click", async () => {
+    const type = goalType.value;
+    const target = goalTarget.value.trim();
+    const deadline = goalDeadline.value;
+    const value = parseInt(goalTarget.value);
 
-        //if (!type || !target || !deadline) return alert("Please fill all fields.");
+    //if (!type || !target || !deadline) return alert("Please fill all fields.");
 
-        if (goalType.value === "weight"){
-          if (!type || !target || !deadline) {
-            alert("Please fill in all fields.");
+    if (goalType.value === "weight") {
+      if (!type || !target || !deadline) {
+        alert("Please fill in all fields.");
+        return;
+      }
+    }
+
+    if (goalType.value === "workoutsPerWeek") {
+      if (!type || !target) {
+        alert("Please fill in all fields.");
+        return;
+      }
+    }
+
+    const userRef = doc(db, "users", currentUser.uid);
+
+    if (isNaN(target) || target < 1) {
+      warning.style.display = "block";
+      return;
+    } else {
+      warning.style.display = "none";
+    }
+
+    try {
+      if (type === 'calories') {
+        // Only update calorie goal in profile
+        await updateDoc(userRef, {
+          calorieGoal: Number(target)
+        });
+        // Keep the deadline as "Daily" for calories
+        goalDeadline.value = 'Daily';
+      } else {
+        // For non-calorie goals, add to goals array
+        const snap = await getDoc(userRef);
+        const data = snap.data() || {};
+        const goals = data.goals || [];
+
+
+
+        //this code is for preventing duplicate goals on the same deadline
+        if (type === 'weight') {
+          const existingGoal = goals.find(g => g.type === 'weight' && g.deadline === deadline);
+          if (existingGoal) {
+            alert("⚠️ A weight goal already exists for this deadline.");
             return;
           }
         }
-        
-        if (goalType.value === "workoutsPerWeek"){
-          if (!type || !target) {
-            alert("Please fill in all fields.");
-            return;
-          }
-        }
 
-        const userRef = doc(db, "users", currentUser.uid);
-        
-        if (isNaN(target) || target < 1) {
-          warning.style.display = "block";
-          return;
-        } else {
-          warning.style.display = "none";
-        }
+        if (type === 'workoutsPerWeek') {
+          const weekRange = getCurrentWeekRange();
+          const existingWorkoutGoal = goals.find(g =>
+            g.type === 'workoutsPerWeek' &&
+            getCurrentWeekRange() === weekRange
+          );
 
-        try {
-            if (type === 'calories') {
-                // Only update calorie goal in profile
-                await updateDoc(userRef, {
-                    calorieGoal: Number(target)
-                });
-                // Keep the deadline as "Daily" for calories
-                goalDeadline.value = 'Daily';
-            } else {
-                // For non-calorie goals, add to goals array
-                const snap = await getDoc(userRef);
-                const data = snap.data() || {};
-                const goals = data.goals || [];
+          if (existingWorkoutGoal) {
+            // Count how many workouts were completed this week
+            const workouts = (data.workoutLogs || []).filter(w => isThisWeek(w.timestamp));
+            const completed = workouts.length;
+            const achieved = completed >= existingWorkoutGoal.target;
 
-
-                
-                //this code is for preventing duplicate goals on the same deadline
-                if (type === 'weight') {
-                  const existingGoal = goals.find(g => g.type === 'weight' && g.deadline === deadline);
-                  if (existingGoal) {
-                    alert("⚠️ A weight goal already exists for this deadline.");
-                    return;
-                  }
-                }
-                
-                goals.push({
-                    type,
-                    target: Number(target),
-                    start: goalStart?.value ? Number(goalStart.value) : null,
-                    deadline
-                });
-
-                await updateDoc(userRef, { goals });
-                // Clear deadline only for non-calorie goals
-                goalDeadline.value = "";
+            if (!achieved) {
+              const confirmOverride = confirm("⚠️ You already have an unachieved goal this week.\nAre you sure you want to override it?");
+              if (!confirmOverride) return; // Cancel saving if user says no
             }
 
-            await renderGoals();
-            await fetchAIInsight();
-
-            // Only clear target, keep deadline for calories
-            goalTarget.value = "";
-        } catch (error) {
-            console.error("Error saving goal:", error);
-            alert("❌ Failed to save goal");
+            // Optional: remove the old unachieved goal
+            const index = goals.indexOf(existingWorkoutGoal);
+            if (index > -1) goals.splice(index, 1);
+          }
         }
-    });
+
+        goals.push({
+          type,
+          target: Number(target),
+          start: goalStart?.value ? Number(goalStart.value) : null,
+          deadline
+        });
+
+        await updateDoc(userRef, { goals });
+        // Clear deadline only for non-calorie goals
+        goalDeadline.value = "";
+      }
+
+      await renderGoals();
+      await fetchAIInsight();
+
+      // Only clear target, keep deadline for calories
+      goalTarget.value = "";
+    } catch (error) {
+      console.error("Error saving goal:", error);
+      alert("❌ Failed to save goal");
+    }
+  });
 }
 
 // Weekly Table Range
@@ -321,11 +359,11 @@ async function renderGoals() {
   const docRef = doc(db, "users", currentUser.uid);
   const docSnap = await getDoc(docRef);
   const data = docSnap.data() || {};
-  
+
   // Get today's meals and calculate calories
   const today = new Date().toISOString().split('T')[0];
   const mealLogs = data.mealLogs || [];
-  
+
   // Improved date comparison for today's meals
   const todayMeals = mealLogs.filter(meal => {
     const mealDate = new Date(meal.timestamp);
@@ -382,32 +420,32 @@ async function renderGoals() {
       let progress = 0, status = "🟢 In Progress", progressText = "Tracking...";
       const now = new Date();
 
-if (goal.type === "weight") {
-    const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
-    const start = goal.start != null && !isNaN(goal.start) ? goal.start : (weightLogs[0]?.weight || 0);
+      if (goal.type === "weight") {
+        const latest = weightLogs[weightLogs.length - 1]?.weight || 0;
+        const start = goal.start != null && !isNaN(goal.start) ? goal.start : (weightLogs[0]?.weight || 0);
 
-    const isLosing = start > goal.target;
-    let directionIndicator = isLosing ? "⬇️ Losing" : "⬆️ Gaining";
+        const isLosing = start > goal.target;
+        let directionIndicator = isLosing ? "⬇️ Losing" : "⬆️ Gaining";
 
-    if (isLosing) {
-        const totalToLose = start - goal.target;
-        const lostSoFar = Math.max(0, start - latest); // Never negative
+        if (isLosing) {
+          const totalToLose = start - goal.target;
+          const lostSoFar = Math.max(0, start - latest); // Never negative
 
-        progress = Math.min((lostSoFar / totalToLose) * 100, 100);
-        progressText = `${Math.min(lostSoFar, totalToLose).toFixed(1)} lbs lost <span style="font-size: 12px; color: gray;">${directionIndicator}</span>`;
-    } else {
-        const totalToGain = goal.target - start;
-        const gainedSoFar = Math.max(0, latest - start);
+          progress = Math.min((lostSoFar / totalToLose) * 100, 100);
+          progressText = `${Math.min(lostSoFar, totalToLose).toFixed(1)} lbs lost <span style="font-size: 12px; color: gray;">${directionIndicator}</span>`;
+        } else {
+          const totalToGain = goal.target - start;
+          const gainedSoFar = Math.max(0, latest - start);
 
-        progress = Math.min((gainedSoFar / totalToGain) * 100, 100);
-        progressText = `${Math.min(gainedSoFar, totalToGain).toFixed(1)} lbs gained <span style="font-size: 12px; color: gray;">${directionIndicator}</span>`;
-    }
+          progress = Math.min((gainedSoFar / totalToGain) * 100, 100);
+          progressText = `${Math.min(gainedSoFar, totalToGain).toFixed(1)} lbs gained <span style="font-size: 12px; color: gray;">${directionIndicator}</span>`;
+        }
 
-    if (progress >= 100) status = "✅ Achieved";
-    else if (new Date(goal.deadline) < new Date()) status = "❌ Missed";
-    else status = "🟢 In Progress";
+        if (progress >= 100) status = "✅ Achieved";
+        else if (new Date(goal.deadline) < new Date()) status = "❌ Missed";
+        else status = "🟢 In Progress";
 
-    goalTable.innerHTML += `
+        goalTable.innerHTML += `
     <tr>
         <td>${goal.start || '—'}</td>
         <td>${goal.target}</td>
@@ -423,8 +461,8 @@ if (goal.type === "weight") {
             <button onclick="deleteGoal(${index})" style="background:#ef4444;color:white;">🗑️</button>
         </td>
     </tr>`;
-    return;
-}
+        return;
+      }
 
 
 
@@ -433,7 +471,7 @@ if (goal.type === "weight") {
       if (goal.type === "calories") {
         progress = (todayCalories / goal.target) * 100;
         progressText = `${todayCalories.toFixed(1)}/${goal.target} kcal`;
-        
+
         if (todayCalories >= goal.target && todayCalories <= goal.target * 1.1) {
           status = "✅ Achieved";
         } else if (todayCalories > goal.target * 1.1) {
@@ -457,7 +495,7 @@ if (goal.type === "weight") {
 
       if (new Date(goal.deadline) < now && progress < 100) status = "❌ Missed";
 
-     goalTable.innerHTML += `
+      goalTable.innerHTML += `
     <tr>
       <td>${goal.start || '—'}</td>
       <td>${goal.target}</td>
@@ -479,16 +517,16 @@ if (goal.type === "weight") {
   // Renders Workout Table
   if (workoutTable) {
     workoutTable.innerHTML = workoutGoals.length ? "" : `<tr><td colspan="5">No workout goals set yet.</td></tr>`;
-  
+
     const weekRange = getCurrentWeekRange();
-  
+
     workoutGoals.forEach((goal, index) => {
       const target = goal.target || "—";
       const count = workouts.filter(w => isThisWeek(w.timestamp)).length;
       const progress = Math.min((count / target) * 100, 100);
       const progressText = `${count}/${target} workouts`;
       const status = progress >= 100 ? "✅ Achieved" : "🟢 In Progress";
-  
+
       workoutTable.innerHTML += `
         <tr>
           <td>${weekRange}</td>
@@ -505,7 +543,7 @@ if (goal.type === "weight") {
           </td>
         </tr>`;
     });
-  }  
+  }
 
 }
 
@@ -537,8 +575,8 @@ goalType.addEventListener("change", () => {
     workoutTimeframe.style.display = "block";
     goalDeadline.style.display = "none";
     weightSection.style.display = "none";
-    
-  } else{
+
+  } else {
     workoutTimeframe.style.display = "none";
     goalDeadline.style.display = "block";
     weightSection.style.display = "block";
@@ -596,10 +634,10 @@ async function updateCalorieGoalDisplay() {
   const docRef = doc(db, "users", currentUser.uid);
   const docSnap = await getDoc(docRef);
   const data = docSnap.data() || {};
-  
+
   const today = new Date().toISOString().split('T')[0];
   const mealLogs = data.mealLogs || [];
-  
+
   // Calculate today's calories
   const todayCalories = mealLogs
     .filter(meal => new Date(meal.timestamp).toISOString().split('T')[0] === today)
