@@ -13,6 +13,23 @@ const workoutListEl = document.getElementById("workout-list");
 const aiInput = document.getElementById("ai-prompt");
 const askAiBtn = document.getElementById("ask-ai-btn");
 const aiResponseBox = document.getElementById("ai-response");
+const workoutDate = document.getElementById("workout-date");
+
+function setSelectedDate(inputId) {
+    const input = document.getElementById(inputId);
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const formattedToday = `${yyyy}-${mm}-${dd}`;
+
+    input.value = formattedToday;
+    input.max = formattedToday;
+  }
+
+  // Call the function for the workout-date input
+  setSelectedDate("workout-date");
 
 let userWeightLbs = 150; // default fallback
 let userProfile = "User profile not loaded yet.";
