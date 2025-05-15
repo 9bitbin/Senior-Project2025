@@ -124,7 +124,8 @@ fetchExerciseBtn.addEventListener("click", async () => {
 async function saveWorkoutToFirestore(type, exercises) {
   const user = auth.currentUser;
   if (!user) return;
-
+  
+  const workoutDateValue = document.getElementById("workout-date").value;
   const userDocRef = doc(db, "users", user.uid);
   const userDoc = await getDoc(userDocRef);
   const logs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
@@ -132,7 +133,8 @@ async function saveWorkoutToFirestore(type, exercises) {
   const workout = {
     id: Date.now().toString(),
     type,
-    timestamp: new Date().toISOString(),
+    date: workoutDateValue,
+    // timestamp: new Date().toISOString(),
     exercises: exercises.map(e => ({
       name: e.name,
       muscleGroup: e.target,
@@ -161,23 +163,42 @@ async function fetchLoggedWorkouts() {
   }
 
   workoutListEl.innerHTML = "";
-  logs.forEach((log, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <strong>Workout Type:</strong> ${log.type}<br>
-      ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
-      ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
-      ${log.exercises ? `
-        <ul>${log.exercises.map(ex => `
-          <li>${ex.name} - ${ex.muscleGroup}<br>
-            <img src="${ex.gif}" width="100">
-          </li>`).join("")}</ul>
-      ` : ""}
-      <em>Logged on: ${new Date(log.timestamp).toLocaleString()}</em><br>
-      <button class="delete-workout" data-index="${i}">Delete</button>
-    `;
-    workoutListEl.appendChild(li);
-  });
+  workoutListEl.innerHTML = "";
+logs.forEach((log, i) => {
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <strong>Workout Type:</strong> ${log.type}<br>
+    ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
+    ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
+    ${log.exercises ? `
+      <ul>${log.exercises.map(ex => `
+        <li>${ex.name} - ${ex.muscleGroup}<br>
+          <img src="${ex.gif}" width="100">
+        </li>`).join("")}</ul>
+    ` : ""}
+    <em>Logged on: ${log.date || new Date(log.timestamp).toLocaleDateString()}</em>
+    <button class="delete-workout" data-index="${i}">Delete</button>
+  `;
+  workoutListEl.appendChild(li);
+});
+
+  // logs.forEach((log, i) => {
+  //   const li = document.createElement("li");
+  //   li.innerHTML = `
+  //     <strong>Workout Type:</strong> ${log.type}<br>
+  //     ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
+  //     ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
+  //     ${log.exercises ? `
+  //       <ul>${log.exercises.map(ex => `
+  //         <li>${ex.name} - ${ex.muscleGroup}<br>
+  //           <img src="${ex.gif}" width="100">
+  //         </li>`).join("")}</ul>
+  //     ` : ""}
+  //     <em>Logged on: ${new Date(log.timestamp).toLocaleString()}</em><br>
+  //     <button class="delete-workout" data-index="${i}">Delete</button>
+  //   `;
+  //   workoutListEl.appendChild(li);
+  // });
 
   document.querySelectorAll(".delete-workout").forEach(btn => {
     btn.addEventListener("click", async (e) => {
