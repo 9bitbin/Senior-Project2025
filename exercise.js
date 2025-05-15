@@ -13,6 +13,23 @@ const workoutListEl = document.getElementById("workout-list");
 const aiInput = document.getElementById("ai-prompt");
 const askAiBtn = document.getElementById("ask-ai-btn");
 const aiResponseBox = document.getElementById("ai-response");
+const workoutDate = document.getElementById("workout-date");
+
+function setSelectedDate(inputId) {
+    const input = document.getElementById(inputId);
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const formattedToday = `${yyyy}-${mm}-${dd}`;
+
+    input.value = formattedToday;
+    input.max = formattedToday;
+  }
+
+  // Call the function for the workout-date input
+  setSelectedDate("workout-date");
 
 let userWeightLbs = 150; // default fallback
 let userProfile = "User profile not loaded yet.";
@@ -107,7 +124,8 @@ fetchExerciseBtn.addEventListener("click", async () => {
 async function saveWorkoutToFirestore(type, exercises) {
   const user = auth.currentUser;
   if (!user) return;
-
+  
+  const workoutDateValue = document.getElementById("workout-date").value;
   const userDocRef = doc(db, "users", user.uid);
   const userDoc = await getDoc(userDocRef);
   const logs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
@@ -115,7 +133,8 @@ async function saveWorkoutToFirestore(type, exercises) {
   const workout = {
     id: Date.now().toString(),
     type,
-    timestamp: new Date().toISOString(),
+    date: workoutDateValue,
+    // timestamp: new Date().toISOString(),
     exercises: exercises.map(e => ({
       name: e.name,
       muscleGroup: e.target,
@@ -144,23 +163,42 @@ async function fetchLoggedWorkouts() {
   }
 
   workoutListEl.innerHTML = "";
-  logs.forEach((log, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <strong>Workout Type:</strong> ${log.type}<br>
-      ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
-      ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
-      ${log.exercises ? `
-        <ul>${log.exercises.map(ex => `
-          <li>${ex.name} - ${ex.muscleGroup}<br>
-            <img src="${ex.gif}" width="100">
-          </li>`).join("")}</ul>
-      ` : ""}
-      <em>Logged on: ${new Date(log.timestamp).toLocaleString()}</em><br>
-      <button class="delete-workout" data-index="${i}">Delete</button>
-    `;
-    workoutListEl.appendChild(li);
-  });
+  workoutListEl.innerHTML = "";
+logs.forEach((log, i) => {
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <strong>Workout Type:</strong> ${log.type}<br>
+    ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
+    ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
+    ${log.exercises ? `
+      <ul>${log.exercises.map(ex => `
+        <li>${ex.name} - ${ex.muscleGroup}<br>
+          <img src="${ex.gif}" width="100">
+        </li>`).join("")}</ul>
+    ` : ""}
+    <em>Logged on: ${log.date || new Date(log.timestamp).toLocaleDateString()}</em>
+    <button class="delete-workout" data-index="${i}">Delete</button>
+  `;
+  workoutListEl.appendChild(li);
+});
+
+  // logs.forEach((log, i) => {
+  //   const li = document.createElement("li");
+  //   li.innerHTML = `
+  //     <strong>Workout Type:</strong> ${log.type}<br>
+  //     ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
+  //     ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
+  //     ${log.exercises ? `
+  //       <ul>${log.exercises.map(ex => `
+  //         <li>${ex.name} - ${ex.muscleGroup}<br>
+  //           <img src="${ex.gif}" width="100">
+  //         </li>`).join("")}</ul>
+  //     ` : ""}
+  //     <em>Logged on: ${new Date(log.timestamp).toLocaleString()}</em><br>
+  //     <button class="delete-workout" data-index="${i}">Delete</button>
+  //   `;
+  //   workoutListEl.appendChild(li);
+  // });
 
   document.querySelectorAll(".delete-workout").forEach(btn => {
     btn.addEventListener("click", async (e) => {
