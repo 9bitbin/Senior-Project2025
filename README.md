@@ -143,3 +143,7 @@ It integrates Firebase services and multiple third-party APIs to deliver a perso
 │
 └── 🍽 ai-meals.html
       └── AI Meal Suggestions
+
+Collaborators: 
+Himal (@9bitbin), Sabrina (@sabrinaachille
+), Alex (@AlexR348), Waleed (@waleedsh02), Amiyl (@Amiyl)
