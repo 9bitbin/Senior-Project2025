@@ -189,6 +189,7 @@ button:hover {
 	cursor: pointer;
 }
 
+
 /* 🔹 General Styles */
 body {
 	font-family: Arial, sans-serif;
@@ -218,6 +219,45 @@ body {
 	border-radius: 10px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* Recipe Sharing Styles */
+#recipe-share-section {
+	margin: 15px 0;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	overflow: hidden;
+}
+.recipe-share-header {
+	background-color: #f9fafb;
+	padding: 12px 15px;
+	border-bottom: 1px solid #e5e7eb;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.recipe-share-header:hover {
+    background: #e2e8f0;
+}
+
+#recipe-share-container {
+    padding: 15px;
+}
+
+#recipe-select {
+	width: 100%;
+	padding: 10px;
+	border: 1px solid #d1d5db;
+	border-radius: 6px;
+	font-size: 14px;
+}
+
+#recipe-select:hover,
+#recipe-select:focus {
+    border-color: #10b981;
+    outline: none;
+}
+
 
 /* 🔹 Profile Section */
 .user-profile {
