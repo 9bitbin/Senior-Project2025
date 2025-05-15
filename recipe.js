@@ -18,7 +18,7 @@ const mealPlanOutput = document.getElementById("ai-meal-plan-results");
 
 const API_KEY = "l4ioC02Ockzgjkietj6YgQ==wWJ0gnTd3hZmLFuz";
 const API_URL = "https://api.calorieninjas.com/v1/nutrition?query=";
-const OPENROUTER_KEY = "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";
+const OPENROUTER_KEY = "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";
 
 function appendAIChat(cardEl, recipeName, instructions) {
   const chatContainer = document.createElement("div");
@@ -43,7 +43,7 @@ function appendAIChat(cardEl, recipeName, instructions) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer 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",
+          "Authorization": "Bearer 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",
           "HTTP-Referer": "http://localhost:5500",
           "X-Title": "VIDIA AI Recipe Insight"
         },
@@ -188,7 +188,7 @@ async function generateMealPlan(uid) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer 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",
       },
       body: JSON.stringify({
         model: "mistralai/mistral-small-3.1-24b-instruct:free",
@@ -388,7 +388,7 @@ async function showRecommendedRecipes(uid) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer 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",
         "HTTP-Referer": "http://localhost:5500",
         "X-Title": "VIDIA AI Meal Recommender"
       },
