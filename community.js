@@ -2,9 +2,52 @@
 import { db, auth } from "./firebase-config.js";
 import {
   collection, addDoc, query, orderBy, doc, getDocs,
-  updateDoc, deleteDoc, arrayUnion, getDoc, onSnapshot, serverTimestamp
+  updateDoc, deleteDoc, arrayUnion, arrayRemove, getDoc, onSnapshot, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+
+function formatTimestamp(timestamp) {
+  if (!timestamp) return '';
+  
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  
+  // Format: MM/DD/YYYY, HH:MM AM/PM
+  const formattedDate = date.toLocaleDateString();
+  const formattedTime = date.toLocaleTimeString([], { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+  
+  return `${formattedDate}, ${formattedTime}`;
+}
+
+// Add toggleLike function
+async function toggleLike(postId) {
+  if (!currentUser) return;
+  
+  try {
+    const postRef = doc(db, "sharedPosts", postId);
+    const postDoc = await getDoc(postRef);
+    
+    if (!postDoc.exists()) return;
+    
+    const likes = postDoc.data().likes || [];
+    const userLiked = likes.includes(currentUser.uid);
+    
+    if (userLiked) {
+      await updateDoc(postRef, {
+        likes: arrayRemove(currentUser.uid)
+      });
+    } else {
+      await updateDoc(postRef, {
+        likes: arrayUnion(currentUser.uid)
+      });
+    }
+  } catch (error) {
+    console.error('Error toggling like:', error);
+  }
+}
 
 function expandPost(button) {
   const contentDiv = button.parentElement;
@@ -153,21 +196,15 @@ function listenForPosts() {
   
   console.log("Setting up posts listener...");
   
-  onSnapshot(q, (snapshot) => {
+  return onSnapshot(q, (snapshot) => {
     allPosts = [];
     snapshot.forEach((doc) => {
-      const post = doc.data();
-      post.id = doc.id;
+      const post = { ...doc.data(), id: doc.id };
       allPosts.push(post);
     });
     
     console.log("Posts loaded:", allPosts.length);
-    
-    // Load user names before filtering posts
-    loadUserNames().then(() => {
-      console.log("User names loaded, filtering posts...");
-      filterPosts();
-    });
+    filterPosts();
   }, (error) => {
     console.error("Error listening for posts:", error);
   });
@@ -390,6 +427,16 @@ function renderFilteredPosts() {
     const userInfo = userIdToNameMap[post.userId] || { name: 'User', email: '' };
     const userName = post.anonymous ? 'Anonymous' : userInfo.name;
     const comments = post.comments || [];
+
+     // Add recipe content display
+     const recipeContent = post.type === 'meal' && post.recipeId ? `
+     <div class="recipe-details" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 10px 0;">
+       <h4 style="margin: 0 0 10px 0;">🍳 Shared Recipe</h4>
+       <button onclick="viewRecipeDetails('${post.recipeId}', '${post.id}')" class="view-recipe-btn" style="padding: 8px 16px; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+         View Full Recipe
+       </button>
+     </div>
+   ` : '';
     
     let displayName = 'Anonymous';
     if (!post.anonymous) {
@@ -406,19 +453,29 @@ function renderFilteredPosts() {
         <div class="post-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"> 
           <div class="post-header-left" style="display: flex; align-items: center; gap: 10px;">
             <img src="${getAvatarUrl(post.userId, post.anonymous)}" alt="Avatar" class="user-avatar" style="width: 40px; height: 40px; border-radius: 50%;">
-            <strong>${displayName}</strong>
+            <div>
+              <strong>${displayName}</strong>
+              <div style="font-size: 12px; color: #666;">
+                ${formatTimestamp(post.timestamp)}
+              </div>
+            </div>
             ${!post.anonymous && !isCurrentUser(post.userId) && !friendList.includes(post.userId) ? 
               `<button onclick="sendFriendRequest('${post.userId}', '${userName}')" class="add-friend-btn" style="padding: 4px 8px; border: none; border-radius: 4px; background-color: #3b82f6; color: white; cursor: pointer; font-size: 12px;">Add Friend</button>` 
             : ''}
           </div>
           <div style="display: flex; gap: 10px; align-items: center;">
             <span class="post-tag" style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${getPostTypeIcon(post.type)} ${post.type}</span>
+            <button onclick="toggleLike('${post.id}')" class="like-button" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; color: ${post.likes?.includes(currentUser.uid) ? '#ef4444' : '#666'};">
+              ${post.likes?.includes(currentUser.uid) ? '❤️' : '🤍'} 
+              <span>${post.likes?.length || 0}</span>
+            </button>
             ${isCurrentUser(post.userId) ? 
               `<button onclick="deletePost('${post.id}')" class="delete-post" style="background-color: #ef4444; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;">🗑️ Delete</button>` 
             : ''}
           </div>
         </div>
-                <div class="post-content" style="margin: 10px 0 35px 0; word-wrap: break-word; width: 100%; padding-bottom: 25px; border-bottom: 1px solid #eee;">
+                
+<div class="post-content" style="margin: 10px 0 35px 0; word-wrap: break-word; width: 100%; padding-bottom: 25px; border-bottom: 1px solid #eee;">
     ${post.content.length > 300 ? 
         `<div class="content-text truncated" style="margin: 0; white-space: pre-wrap; overflow: hidden; max-height: 4.5em;">${escapeHtml(post.content)}</div>
          <button onclick="expandPost(this)" class="read-more-btn" style="display: block; margin-top: 8px; color: #3b82f6; background: none; border: none; cursor: pointer; padding: 5px 0;">Read more</button>
@@ -426,7 +483,9 @@ function renderFilteredPosts() {
         : 
         `<div class="content-text" style="margin: 0; white-space: pre-wrap;">${escapeHtml(post.content)}</div>`
     }
+    ${recipeContent}
 </div>
+
         <div class="comments-section" style="width: 100%; background: white; margin-top: 35px; padding-top: 20px; border-top: 1px solid #eee; display: block;">
           <div class="comments-toggle" onclick="toggleComments(this)" style="cursor: pointer; padding: 10px 0;">
             💬 Comments (${comments.length})
@@ -1048,7 +1107,7 @@ window.deletePost = deletePost;
 window.searchUsers = searchUsers;
 window.sendFriendRequest = sendFriendRequest;
 
-// Add these functions after renderFilteredPosts
+
 
 
 
@@ -1425,18 +1484,39 @@ async function removeFriend(friendId) {
 
 // Add missing sharePost function
 async function sharePost() {
-  if (!currentUser) return;
-  
+  if (!currentUser) return alert("⚠️ You must be logged in to share a post.");
+
   const content = postContent?.value?.trim();
   const type = postType?.value;
   const anonymous = anonymousCheck?.checked || false;
   const friendsOnly = visibilityCheck?.checked || false;
-  
+
   if (!content) {
     alert('Please enter post content.');
     return;
   }
-  
+
+  // Recipe handling
+  let recipeId = null;
+  let recipeData = null;
+  if (type === 'meal') {
+    const recipeSelect = document.getElementById('recipe-select');
+    if (recipeSelect) {
+      recipeId = recipeSelect.value;
+      if (recipeId) {
+        try {
+          const recipeRef = doc(db, "users", currentUser.uid, "savedRecipes", recipeId);
+          const recipeSnap = await getDoc(recipeRef);
+          if (recipeSnap.exists()) {
+            recipeData = recipeSnap.data();
+          }
+        } catch (error) {
+          console.error('Error fetching recipe data:', error);
+        }
+      }
+    }
+  }
+
   try {
     const post = {
       userId: currentUser.uid,
@@ -1446,7 +1526,10 @@ async function sharePost() {
       anonymous,
       friendsOnly,
       timestamp: serverTimestamp(),
-      comments: []
+      comments: [],
+      likes: [], 
+      recipeId,
+      recipe: recipeData
     };
     
     await addDoc(collection(db, "sharedPosts"), post);
@@ -1457,6 +1540,10 @@ async function sharePost() {
     if (anonymousCheck) anonymousCheck.checked = false;
     if (visibilityCheck) visibilityCheck.checked = false;
     
+    // Remove recipe display
+    const recipeContainer = document.getElementById('recipe-share-section');
+    if (recipeContainer) recipeContainer.remove();
+    
     alert('Post shared successfully!');
   } catch (error) {
     console.error('Error sharing post:', error);
@@ -1464,9 +1551,80 @@ async function sharePost() {
   }
 }
 
-// Update the DOMContentLoaded event listener
-// Update the DOMContentLoaded event listener
-document.addEventListener('DOMContentLoaded', () => {
+async function viewRecipeDetails(recipeId, postId) {
+  try {
+    let recipe;
+    
+    // First try to get the recipe from the post
+    if (postId) {
+      const postDoc = await getDoc(doc(db, "sharedPosts", postId));
+      if (postDoc.exists() && postDoc.data().recipe) {
+        recipe = postDoc.data().recipe;
+      }
+    }
+    
+    // If no recipe found in post, try user's saved recipes
+    if (!recipe) {
+      const recipeDoc = await getDoc(doc(db, "users", currentUser.uid, "savedRecipes", recipeId));
+      if (!recipeDoc.exists()) {
+        alert('Recipe not found.');
+        return;
+      }
+      recipe = recipeDoc.data();
+    }
+    
+    
+    // Create popup to display recipe details
+    const popup = document.createElement('div');
+    popup.className = 'recipe-popup';
+    popup.style.position = 'fixed';
+    popup.style.top = '50%';
+    popup.style.left = '50%';
+    popup.style.transform = 'translate(-50%, -50%)';
+    popup.style.backgroundColor = 'white';
+    popup.style.padding = '20px';
+    popup.style.borderRadius = '8px';
+    popup.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+    popup.style.maxWidth = '600px';
+    popup.style.width = '90%';
+    popup.style.maxHeight = '80vh';
+    popup.style.overflowY = 'auto';
+    popup.style.zIndex = '1000';
+
+    popup.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="margin: 0;">${recipe.name || recipe.title || 'Recipe Details'}</h3>
+      <button onclick="this.parentElement.parentElement.remove()" 
+        style="background: none; 
+               border: none; 
+               font-size: 24px; 
+               cursor: pointer;
+               color: #666;
+               width: 32px;
+               height: 32px;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               border-radius: 50%;
+               transition: background-color 0.2s;">×</button>
+    </div>
+    <div style="margin-bottom: 20px;">
+      <h4>Ingredients:</h4>
+      <pre style="white-space: pre-wrap;">${recipe.ingredients || 'No ingredients listed'}</pre>
+    </div>
+    <div>
+      <h4>Instructions:</h4>
+      <pre style="white-space: pre-wrap;">${recipe.instructions || 'No instructions listed'}</pre>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+} catch (error) {
+  console.error('Error loading recipe:', error);
+  alert('Error loading recipe details. Please try again.');
+}
+}
+document.addEventListener('DOMContentLoaded', async () => {
   if (!isCommunityPage()) return;
 
   // Initialize UI elements
@@ -1491,22 +1649,101 @@ document.addEventListener('DOMContentLoaded', () => {
   if (friendToggle) friendToggle.addEventListener('change', filterPosts);
   if (sharePostBtn) sharePostBtn.addEventListener('click', sharePost);
 
-  // Remove the document click listener that was hiding posts
-  
-  // Initialize auth state listener
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
-    currentUser = user;
-    await loadUserNames();
-    listenForPosts();
-    listenForFriendRequests();
+  // Wait for auth to initialize
+  await new Promise(resolve => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUser = user;
+      await loadUserNames();
+      listenForPosts();
+      listenForFriendRequests();
+      resolve();
+    });
   });
-});
- 
 
+  // Add postType event listener and trigger initial state
+  if (postType) {
+    const handlePostTypeChange = async (e) => {
+      const recipeContainer = document.getElementById('recipe-share-section');
+      if (e.target.value === 'meal') {
+        if (!recipeContainer) {
+          try {
+            const recipesRef = collection(db, "users", currentUser.uid, "savedRecipes");
+            const recipesSnapshot = await getDocs(recipesRef);
+            const recipes = [];
+            recipesSnapshot.forEach(doc => {
+              recipes.push({ id: doc.id, ...doc.data() });
+            });
+
+            const container = document.createElement('div');
+            container.id = 'recipe-share-section';
+            container.innerHTML = `
+              <div id="recipe-share-container" style="padding: 15px;">
+                <div class="results-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 20px;">
+                  ${recipes.length ? recipes.map(recipe => `
+                    <div class="recipe-card" style="background: #fefefe; border-radius: 16px; box-shadow: 0 3px 12px rgba(0,0,0,0.06); overflow: hidden;">
+                      <img src="${recipe.image}" alt="${recipe.name}" style="width: 100%; height: 180px; object-fit: cover;">
+                      <div class="card-body" style="padding: 16px;">
+                        <h3 style="font-size: 18px; margin-bottom: 10px;">${recipe.name}</h3>
+                        <p style="font-size: 14px; margin-bottom: 12px;">${recipe.instructions.substring(0, 100)}...</p>
+                        <button onclick="selectRecipeToShare('${recipe.id}', '${recipe.name}')" 
+                                style="width: 100%; padding: 10px; background-color: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                          Share This Recipe
+                        </button>
+                      </div>
+                    </div>
+                  `).join('') : 
+                  '<div style="text-align: center; padding: 20px; color: #666;">No saved recipes yet. Save some recipes from the Recipe page first!</div>'}
+                </div>
+                <input type="hidden" id="recipe-select" value="">
+              </div>
+            `;
+            postType.parentNode.insertBefore(container, postType.nextSibling);
+
+            // Add the selection function to window scope
+            window.selectRecipeToShare = function(recipeId, recipeName) {
+              const postContentEl = document.getElementById('postContent');
+              if (postContentEl) {
+                postContentEl.value = `Check out my recipe for ${recipeName}!`;
+              }
+              const recipeSelect = document.getElementById('recipe-select');
+              if (recipeSelect) {
+                recipeSelect.value = recipeId;
+              }
+            };
+
+          } catch (error) {
+            console.error('Error loading recipes:', error);
+            // Show error message
+            const container = document.createElement('div');
+            container.id = 'recipe-share-section';
+            container.innerHTML = `
+              <div id="recipe-share-container" style="padding: 15px;">
+                <div style="color: #ef4444; text-align: center; padding: 10px;">Error loading recipes. Please try again.</div>
+                <input type="hidden" id="recipe-select" value="">
+              </div>
+            `;
+            postType.parentNode.insertBefore(container, postType.nextSibling);
+          }
+        }
+      } else {
+        recipeContainer?.remove();
+      }
+    };
+
+    // Remove any existing listeners and add the new one
+    postType.removeEventListener('change', handlePostTypeChange);
+    postType.addEventListener('change', handlePostTypeChange);
+
+    // Trigger the change event immediately if type is 'meal'
+    if (postType.value === 'meal') {
+      postType.dispatchEvent(new Event('change'));
+    }
+  }
+  });
 // Make these functions globally accessible
 window.getPostTypeIcon = getPostTypeIcon;
 window.deletePost = deletePost;
@@ -1521,3 +1758,5 @@ window.rejectFriendRequest = rejectFriendRequest;
 window.removeFriend = removeFriend;
 window.escapeHtml = escapeHtml;  
 window.expandPost = expandPost;
+window.viewRecipeDetails = viewRecipeDetails;
+window.toggleLike = toggleLike;

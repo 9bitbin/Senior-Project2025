@@ -89,9 +89,17 @@ function displayRecipes(meals) {
         <p><strong>Origin:</strong> ${meal.strArea}</p>
         <p>${meal.strInstructions.substring(0, 100)}...</p>
         <div class="card-actions">
+          <button onclick="viewFullRecipe(this)" class="view-recipe-btn" 
+            data-recipe='${JSON.stringify({
+              name: meal.strMeal,
+              category: meal.strCategory,
+              origin: meal.strArea,
+              instructions: meal.strInstructions,
+              ingredients: getIngredientsList(meal)
+            }).replace(/'/g, "&apos;")}'
+          >View Recipe</button>
           <button class="save-btn" data-name="${meal.strMeal}" data-img="${meal.strMealThumb}" data-inst="${meal.strInstructions.replace(/'/g, "\'")}">💾 Save</button>
           <button class="log-btn" data-name="${meal.strMeal}">🍽 Log</button>
-          <button class="grocery-btn" data-name="${meal.strMeal}">🛒 Grocery</button>
         </div>
       </div>
     `;
@@ -122,6 +130,47 @@ function displayRecipes(meals) {
     });
   });
 }
+
+// Add these new functions
+function getIngredientsList(meal) {
+  const ingredients = [];
+  for (let i = 1; i <= 20; i++) {
+    const ingredient = meal[`strIngredient${i}`];
+    const measure = meal[`strMeasure${i}`];
+    if (ingredient && ingredient.trim()) {
+      ingredients.push(`${measure} ${ingredient}`);
+    }
+  }
+  return ingredients;
+}
+
+// Add this to your window object for the onclick handler
+window.viewFullRecipe = function(button) {
+  try {
+    const recipeData = JSON.parse(button.dataset.recipe.replace(/&apos;/g, "'"));
+    const popup = document.createElement('div');
+    popup.className = 'recipe-popup';
+    popup.innerHTML = `
+      <div class="recipe-popup-content">
+        <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
+        <h3>${recipeData.name}</h3>
+        <p><strong>Category:</strong> ${recipeData.category || 'Not specified'}</p>
+        <p><strong>Origin:</strong> ${recipeData.origin || 'Not specified'}</p>
+        <div class="recipe-details">
+          <h4>Ingredients:</h4>
+          <ul>
+            ${(recipeData.ingredients || []).map(ing => `<li>${ing}</li>`).join('')}
+          </ul>
+          <h4>Instructions:</h4>
+          <div class="instructions">${recipeData.instructions || 'No instructions available'}</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(popup);
+  } catch (error) {
+    console.error('Error displaying recipe:', error);
+  }
+};
 
 async function generateMealPlan(uid) {
   const days = mealDurationSelect.value;
@@ -193,8 +242,21 @@ async function saveRecipe(name, image, instructions) {
   const user = auth.currentUser;
   if (!user) return alert("❌ You must be logged in to save recipes.");
   try {
+    // Fetch full recipe details from API
+    const response = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(name)}`);
+    const data = await response.json();
+    const fullRecipe = data.meals?.[0];
+
     const ref = collection(db, "users", user.uid, "savedRecipes");
-    await addDoc(ref, { name, image, instructions, timestamp: new Date().toISOString() });
+    await addDoc(ref, { 
+      name, 
+      image, 
+      instructions,
+      category: fullRecipe?.strCategory || "Not Specified",
+      origin: fullRecipe?.strArea || "Not Specified",
+      ingredients: fullRecipe ? getIngredientsList(fullRecipe) : [],
+      timestamp: new Date().toISOString() 
+    });
     alert("✅ Recipe saved!");
     loadSavedRecipes();
   } catch (error) {
@@ -222,9 +284,21 @@ async function loadSavedRecipes() {
         <img src="${recipe.image}" alt="${recipe.name}">
         <div class="card-body">
           <h3>${recipe.name}</h3>
+          <p><strong>Category:</strong> ${recipe.category}</p>
+          <p><strong>Origin:</strong> ${recipe.origin}</p>
           <p>${recipe.instructions.substring(0, 100)}...</p>
           <div class="card-actions">
-            <button onclick="deleteRecipe('${docRef.id}')">🗑 Delete</button>
+            <button onclick="viewFullRecipe(this)" class="view-recipe-btn" 
+              data-recipe='${JSON.stringify({
+                name: recipe.name,
+                category: recipe.category,
+                origin: recipe.origin,
+                instructions: recipe.instructions,
+                ingredients: recipe.ingredients
+              }).replace(/'/g, "&apos;")}'
+            >View Recipe</button>
+            <button onclick="deleteRecipe('${docRef.id}')" class="delete-btn">🗑 Delete</button>
+            <button class="log-btn" data-name="${recipe.name}">🍽 Log</button>
           </div>
         </div>
       `;

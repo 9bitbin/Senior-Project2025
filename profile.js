@@ -1,6 +1,7 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
 let profileForm;
 
@@ -43,10 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const userDocRef = doc(db, "users", user.uid);
 
-      // Inside the profileForm submit handler, update the try block
+      // Add recipes collection reference
+      const recipesRef = collection(db, "recipes");
+      
       try {
           const existingDoc = await getDoc(userDocRef);
           const existingData = existingDoc.exists() ? existingDoc.data() : {};
+          
+          // Ensure recipes are linked to user
+          const userRecipes = await getDocs(query(recipesRef, where("userId", "==", user.uid)));
+          const recipes = [];
+          userRecipes.forEach(doc => {
+              recipes.push({ id: doc.id, ...doc.data() });
+          });
+          
+          // Add recipes to user data
+          updatedData.recipes = recipes.map(recipe => recipe.id);
           
           // Ensure email is always saved
           updatedData.email = user.email || existingData.email || '';
