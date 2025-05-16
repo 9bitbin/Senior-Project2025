@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const updatedData = {
           name: document.getElementById("name").value,
-          age: document.getElementById("age").value,
           weight: document.getElementById("weight").value,
           height: document.getElementById("height").value,
           dob: document.getElementById("dob").value,
@@ -94,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function isProfileComplete(userData) {
   return userData && 
          userData.name && 
-         userData.age && 
          userData.sex && 
          userData.height && 
          userData.weight;
@@ -191,7 +189,7 @@ onAuthStateChanged(auth, async (user) => {
         await setDoc(userDocRef, { ...data, email: user.email }, { merge: true });
       }
       const formFields = [
-        "name", "age", "weight", "height", "dob", "sex", "calorieGoal",
+        "name", "weight", "height", "dob", "sex", "calorieGoal",
         "exerciseType", "healthGoals", "activityLevel", "dietType",
         "allergies", "budgetPreference", "sleepHours", "waterIntakeGoal",
         "preferredWorkoutTime", "mentalHealthFocus"
