@@ -142,7 +142,7 @@ async function getAIInsight(logs) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"
+        "Authorization": "Bearer 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"
       },
       body: JSON.stringify({
         model: "mistralai/mistral-small-3.1-24b-instruct:free",
@@ -607,7 +607,7 @@ Workouts:\n${workouts.slice(-3).map(w => `${w.type} - ${w.caloriesBurned} kcal`)
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"
+        "Authorization": "Bearer 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"
       },
       body: JSON.stringify({
         model: "mistralai/mistral-small-3.1-24b-instruct:free",
