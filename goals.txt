@@ -108,11 +108,13 @@
     <select id="goal-type">
       <option value="weight">Lose Weight</option>
       <option value="calories">Daily Calorie Limit</option>
-      <option value="workoutsPerWeek">Workouts Per Week</option>
+      <option value="workoutsPerWeek">Weekly Workout</option>
       <option value="fastingDays">Fasting Days Per Week</option>
     </select>
-    <input type="number" id="goal-target" placeholder="Enter target value" />
+    <input type="number" id="goal-target" placeholder="Enter target value" min="1"/>
+    <p id="goal-warning" style="color: red; display: none;">Please enter a valid goal.</p>
     <input type="date" id="goal-deadline" />
+    <input type="text" id="goal-workout-range" placeholder="Weekly"/>
     <button id="save-goal">Save Goal</button>
   </div>
 
@@ -124,6 +126,18 @@
       </thead>
       <tbody id="goal-table">
         <tr><td colspan="6">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" id="workout-goal-card">
+    <h2>🏋️ Your Workout Goals</h2>
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Target</th><th>Progress</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody id="workout-goal-table">
+        <tr><td colspan="5">Loading...</td></tr>
       </tbody>
     </table>
   </div>

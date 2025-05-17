@@ -2,9 +2,245 @@
 import { db, auth } from "./firebase-config.js";
 import {
   collection, addDoc, query, orderBy, doc, getDocs,
-  updateDoc, deleteDoc, arrayUnion, arrayRemove, getDoc, onSnapshot, serverTimestamp 
+  updateDoc, deleteDoc, arrayUnion, arrayRemove, getDoc, onSnapshot, serverTimestamp, setDoc
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+
+window.toggleComments = function(button) {
+  console.log('Toggle comments clicked');
+  const commentsSection = button.closest('.comments-section');
+  const commentsContainer = commentsSection.querySelector('.comments-container');
+  
+  if (commentsContainer) {
+    console.log('Found comments container, current display:', commentsContainer.style.display);
+    
+    // Remove inline style and use a class instead
+    commentsContainer.classList.toggle('hidden');
+    const isHidden = commentsContainer.classList.contains('hidden');
+    
+    // Update button text
+    const commentCount = button.textContent.match(/\d+/)?.[0] || '0';
+    button.innerHTML = `💬 Comments (${commentCount}) ${isHidden ? '▼' : '▲'}`;
+    console.log('Toggled container visibility');
+  } else {
+    console.error('Comments container not found');
+  }
+};
+
+
+window.submitComment = async function(button) {
+  if (!currentUser) return;
+  
+  const commentContainer = button.closest('.comments-container');
+  const input = commentContainer.querySelector('.comment-input');
+  const post = button.closest('.post');
+  const postId = post.dataset.postId;
+  
+  if (!input || !input.value.trim()) return;
+
+  try {
+    const postRef = doc(db, "sharedPosts", postId);
+    const postDoc = await getDoc(postRef);
+    
+    if (!postDoc.exists()) return;
+    
+    const newComment = {
+      userId: currentUser.uid,
+      content: input.value.trim(),
+      timestamp: new Date().toISOString()
+    };
+    
+    await updateDoc(postRef, {
+      comments: arrayUnion(newComment)
+    });
+    
+    input.value = '';
+    
+    // Store the current visibility state
+    const wasVisible = !commentContainer.classList.contains('hidden');
+    
+    // Refresh the post to show the new comment
+    const updatedDoc = await getDoc(postRef);
+    const postData = { ...updatedDoc.data(), id: postId };
+    const newPostElement = renderPost(postData);
+    
+    // Replace the old post with the new one
+    post.replaceWith(newPostElement);
+    
+    // If comments were visible, show them in the new post
+    if (wasVisible) {
+      const newCommentsContainer = newPostElement.querySelector('.comments-container');
+      if (newCommentsContainer) {
+        newCommentsContainer.classList.remove('hidden');
+        const toggleButton = newPostElement.querySelector('.comments-toggle');
+        if (toggleButton) {
+          const commentCount = toggleButton.textContent.match(/\d+/)?.[0] || '0';
+          toggleButton.innerHTML = `💬 Comments (${commentCount}) ▲`;
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error submitting comment:', error);
+  }
+}
+
+ export function generateUserAvatar(userId, username, isAnonymous = false) {
+  const colors = ['#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#16a085', '#27ae60', '#2980b9', '#8e44ad', '#2c3e50'];
+  
+  if (isAnonymous) {
+    return {
+      initials: 'AN',
+      color: '#6b7280',
+      displayName: 'Anonymous'
+    };
+  }
+
+  const colorIndex = [...userId].reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+  const cleanUsername = username.split('#')[0].trim();
+  const words = cleanUsername.split(' ');
+  
+  let initials;
+  if (words.length >= 2) {
+    initials = (words[0][0] + words[1][0]).toUpperCase();
+  } else {
+    initials = words[0][0].toUpperCase(); // Only use first letter for single word names
+  }
+
+  return {
+    initials,
+    color: colors[colorIndex],
+    displayName: cleanUsername
+  };
+}
+
+function userNameCount(username) {
+  if (!username || !userIdToNameMap) return 0;
+  return Object.values(userIdToNameMap).filter(user => 
+    user && user.name && user.name.toLowerCase() === username.toLowerCase()
+  ).length;
+}
+
+function toggleRecipeSection() {
+  const recipeSection = document.getElementById('recipe-share-section');
+  const arrowIcon = document.getElementById('arrowIcon');
+  
+  if (!recipeSection || !arrowIcon) {
+    console.error('Recipe section elements not found');
+    return;
+  }
+
+  // Get current state
+  const isHidden = recipeSection.style.display === 'none' || !recipeSection.style.display;
+
+  // Toggle visibility
+  recipeSection.style.display = isHidden ? 'block' : 'none';
+  arrowIcon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+  arrowIcon.style.transition = 'transform 0.3s ease';
+  arrowIcon.textContent = isHidden ? '▲' : '▼';
+
+  // Only fetch and display recipes when opening the section
+  if (isHidden && currentUser) {
+    // Show loading state
+    recipeSection.innerHTML = '<p style="text-align: center; padding: 20px;">Loading your recipes...</p>';
+    
+    const recipesRef = collection(db, "users", currentUser.uid, "savedRecipes");
+    getDocs(recipesRef)
+      .then((snapshot) => {
+        if (snapshot.empty) {
+          recipeSection.innerHTML = '<p style="text-align: center; padding: 20px;">No saved recipes found. Save some recipes first!</p>';
+          return;
+        }
+
+        let recipesHTML = `
+          <div class="recipe-grid" style="
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 15px;">
+        `;
+        
+        snapshot.forEach((doc) => {
+          const recipe = doc.data();
+          recipesHTML += `
+            <div class="recipe-card" style="
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+              overflow: hidden;
+              position: relative;">
+              <input type="checkbox" 
+                class="recipe-select" 
+                data-recipe-id="${doc.id}" 
+                data-recipe-name="${recipe.name}"
+                style="position: absolute; top: 8px; right: 8px; width: 18px; height: 18px;">
+              <img src="${recipe.image}" alt="${recipe.name}" 
+                style="width: 100%; height: 150px; object-fit: cover;">
+              <div style="padding: 15px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 16px;">${recipe.name}</h4>
+                <p style="margin: 0; font-size: 12px; color: #666;">
+                  <strong>Category:</strong> ${recipe.category || 'N/A'}<br>
+                  <strong>Origin:</strong> ${recipe.origin || 'N/A'}
+                </p>
+              </div>
+            </div>
+          `;
+        });
+        
+        recipesHTML += `</div>
+          <button onclick="shareSelectedRecipes()" 
+            style="
+              display: block;
+              margin: 20px auto;
+              padding: 10px 20px;
+              background-color: #3b82f6;
+              color: white;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;">
+            Share Selected Recipes
+          </button>
+        `;
+        
+        recipeSection.innerHTML = recipesHTML;
+      })
+      .catch(error => {
+        console.error("Error loading recipes:", error);
+        recipeSection.innerHTML = '<p style="text-align: center; color: red; padding: 20px;">Error loading recipes. Please try again.</p>';
+      });
+  }
+}
+window.shareSelectedRecipes = async function() {
+  if (!currentUser) return;
+  
+  const selectedRecipes = document.querySelectorAll('.recipe-select:checked');
+  if (selectedRecipes.length === 0) {
+    alert('Please select at least one recipe to share');
+    return;
+  }
+
+  try {
+    let recipeNames = [];
+    for (const checkbox of selectedRecipes) {
+      const recipeName = checkbox.dataset.recipeName;
+      if (recipeName) recipeNames.push(recipeName);
+    }
+
+    const postContent = document.getElementById('postContent');
+    if (postContent) {
+      const isMultiple = recipeNames.length > 1;
+      postContent.value = isMultiple ? 
+        `Check out my recipes for:\n${recipeNames.join('\n')}` : 
+        `Check out my recipe for ${recipeNames[0]}`;
+    }
+    
+    window.selectedRecipeIds = Array.from(selectedRecipes).map(checkbox => 
+      checkbox.dataset.recipeId
+    );
+  } catch (error) {
+    console.error("Error preparing recipes to share:", error);
+    alert("Error preparing recipes to share. Please try again.");
+  }
+}
 
 function formatTimestamp(timestamp) {
   if (!timestamp) return '';
@@ -22,10 +258,226 @@ function formatTimestamp(timestamp) {
   return `${formattedDate}, ${formattedTime}`;
 }
 
+function renderPost(post) {
+  const postElement = document.createElement('div');
+  postElement.className = 'post';
+  postElement.dataset.postId = post.id;
+  postElement.style.backgroundColor = 'white';
+  postElement.style.borderRadius = '12px';
+  postElement.style.padding = '20px';
+  postElement.style.marginBottom = '20px';
+  postElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+
+  // Your existing code for userInfo and avatar
+  const userInfo = userIdToNameMap[post.userId] || { name: 'Unknown User', email: '' };
+  const userName = post.anonymous ? 'Anonymous' : formatUserDisplay(userInfo.name, post.userId);
+  const avatar = generateUserAvatar(post.userId, userName, post.anonymous);
+  const postHeader = `
+    <div class="post-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <div class="post-header-left" style="display: flex; align-items: center;">
+        <div class="user-initial" style="
+            width: 40px; 
+            height: 40px; 
+            background-color: ${avatar.color}; 
+            color: white; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-right: 10px; 
+            font-weight: bold; 
+            font-size: 16px;
+            font-family: system-ui, -apple-system, sans-serif;">
+            ${avatar.initials}
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="user-name" style="font-weight: 500; color: #1f2937;">
+              ${userName}${!post.anonymous && userNameCount(userName) > 1 ? ` #${post.userId.substring(0, 6)}` : ''}
+            </span>
+            ${!post.anonymous && post.userId !== currentUser?.uid && !friendList.includes(post.userId) ? 
+              `<button onclick="sendFriendRequest('${post.userId}')" style="padding: 2px 8px; border: none; border-radius: 4px; background-color: #3b82f6; color: white; cursor: pointer; font-size: 12px;">
+                Add Friend
+              </button>` : ''
+            }
+          </div>
+          <span class="post-timestamp" style="color: #6b7280; font-size: 12px;">
+            ${formatTimestamp(post.timestamp)}
+          </span>
+        </div>
+      </div>
+      <div class="post-header-right" style="display: flex; align-items: center; gap: 10px;">
+        <span class="post-tag" style="background-color: #f3f4f6; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+          ${getPostTypeIcon(post.type)} ${post.type}
+        </span>
+        ${isCurrentUser(post.userId) ? `
+          <button onclick="deletePost('${post.id}')" class="delete-btn" style="display: flex; align-items: center; gap: 5px; padding: 4px 8px; border: none; border-radius: 4px; background-color: #ef4444; color: white; cursor: pointer;">
+            Delete 🗑️
+          </button>` : ''}
+      </div>
+    </div>
+  `;
+
+  const recipeContent = post.recipeIds ? `
+  <div class="shared-recipes" style="margin: 15px 0; padding: 15px; background-color: #f9fafb; border-radius: 8px;">
+    <h4 style="margin: 0 0 10px 0;">🍳 Shared Recipes</h4>
+    <div class="recipe-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+      ${post.recipeIds.map((recipeId, index) => `
+        <div class="recipe-card" style="
+          background-color: white;
+          padding: 15px;
+          border-radius: 8px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <h5 style="margin: 0 0 10px 0;">${post.recipeNames[index]}</h5>
+          <button onclick="viewSharedRecipe('${post.userId}', '${recipeId}')" 
+            class="view-recipe-btn" style="
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;">
+            View Full Recipe
+          </button>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+` : '';
+
+  const likeButton = `
+  <button onclick="toggleLike('${post.id}')" class="like-btn" style="
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: ${post.likes?.includes(currentUser?.uid) ? '#ef4444' : '#e5e7eb'};
+    color: ${post.likes?.includes(currentUser?.uid) ? 'white' : '#374151'};
+    cursor: pointer;
+    transition: all 0.2s;
+    width: fit-content;">
+    ${post.likes?.includes(currentUser?.uid) ? '❤️' : '🤍'} 
+    ${post.likes?.length || 0}
+  </button>
+`;
+
+  // Update the comments section
+  const commentsSection = `
+  <div class="comments-section" style="width: 100%;">
+    <button class="comments-toggle" onclick="window.toggleComments(this)" style="
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      background-color: #f3f4f6;
+      color: #374151;
+      cursor: pointer;
+      font-size: 14px;
+      width: 100%;">
+      💬 Comments (${post.comments?.length || 0}) ▲
+    </button>
+    
+    <div class="comments-container hidden" style="
+      margin-top: 15px;
+      padding: 15px;
+      background-color: #f9fafb;
+      border-radius: 12px;
+      width: 100%;
+      box-sizing: border-box;">
+      <div class="comments-list" style="margin-bottom: 15px;">
+        ${post.comments && post.comments.length > 0 ? 
+          post.comments.map(comment => {
+            const commentUser = userIdToNameMap[comment.userId] || { name: 'Unknown User' };
+            const avatar = generateUserAvatar(comment.userId, commentUser.name);
+            return `
+              <div class="comment" style="display: flex; gap: 12px; margin-bottom: 12px; padding: 10px; background-color: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div class="comment-avatar" style="
+                  width: 32px;
+                  height: 32px;
+                  background-color: ${avatar.color};
+                  color: white;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: bold;
+                  font-size: 14px;">
+                  ${avatar.initials}
+                </div>
+                <div class="comment-content" style="flex: 1;">
+                  <div class="comment-header" style="margin-bottom: 4px;">
+                    <span class="comment-author" style="font-weight: 500; color: #1f2937;">
+                      ${commentUser.name}
+                    </span>
+                    <span class="comment-time" style="font-size: 12px; color: #6b7280; margin-left: 8px;">
+                      ${formatTimestamp(comment.timestamp)}
+                    </span>
+                  </div>
+                  <div class="comment-text" style="color: #374151;">
+                    ${comment.content ? escapeHtml(comment.content) : '(no content)'}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('') : 
+          '<p style="text-align: center; color: #6b7280; padding: 10px;">No comments yet</p>'
+        }
+      </div>
+      
+      <div class="comment-input-container" style="display: flex; gap: 10px;">
+        <input type="text" class="comment-input" placeholder="Write a comment..." style="
+          flex: 1;
+          padding: 10px 12px;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          outline: none;
+          font-size: 14px;">
+        <button onclick="submitComment(this)" class="post-comment-btn" style="
+          padding: 8px 16px;
+          background-color: #10b981;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;">
+          Post
+        </button>
+      </div>
+    </div>
+  </div>
+`;
+
+
+
+
+const postFooter = `
+  <div class="post-footer" style="display: flex; gap: 10px; margin-top: 15px;">
+    ${likeButton}
+    ${commentsSection}
+  </div>
+`;
+
+postElement.innerHTML = `
+  ${postHeader}
+  <div class="post-content" style="margin: 15px 0;">
+    <p style="margin: 0; white-space: pre-wrap;">${post.content}</p>
+    ${recipeContent || ''}
+  </div>
+  ${postFooter}
+`;
+
+return postElement;
+}
 // Add toggleLike function
-async function toggleLike(postId) {
+export async function toggleLike(postId) {
   if (!currentUser) return;
-  
+
   try {
     const postRef = doc(db, "sharedPosts", postId);
     const postDoc = await getDoc(postRef);
@@ -35,38 +487,80 @@ async function toggleLike(postId) {
     const likes = postDoc.data().likes || [];
     const userLiked = likes.includes(currentUser.uid);
     
-    if (userLiked) {
-      await updateDoc(postRef, {
-        likes: arrayRemove(currentUser.uid)
-      });
-    } else {
-      await updateDoc(postRef, {
-        likes: arrayUnion(currentUser.uid)
-      });
-    }
+    await updateDoc(postRef, {
+      likes: userLiked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid)
+    });
   } catch (error) {
     console.error('Error toggling like:', error);
   }
 }
 
-function expandPost(button) {
-  const contentDiv = button.parentElement;
-  const truncatedContent = contentDiv.querySelector('.content-text.truncated');
-  const fullContent = contentDiv.querySelector('.full-content');
-  
-  if (truncatedContent && fullContent) {
-    truncatedContent.style.display = 'none';
-    fullContent.style.display = 'block';
-    button.style.display = 'none';
+window.viewSharedRecipe = async function(userId, recipeId) {
+  try {
+    const recipeRef = doc(db, "users", userId, "savedRecipes", recipeId);
+    const recipeDoc = await getDoc(recipeRef);
+    
+    if (!recipeDoc.exists()) {
+      alert("Recipe not found");
+      return;
+    }
+
+    const recipe = recipeDoc.data();
+    
+    const popup = document.createElement('div');
+    popup.className = 'recipe-popup';
+    popup.innerHTML = `
+      <div class="recipe-popup-content">
+        <button class="close-btn" onclick="this.closest('.recipe-popup').remove()">×</button>
+        <h2>${recipe.name}</h2>
+        ${recipe.image ? `<img src="${recipe.image}" alt="${recipe.name}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin: 10px 0;">` : ''}
+        <div class="recipe-details">
+          <p><strong>Category:</strong> ${recipe.category || 'N/A'}</p>
+          <p><strong>Origin:</strong> ${recipe.origin || 'N/A'}</p>
+          <h3>Ingredients:</h3>
+          <ul>
+            ${recipe.ingredients ? recipe.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('') : '<li>No ingredients listed</li>'}
+          </ul>
+          <h3>Instructions:</h3>
+          <div style="white-space: pre-wrap;">${recipe.instructions || 'No instructions available'}</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(popup);
+  } catch (error) {
+    console.error("Error viewing recipe:", error);
+    alert("Error loading recipe details");
+  }
+};
+
+function expandPost(element) {
+  const content = element.closest('.post-content');
+  const fullText = content.querySelector('.full-text');
+  const truncatedText = content.querySelector('.truncated-text');
+  const expandBtn = content.querySelector('.expand-btn');
+
+  if (fullText && truncatedText) {
+    if (truncatedText.style.display !== 'none') {
+      truncatedText.style.display = 'none';
+      fullText.style.display = 'block';
+      expandBtn.innerHTML = '↑';
+      expandBtn.title = 'Show less';
+    } else {
+      truncatedText.style.display = 'block';
+      fullText.style.display = 'none';
+      expandBtn.innerHTML = '↓';
+      expandBtn.title = 'Show more';
+    }
   }
 }
-
 function generateRandomHash() {
   return Math.random().toString(36).substring(2, 8);
 }
 
 // Add the escapeHtml function
 function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  
   return unsafe
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -94,6 +588,7 @@ let filteredPosts = [];
 let friendList = [];
 let friendRequests = [];
 let userIdToNameMap = {};
+let sharePostBtn = null;
 
 // Initialize UI function
 function initializeUI() {
@@ -118,26 +613,12 @@ function updateNotificationBadge() {
 }
 
 // 🔹 Select Elements
-function formatUserDisplay(username, email) {
+function formatUserDisplay(username, userId) {
   if (!username || username === 'Anonymous') return 'Anonymous';
   
-  // Count how many users have this username
-  const usersWithSameName = Object.values(userIdToNameMap).filter(user => 
-    user && user.name === username
-  ).length;
-
-  // Find the exact user by matching both username and email
-  const userEntry = Object.entries(userIdToNameMap).find(([_, user]) => 
-    user && user.name === username && user.email === email
-  );
-
-  if (userEntry && usersWithSameName > 1) {
-    // Only show hash for duplicate names
-    const userId = userEntry[0];
-    return `${username} #${userId.substring(0, 6)}`;
-  }
-
-  return username;
+  const duplicateCount = userNameCount(username);
+  // Only show hash for duplicate names
+  return duplicateCount > 1 ? `${username} #${userId.substring(0, 6)}` : username;
 }
 
 // Usw these functions to get or create the elements when needed
@@ -197,6 +678,7 @@ function listenForPosts() {
   console.log("Setting up posts listener...");
   
   return onSnapshot(q, (snapshot) => {
+    console.log("Received snapshot update");
     allPosts = [];
     snapshot.forEach((doc) => {
       const post = { ...doc.data(), id: doc.id };
@@ -210,23 +692,13 @@ function listenForPosts() {
   });
 }
 
-
 // Fix the loadUserNames function to properly return a Promise
 async function loadUserNames() {
   try {
     console.log("Loading user names...");
     userIdToNameMap = {};
-    const nameCount = new Map();
     
-    // First pass: count names
     const usersSnapshot = await getDocs(collection(db, "users"));
-    usersSnapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      const displayName = data.displayName || data.name || (data.email ? data.email.split('@')[0] : 'Anonymous');
-      nameCount.set(displayName, (nameCount.get(displayName) || 0) + 1);
-    });
-    
-    // Second pass: store user data
     usersSnapshot.forEach(docSnap => {
       const data = docSnap.data();
       const userId = docSnap.id;
@@ -234,11 +706,11 @@ async function loadUserNames() {
       
       userIdToNameMap[userId] = {
         name: displayName,
-        email: data.email || '',
-        isDuplicate: nameCount.get(displayName) > 1
+        email: data.email || ''
       };
     });
 
+    console.log("Loaded user names:", userIdToNameMap);
     return true;
   } catch (error) {
     console.error("Error loading user names:", error);
@@ -370,8 +842,8 @@ function filterPosts() {
 
 // Update the DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', () => {
-// Only initialize if we're on the community page
-if (!isCommunityPage()) return;
+  // Only initialize if we're on the community page
+  if (!isCommunityPage()) return;
 
   // Initialize UI elements
   searchInput = document.getElementById("searchInput");
@@ -381,25 +853,47 @@ if (!isCommunityPage()) return;
   postType = document.getElementById("postType");
   anonymousCheck = document.getElementById("anonymousCheck");
   visibilityCheck = document.getElementById("visibilityCheck");
-  const sharePostBtn = document.getElementById("sharePostBtn");
+  sharePostBtn = document.getElementById("sharePostBtn");
+
+  // Initialize recipe toggle and its event listeners
+  const recipeToggle = document.getElementById('toggleArrow');
+  if (recipeToggle && postType) {
+    // Set initial visibility based on post type
+    recipeToggle.style.display = postType.value === 'meal' ? 'block' : 'none';
+    
+    // Add click event listener for toggle
+    recipeToggle.addEventListener('click', toggleRecipeSection);
+    
+    // Add change event listener for post type
+    postType.addEventListener('change', function() {
+      const recipeSection = document.getElementById('recipe-share-section');
+      
+      if (this.value === 'meal') {
+        recipeToggle.style.display = 'block';
+      } else {
+        recipeToggle.style.display = 'none';
+        if (recipeSection) {
+          recipeSection.style.display = 'none';
+        }
+      }
+    });
+  }
 
   // Initialize UI components
   initializeUI();
   
- // Add event listeners
- if (searchInput) {
-  searchInput.addEventListener('input', filterPosts);
-  searchInput.addEventListener('click', function() {
-    const postsContainer = getPostsContainer();
-    postsContainer.style.display = 'block'; // Always show posts container
-    filterPosts();
-  });
-}
-if (postFilter) postFilter.addEventListener('change', filterPosts);
-if (friendToggle) friendToggle.addEventListener('change', filterPosts);
-if (sharePostBtn) sharePostBtn.addEventListener('click', sharePost);
-
-
+  // Add event listeners
+  if (searchInput) {
+    searchInput.addEventListener('input', filterPosts);
+    searchInput.addEventListener('click', function() {
+      const postsContainer = getPostsContainer();
+      postsContainer.style.display = 'block';
+      filterPosts();
+    });
+  }
+  if (postFilter) postFilter.addEventListener('change', filterPosts);
+  if (friendToggle) friendToggle.addEventListener('change', filterPosts);
+  if (sharePostBtn) sharePostBtn.addEventListener('click', sharePost);
 
   // Initialize auth state listener
   onAuthStateChanged(auth, async (user) => {
@@ -414,117 +908,69 @@ if (sharePostBtn) sharePostBtn.addEventListener('click', sharePost);
   });
 });
 
+
 function renderFilteredPosts() {
   const postsContainer = getPostsContainer();
   if (!postsContainer) return;
+
+  postsContainer.innerHTML = '';
   
   if (!filteredPosts || filteredPosts.length === 0) {
     postsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">No posts available.</p>';
     return;
   }
 
-  const postsHTML = filteredPosts.map(post => {
-    const userInfo = userIdToNameMap[post.userId] || { name: 'User', email: '' };
-    const userName = post.anonymous ? 'Anonymous' : userInfo.name;
-    const comments = post.comments || [];
+  // Sort posts by timestamp (newest first)
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    const timeA = a.timestamp?.toMillis() || 0;
+    const timeB = b.timestamp?.toMillis() || 0;
+    return timeB - timeA;
+  });
 
-     // Add recipe content display
-     const recipeContent = post.type === 'meal' && post.recipeId ? `
-     <div class="recipe-details" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 10px 0;">
-       <h4 style="margin: 0 0 10px 0;">🍳 Shared Recipe</h4>
-       <button onclick="viewRecipeDetails('${post.recipeId}', '${post.id}')" class="view-recipe-btn" style="padding: 8px 16px; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
-         View Full Recipe
-       </button>
-     </div>
-   ` : '';
-    
-    let displayName = 'Anonymous';
-    if (!post.anonymous) {
-      const usersWithSameName = Object.values(userIdToNameMap).filter(u => 
-        u && u.name === userName && !u.anonymous
-      ).length;
-      
-      displayName = usersWithSameName > 1 ? 
-        `${userName} #${post.userId.substring(0, 6)}` : 
-        userName;
-    }
+  // Render each post using the renderPost function
+  sortedPosts.forEach(post => {
+    const postElement = renderPost(post);
+    postsContainer.appendChild(postElement);
+  });
 
-    return `<article class="post" data-post-id="${post.id}" style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <div class="post-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"> 
-          <div class="post-header-left" style="display: flex; align-items: center; gap: 10px;">
-            <img src="${getAvatarUrl(post.userId, post.anonymous)}" alt="Avatar" class="user-avatar" style="width: 40px; height: 40px; border-radius: 50%;">
-            <div>
-              <strong>${displayName}</strong>
-              <div style="font-size: 12px; color: #666;">
-                ${formatTimestamp(post.timestamp)}
-              </div>
-            </div>
-            ${!post.anonymous && !isCurrentUser(post.userId) && !friendList.includes(post.userId) ? 
-              `<button onclick="sendFriendRequest('${post.userId}', '${userName}')" class="add-friend-btn" style="padding: 4px 8px; border: none; border-radius: 4px; background-color: #3b82f6; color: white; cursor: pointer; font-size: 12px;">Add Friend</button>` 
-            : ''}
-          </div>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <span class="post-tag" style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${getPostTypeIcon(post.type)} ${post.type}</span>
-            <button onclick="toggleLike('${post.id}')" class="like-button" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; color: ${post.likes?.includes(currentUser.uid) ? '#ef4444' : '#666'};">
-              ${post.likes?.includes(currentUser.uid) ? '❤️' : '🤍'} 
-              <span>${post.likes?.length || 0}</span>
-            </button>
-            ${isCurrentUser(post.userId) ? 
-              `<button onclick="deletePost('${post.id}')" class="delete-post" style="background-color: #ef4444; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;">🗑️ Delete</button>` 
-            : ''}
-          </div>
-        </div>
-                
-<div class="post-content" style="margin: 10px 0 35px 0; word-wrap: break-word; width: 100%; padding-bottom: 25px; border-bottom: 1px solid #eee;">
-    ${post.content.length > 300 ? 
-        `<div class="content-text truncated" style="margin: 0; white-space: pre-wrap; overflow: hidden; max-height: 4.5em;">${escapeHtml(post.content)}</div>
-         <button onclick="expandPost(this)" class="read-more-btn" style="display: block; margin-top: 8px; color: #3b82f6; background: none; border: none; cursor: pointer; padding: 5px 0;">Read more</button>
-         <div class="full-content" style="display: none; margin: 0; white-space: pre-wrap;">${escapeHtml(post.content)}</div>`
-        : 
-        `<div class="content-text" style="margin: 0; white-space: pre-wrap;">${escapeHtml(post.content)}</div>`
-    }
-    ${recipeContent}
-</div>
-
-        <div class="comments-section" style="width: 100%; background: white; margin-top: 35px; padding-top: 20px; border-top: 1px solid #eee; display: block;">
-          <div class="comments-toggle" onclick="toggleComments(this)" style="cursor: pointer; padding: 10px 0;">
-            💬 Comments (${comments.length})
-          </div>
-          <div class="comments-container" style="display: none; padding: 10px 0;">
-            ${comments.length > 0 ? comments.map(comment => {
-              const commentUserInfo = userIdToNameMap[comment.userId] || { name: 'User', email: '' };
-              const commentUserName = comment.anonymous ? 'Anonymous' : commentUserInfo.name;
-              
-              let commentDisplayName = 'Anonymous';
-              if (!comment.anonymous) {
-                const usersWithSameName = Object.values(userIdToNameMap).filter(u => 
-                  u && u.name === commentUserName && !u.anonymous
-                ).length;
-                
-                commentDisplayName = usersWithSameName > 1 ? 
-                  `${commentUserName} #${comment.userId.substring(0, 6)}` : 
-                  commentUserName;
-              }
-
-              return `
-                <div class="comment" style="margin: 10px 0; padding: 5px 0; border-bottom: 1px solid #eee;">
-                  <strong>${commentDisplayName}</strong>: ${comment.content || '(No content)'}
-                </div>
-              `;
-            }).join('') : '<div class="no-comments" style="padding: 10px 0;">No comments yet</div>'}
-            <div class="add-comment" style="margin-top: 15px;">
-              <input type="text" placeholder="Add a comment..." class="comment-input" style="width: 80%; padding: 5px; margin-right: 5px;">
-              <button onclick="submitComment('${post.id}')" class="submit-comment" style="padding: 5px 10px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Send</button>
-            </div>
-          </div>
-        </div>
-      </article>`;
-  }).join('');
-  
-  postsContainer.innerHTML = postsHTML;
+  // Add event listeners to the new posts
   addPostEventListeners();
 }
 
+// Add this helper function for post event listeners
+function addPostEventListeners() {
+  // Add event listeners for comments sections
+  document.querySelectorAll('.comments-toggle').forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const container = this.nextElementSibling;
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    });
+  });
+
+  // Add event listeners for comment inputs
+  document.querySelectorAll('.comment-input').forEach(input => {
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const postId = this.closest('.post').dataset.postId;
+        submitComment(postId);
+      }
+    });
+  });
+
+  // Add event listeners for read more buttons
+  document.querySelectorAll('.read-more-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const content = this.parentElement;
+      content.classList.add('expanded');
+      this.style.display = 'none';
+    });
+  });
+  
+  // Initialize comments sections to be hidden
+  document.querySelectorAll('.comments-container').forEach(container => {
+    container.style.display = 'none';
+  });
+}
 
 function isCurrentUser(userId) {
   return currentUser && currentUser.uid === userId;
@@ -649,31 +1095,46 @@ function showFriendList() {
       try {
         const friendsHTML = [];
         for (const friendId of friendList) {
-          const friendDoc = await getDoc(doc(db, "users", friendId));
-          if (friendDoc.exists()) {
-            const friendData = friendDoc.data();
-            const displayName = friendData.displayName || friendData.name;
-            const email = friendData.email;
-            const username = displayName || (email ? email.split('@')[0] : 'User');
-            
-            // Check for duplicate names
-            const duplicateCount = Object.values(userIdToNameMap)
-              .filter(user => user.name === username).length;
-            
-            const displayUsername = duplicateCount > 1 ? 
-              `${username} #${friendId.substring(0, 6)}` : 
-              username;
-      
-            friendsHTML.push(`
-              <div class="friend-item" style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
-                <img src="${getAvatarUrl(friendId)}" alt="Friend Avatar" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
-                <div style="flex: 1;">
-                  <div style="font-weight: 500;">${displayUsername}</div>
-                </div>
-                <button onclick="removeFriend('${friendId}')" style="padding: 5px 10px; border: none; border-radius: 4px; background-color: #ef4444; color: white; cursor: pointer;">Remove</button>
-              </div>
-            `);
-          }
+            const friendDoc = await getDoc(doc(db, "users", friendId));
+            if (friendDoc.exists()) {
+                const friendData = friendDoc.data();
+                const displayName = friendData.displayName || friendData.name;
+                const email = friendData.email;
+                const username = displayName || (email ? email.split('@')[0] : 'User');
+                const avatar = generateUserAvatar(friendId, username);
+                
+                // Count username occurrences
+                const usersWithSameName = Object.values(userIdToNameMap).filter(user => 
+                    user && user.name === username
+                ).length;
+                
+                friendsHTML.push(`
+                    <div class="friend-item" style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                        <div class="user-initial" style="
+                            width: 40px; 
+                            height: 40px; 
+                            background-color: ${avatar.color}; 
+                            color: white; 
+                            border-radius: 50%; 
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center; 
+                            font-weight: bold; 
+                            font-size: 16px;
+                            font-family: system-ui, -apple-system, sans-serif;">
+                            ${avatar.initials}
+                        </div>
+                        <div style="flex: 1; margin-left: 10px;">
+                            <div style="font-weight: 500; color: #1f2937;">
+                                ${username}${usersWithSameName > 1 ? ` #${friendId.substring(0, 6)}` : ''}
+                            </div>
+                        </div>
+                        <button onclick="removeFriend('${friendId}')" style="padding: 5px 10px; border: none; border-radius: 4px; background-color: #ef4444; color: white; cursor: pointer;">
+                            Remove
+                        </button>
+                    </div>
+                `);
+            }
         }
         
         if (friendsHTML.length > 0) {
@@ -793,15 +1254,24 @@ function createUserSearchBar() {
       suggestionsContainer.style.display = "none";
       return;
     }
-
+  
     try {
       const usersSnapshot = await getDocs(collection(db, "users"));
       const suggestions = [];
+      const usernameCounts = {};
       
+      
+      // Count username occurrences
+      usersSnapshot.forEach(docSnap => {
+        const userData = docSnap.data();
+        const displayName = userData.displayName || userData.name;
+        const username = displayName || (userData.email ? userData.email.split('@')[0] : 'User');
+        usernameCounts[username.toLowerCase()] = (usernameCounts[username.toLowerCase()] || 0) + 1;
+      });
+  
       usersSnapshot.forEach(docSnap => {
         const userData = docSnap.data();
         const userId = docSnap.id;
-        
         if (userId === currentUser.uid) return;
         
         const displayName = userData.displayName || userData.name;
@@ -809,34 +1279,57 @@ function createUserSearchBar() {
         const username = displayName || (email ? email.split('@')[0] : 'User');
         
         if (username.toLowerCase().includes(query)) {
-          suggestions.push({ id: userId, username, email });
+          suggestions.push({ 
+            id: userId, 
+            username, 
+            email,
+            hasDuplicate: usernameCounts[username.toLowerCase()] > 1
+          });
         }
       });
-
+  
       if (suggestions.length > 0) {
-        suggestionsContainer.innerHTML = suggestions.map(user => `
-          <div class="suggestion-item" style="padding: 8px 16px; cursor: pointer; hover:background-color: #f3f4f6;">
-            <div style="font-weight: 500;">${user.username}</div>
-            ${user.email ? `<div style="font-size: 12px; color: #6b7280;">${user.email}</div>` : ''}
-          </div>
-        `).join('');
-        
-        suggestionsContainer.querySelectorAll('.suggestion-item').forEach((item, index) => {
-          item.addEventListener('click', () => {
-            searchInput.value = suggestions[index].username;
-            suggestionsContainer.style.display = "none";
-            searchUsers(suggestions[index].username);
-          });
-        });
-        
+        suggestionsContainer.innerHTML = suggestions.map(user => {
+          const avatar = generateUserAvatar(user.id, user.username);
+          return `
+            <div class="suggestion-item" onclick="searchUsers('${user.username}')" 
+              style="padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;">
+              <div class="user-initial" style="
+                width: 40px; 
+                height: 40px; 
+                background-color: ${avatar.color}; 
+                color: white; 
+                border-radius: 50%; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                font-weight: bold; 
+                font-size: 16px;
+                font-family: system-ui, -apple-system, sans-serif;">
+                ${avatar.initials}
+              </div>
+              <div style="flex: 1;">
+                <div style="font-weight: 500; color: #1f2937;">
+                  ${user.username}${user.hasDuplicate ? ` #${user.id.substring(0, 6)}` : ''}
+                </div>
+                ${user.email ? `<div style="font-size: 12px; color: #6b7280;">${user.email}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
         suggestionsContainer.style.display = "block";
       } else {
-        suggestionsContainer.style.display = "none";
+        suggestionsContainer.innerHTML = '<div style="padding: 8px 16px; color: #6b7280;">No users found</div>';
+        suggestionsContainer.style.display = "block";
       }
     } catch (error) {
-      console.error("Error getting suggestions:", error);
+      console.error("Error searching users:", error);
+      suggestionsContainer.innerHTML = '<div style="padding: 8px 16px; color: #ef4444;">Error searching users</div>';
+      suggestionsContainer.style.display = "block";
     }
   });
+   
+  
   
   searchButton.addEventListener("click", () => {
     searchUsers(searchInput.value.trim());
@@ -845,10 +1338,9 @@ function createUserSearchBar() {
   searchContainer.appendChild(searchInput);
   searchContainer.appendChild(searchButton);
   searchContainer.appendChild(suggestionsContainer);
-
-  // Add to document body
+  
   document.body.appendChild(searchContainer);
-}
+  }
 
 // Add this function to search for users
 async function searchUsers(query) {
@@ -948,156 +1440,95 @@ async function searchUsers(query) {
     
     // Update content with results
     content.innerHTML = "";
-    
     if (users.length === 0) {
       content.innerHTML = "<p>No users found matching your search.</p>";
-    } else {
+  } else {
       users.forEach(user => {
-        const userItem = document.createElement("div");
-        userItem.className = "user-item";
-        userItem.style.display = "flex";
-        userItem.style.alignItems = "center";
-        userItem.style.marginBottom = "15px";
-        userItem.style.paddingBottom = "15px";
-        userItem.style.borderBottom = "1px solid #eee";
-        
-        const avatar = document.createElement("img");
-        avatar.src = getAvatarUrl(user.id);
-        avatar.alt = "User Avatar";
-        avatar.className = "user-avatar";
-        avatar.style.width = "40px";
-        avatar.style.height = "40px";
-        avatar.style.borderRadius = "50%";
-        avatar.style.marginRight = "10px";
-        
-        const userInfo = document.createElement("div");
-        userInfo.className = "user-info";
-        userInfo.style.flex = "1";
-        const nameEl = document.createElement("div");
-        const usersWithSameName = Object.values(userIdToNameMap).filter(u => 
-          u && u.name === user.username
-        ).length;
-        
-        const displayName = usersWithSameName > 1 ? 
-          `${user.username} #${user.id.substring(0, 6)}` : 
-          user.username;
-        
-        nameEl.textContent = displayName;
-        nameEl.style.fontWeight = "500";
-      
-  
-        
-        const emailEl = document.createElement("div");
-        emailEl.textContent = user.email || "";
-        emailEl.style.fontSize = "12px";
-        emailEl.style.color = "#6b7280";
-        
-        userInfo.appendChild(nameEl);
-        if (user.email) userInfo.appendChild(emailEl);
-        
-        const addBtn = document.createElement("button");
-        addBtn.className = "add-friend";
-        addBtn.textContent = "Add Friend";
-        addBtn.style.padding = "5px 10px";
-        addBtn.style.border = "none";
-        addBtn.style.borderRadius = "4px";
-        addBtn.style.backgroundColor = "#3b82f6";
-        addBtn.style.color = "white";
-        addBtn.style.cursor = "pointer";
-        
-        // Check if already friends or request sent
-        if (friendList.includes(user.id)) {
-          addBtn.textContent = "Friends";
-          addBtn.style.backgroundColor = "#10b981";
-          addBtn.disabled = true;
-        } else {
-          addBtn.addEventListener("click", function(event) {
-            sendFriendRequest(user.id, user.username, event);
-          });
-        }
-        
-        userItem.appendChild(avatar);
-        userItem.appendChild(userInfo);
-        userItem.appendChild(addBtn);
-        
-        content.appendChild(userItem);
+          const userItem = document.createElement("div");
+          userItem.className = "user-item";
+          userItem.style.display = "flex";
+          userItem.style.alignItems = "center";
+          userItem.style.marginBottom = "15px";
+          userItem.style.paddingBottom = "15px";
+          userItem.style.borderBottom = "1px solid #eee";
+          
+          const avatar = generateUserAvatar(user.id, user.username);
+          
+          // Count username occurrences
+          const usersWithSameName = Object.values(userIdToNameMap).filter(u => 
+              u && u.name === user.username
+          ).length;
+          
+          userItem.innerHTML = `
+              <div class="user-initial" style="
+                  width: 40px; 
+                  height: 40px; 
+                  background-color: ${avatar.color}; 
+                  color: white; 
+                  border-radius: 50%; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center; 
+                  font-weight: bold; 
+                  font-size: 16px;
+                  margin-right: 10px;
+                  font-family: system-ui, -apple-system, sans-serif;">
+                  ${avatar.initials}
+              </div>
+              <div style="flex: 1;">
+                  <div style="font-weight: 500; color: #1f2937;">
+                      ${user.username}${usersWithSameName > 1 ? ` #${user.id.substring(0, 6)}` : ''}
+                  </div>
+                  ${user.email ? `<div style="font-size: 12px; color: #6b7280;">${user.email}</div>` : ''}
+              </div>
+              <button onclick="sendFriendRequest('${user.id}')" class="add-friend-btn" style="
+                  padding: 5px 10px;
+                  border: none;
+                  border-radius: 4px;
+                  background-color: #3b82f6;
+                  color: white;
+                  cursor: pointer;
+                  font-size: 14px;">
+                  Add Friend
+              </button>
+          `;
+          content.appendChild(userItem);
       });
-    }
-  } catch (error) {
-    console.error("Error searching for users:", error);
-    alert("Error searching for users. Please try again.");
   }
+} catch (error) {
+console.error("Error searching users:", error);
+content.innerHTML = "<p>Error searching for users. Please try again.</p>";
 }
-
+} 
 // Add this function to send friend requests
-async function sendFriendRequest(userId, username, event) {
+async function sendFriendRequest(userId) {
+  if (!currentUser) return;
+  
   try {
-    if (!currentUser) return;
+    // Create a unique ID for the friend request
+    const requestId = `${currentUser.uid}_${userId}`;
+    const requestRef = doc(db, "friendRequests", requestId);
     
-    // Get current user data
-    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    if (!userDoc.exists()) {
-      alert("Your user profile could not be found.");
+    // Check if request already exists
+    const existingRequest = await getDoc(requestRef);
+    if (existingRequest.exists()) {
+      alert('Friend request already sent!');
       return;
     }
     
-    const userData = userDoc.data();
-    const currentFriends = userData.friends || [];
-    const sentRequests = userData.sentRequests || [];
-    
-    // Check if already friends
-    if (currentFriends.includes(userId)) {
-      alert(`You are already friends with ${username}.`);
-      return;
-    }
-    
-    // Check if request already sent
-    if (sentRequests.some(req => req.userId === userId)) {
-      alert(`You have already sent a friend request to ${username}.`);
-      return;
-    }
-    
-    // Get current user's name
-    let senderName = userData.displayName || userData.name;
-    if (!senderName && currentUser.email) {
-      senderName = currentUser.email.split('@')[0];
-    }
-    
-    // Create friend request
-    const friendRequest = {
-      userId: currentUser.uid,
-      username: senderName,
-      timestamp: new Date().toISOString()
-    };
-    
-    // Add to other user's friend requests
-    const otherUserDocRef = doc(db, "users", userId);
-    await updateDoc(otherUserDocRef, {
-      friendRequests: arrayUnion(friendRequest)
+    // Send the friend request
+    await setDoc(requestRef, {
+      from: currentUser.uid,
+      to: userId,
+      status: 'pending',
+      timestamp: serverTimestamp(),
+      fromName: currentUser.displayName || currentUser.email
     });
     
-    // Add to current user's sent requests
-    const userDocRef = doc(db, "users", currentUser.uid);
-    await updateDoc(userDocRef, {
-      sentRequests: arrayUnion({
-        userId,
-        username,
-        timestamp: new Date().toISOString()
-      })
-    });
-    
-    alert(`Friend request sent to ${username}!`);
-    
-    // Update the button in the search results
-    if (event && event.target) {
-      const addBtn = event.target;
-      addBtn.textContent = "Request Sent";
-      addBtn.style.backgroundColor = "#6b7280";
-      addBtn.disabled = true;
-    }
+    alert('Friend request sent!');
   } catch (error) {
-    console.error("Error sending friend request:", error);
-    alert("Error sending friend request. Please try again.");
+    console.error('Error sending friend request:', error);
+    alert('Error sending friend request. Please try again.');
   }
 }
 
@@ -1128,77 +1559,6 @@ function getAvatarUrl(userId, anonymous = false) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
 }
 
-// Add missing toggleComments function
-function toggleComments(element) {
-  const commentsContainer = element.nextElementSibling;
-  const currentDisplay = commentsContainer.style.display;
-  commentsContainer.style.display = currentDisplay === 'none' ? 'block' : 'none';
-}
-
-// Add missing submitComment function
-async function submitComment(postId) {
-  if (!currentUser) return;
-  
-  const commentInput = document.querySelector(`.post[data-post-id="${postId}"] .comment-input`);
-  const commentText = commentInput.value.trim();
-  
-  if (!commentText) {
-    alert('Please enter a comment.');
-    return;
-  }
-  
-  try {
-    const postRef = doc(db, "sharedPosts", postId);
-    const postDoc = await getDoc(postRef);
-    
-    if (!postDoc.exists()) {
-      alert('Post not found.');
-      return;
-    }
-    
-    const postData = postDoc.data();
-    const comments = postData.comments || [];
-    
-    // Get current user's name
-    const userName = userIdToNameMap[currentUser.uid] || 'User';
-    
-    comments.push({
-      userId: currentUser.uid,
-      username: userName,
-      content: commentText,
-      timestamp: new Date().toISOString(),
-      anonymous: false
-    });
-    
-    await updateDoc(postRef, { comments });
-    
-    commentInput.value = '';
-    alert('Comment added successfully.');
-    
-    // Refresh the posts to show the new comment
-    renderFilteredPosts();
-  } catch (error) {
-    console.error('Error adding comment:', error);
-    alert('Error adding comment. Please try again.');
-  }
-}
-
-// Add missing addPostEventListeners function
-function addPostEventListeners() {
-  // Add event listeners for read more buttons
-  document.querySelectorAll('.read-more-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const content = this.parentElement;
-      content.classList.add('expanded');
-      this.style.display = 'none';
-    });
-  });
-  
-  // Initialize comments sections to be hidden
-  document.querySelectorAll('.comments-container').forEach(container => {
-    container.style.display = 'none';
-  });
-}
 
 // Add missing listenForFriendRequests function
 function listenForFriendRequests() {
@@ -1486,183 +1846,117 @@ async function removeFriend(friendId) {
 async function sharePost() {
   if (!currentUser) return alert("⚠️ You must be logged in to share a post.");
 
-  const content = postContent?.value?.trim();
-  const type = postType?.value;
-  const anonymous = anonymousCheck?.checked || false;
-  const friendsOnly = visibilityCheck?.checked || false;
+  // Get values instead of setting them to empty
+  const content = postContent.value;
+  const type = postType.value;
+  const anonymous = anonymousCheck.checked;
+  const friendsOnly = visibilityCheck.checked;
 
-  if (!content) {
+  if (!content.trim()) {
     alert('Please enter post content.');
     return;
   }
 
-  // Recipe handling
-  let recipeId = null;
-  let recipeData = null;
-  if (type === 'meal') {
-    const recipeSelect = document.getElementById('recipe-select');
-    if (recipeSelect) {
-      recipeId = recipeSelect.value;
-      if (recipeId) {
-        try {
-          const recipeRef = doc(db, "users", currentUser.uid, "savedRecipes", recipeId);
-          const recipeSnap = await getDoc(recipeRef);
-          if (recipeSnap.exists()) {
-            recipeData = recipeSnap.data();
-          }
-        } catch (error) {
-          console.error('Error fetching recipe data:', error);
+  try {
+    // Create post data
+    const postData = {
+      userId: currentUser.uid,
+      content: content,
+      type: type,
+      timestamp: serverTimestamp(),
+      anonymous: anonymous,
+      friendsOnly: friendsOnly,
+      likes: [],
+      comments: []
+    };
+
+    // Add recipe data if recipes were selected
+    if (window.selectedRecipeIds && window.selectedRecipeIds.length > 0) {
+      postData.recipeIds = window.selectedRecipeIds;
+      // Get recipe names for display
+      const recipeNames = [];
+      for (const recipeId of window.selectedRecipeIds) {
+        const recipeRef = doc(db, "users", currentUser.uid, "savedRecipes", recipeId);
+        const recipeSnap = await getDoc(recipeRef);
+        if (recipeSnap.exists()) {
+          recipeNames.push(recipeSnap.data().name);
         }
       }
+      postData.recipeNames = recipeNames;
     }
-  }
 
-  try {
-    const post = {
-      userId: currentUser.uid,
-      username: userIdToNameMap[currentUser.uid] || 'User',
-      content,
-      type,
-      anonymous,
-      friendsOnly,
-      timestamp: serverTimestamp(),
-      comments: [],
-      likes: [], 
-      recipeId,
-      recipe: recipeData
-    };
-    
-    await addDoc(collection(db, "sharedPosts"), post);
-    
-    // Clear form
-    if (postContent) postContent.value = '';
-    if (postType) postType.value = 'meal';
-    if (anonymousCheck) anonymousCheck.checked = false;
-    if (visibilityCheck) visibilityCheck.checked = false;
-    
-    // Remove recipe display
-    const recipeContainer = document.getElementById('recipe-share-section');
-    if (recipeContainer) recipeContainer.remove();
-    
-    alert('Post shared successfully!');
+    // Add post to database
+    await addDoc(collection(db, "sharedPosts"), postData);
+
+    // Reset form
+    postContent.value = '';
+    postType.value = 'meal';
+    anonymousCheck.checked = false;
+    visibilityCheck.checked = false;
+    window.selectedRecipeIds = [];
+
+    // Reset recipe section
+    const recipeSection = document.getElementById('recipe-share-section');
+    const arrowIcon = document.getElementById('arrowIcon');
+    if (recipeSection && arrowIcon) {
+      recipeSection.style.display = 'none';
+      arrowIcon.textContent = '▼';
+      arrowIcon.style.transform = 'rotate(0deg)';
+    }
+
+    alert('Post shared successfully! 🎉');
   } catch (error) {
     console.error('Error sharing post:', error);
     alert('Error sharing post. Please try again.');
   }
 }
 
-async function viewRecipeDetails(recipeId, postId) {
+async function viewRecipeDetails(recipeId) {
   try {
-    let recipe;
+    const recipeRef = doc(db, "users", currentUser.uid, "savedRecipes", recipeId);
+    const recipeDoc = await getDoc(recipeRef);
     
-    // First try to get the recipe from the post
-    if (postId) {
-      const postDoc = await getDoc(doc(db, "sharedPosts", postId));
-      if (postDoc.exists() && postDoc.data().recipe) {
-        recipe = postDoc.data().recipe;
-      }
+    if (!recipeDoc.exists()) {
+      alert("Recipe not found");
+      return;
     }
+
+    const recipe = recipeDoc.data();
     
-    // If no recipe found in post, try user's saved recipes
-    if (!recipe) {
-      const recipeDoc = await getDoc(doc(db, "users", currentUser.uid, "savedRecipes", recipeId));
-      if (!recipeDoc.exists()) {
-        alert('Recipe not found.');
-        return;
-      }
-      recipe = recipeDoc.data();
-    }
-    
-    
-    // Create popup to display recipe details
     const popup = document.createElement('div');
     popup.className = 'recipe-popup';
-    popup.style.position = 'fixed';
-    popup.style.top = '50%';
-    popup.style.left = '50%';
-    popup.style.transform = 'translate(-50%, -50%)';
-    popup.style.backgroundColor = 'white';
-    popup.style.padding = '20px';
-    popup.style.borderRadius = '8px';
-    popup.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
-    popup.style.maxWidth = '600px';
-    popup.style.width = '90%';
-    popup.style.maxHeight = '80vh';
-    popup.style.overflowY = 'auto';
-    popup.style.zIndex = '1000';
-
     popup.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="margin: 0;">${recipe.name || recipe.title || 'Recipe Details'}</h3>
-      <button onclick="this.parentElement.parentElement.remove()" 
-        style="background: none; 
-               border: none; 
-               font-size: 24px; 
-               cursor: pointer;
-               color: #666;
-               width: 32px;
-               height: 32px;
-               display: flex;
-               align-items: center;
-               justify-content: center;
-               border-radius: 50%;
-               transition: background-color 0.2s;">×</button>
-    </div>
-    <div style="margin-bottom: 20px;">
-      <h4>Ingredients:</h4>
-      <pre style="white-space: pre-wrap;">${recipe.ingredients || 'No ingredients listed'}</pre>
-    </div>
-    <div>
-      <h4>Instructions:</h4>
-      <pre style="white-space: pre-wrap;">${recipe.instructions || 'No instructions listed'}</pre>
-    </div>
-  `;
+      <div class="recipe-popup-content">
+        <button class="close-btn" onclick="this.closest('.recipe-popup').remove()">×</button>
+        <h2>${recipe.name}</h2>
+        <img src="${recipe.image}" alt="${recipe.name}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin: 10px 0;">
+        <div class="recipe-details">
+          <p><strong>Category:</strong> ${recipe.category}</p>
+          <p><strong>Origin:</strong> ${recipe.origin}</p>
+          <h3>Ingredients:</h3>
+          <ul>
+            ${recipe.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}
+          </ul>
+          <h3>Instructions:</h3>
+          <ol>
+            ${recipe.instructions.map(step => `<li>${step}</li>`).join('')}
+          </ol>
+        </div>
+      </div>
+    `;
 
-  document.body.appendChild(popup);
-} catch (error) {
-  console.error('Error loading recipe:', error);
-  alert('Error loading recipe details. Please try again.');
-}
-}
-document.addEventListener('DOMContentLoaded', async () => {
-  if (!isCommunityPage()) return;
+    document.body.appendChild(popup);
 
-  // Initialize UI elements
-  searchInput = document.getElementById("searchInput");
-  postFilter = document.getElementById("postFilter");
-  friendToggle = document.getElementById("friendToggle");
-  postContent = document.getElementById("postContent");
-  postType = document.getElementById("postType");
-  anonymousCheck = document.getElementById("anonymousCheck");
-  visibilityCheck = document.getElementById("visibilityCheck");
-  const sharePostBtn = document.getElementById("sharePostBtn");
-
-  // Initialize UI components
-  initializeUI();
-  
-  // Add event listeners
-  if (searchInput) {
-    searchInput.addEventListener('input', filterPosts);
-    searchInput.addEventListener('click', filterPosts);
-  }
-  if (postFilter) postFilter.addEventListener('change', filterPosts);
-  if (friendToggle) friendToggle.addEventListener('change', filterPosts);
-  if (sharePostBtn) sharePostBtn.addEventListener('click', sharePost);
-
-  // Wait for auth to initialize
-  await new Promise(resolve => {
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "index.html";
-        return;
-      }
-      currentUser = user;
-      await loadUserNames();
-      listenForPosts();
-      listenForFriendRequests();
-      resolve();
+    // Close popup when clicking outside
+    popup.addEventListener('click', (e) => {
+      if (e.target === popup) popup.remove();
     });
-  });
+  } catch (error) {
+    console.error("Error loading recipe details:", error);
+    alert("Error loading recipe details. Please try again.");
+  }
+}
+
 
   // Add postType event listener and trigger initial state
   if (postType) {
@@ -1743,14 +2037,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       postType.dispatchEvent(new Event('change'));
     }
   }
-  });
+  
 // Make these functions globally accessible
 window.getPostTypeIcon = getPostTypeIcon;
 window.deletePost = deletePost;
 window.searchUsers = searchUsers;
 window.sendFriendRequest = sendFriendRequest;
-window.toggleComments = toggleComments;
-window.submitComment = submitComment;
 window.showFriendList = showFriendList;
 window.showFriendRequests = showFriendRequests;
 window.acceptFriendRequest = acceptFriendRequest;
@@ -1759,4 +2051,5 @@ window.removeFriend = removeFriend;
 window.escapeHtml = escapeHtml;  
 window.expandPost = expandPost;
 window.viewRecipeDetails = viewRecipeDetails;
+window.generateUserAvatar = generateUserAvatar;
 window.toggleLike = toggleLike;

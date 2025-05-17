@@ -115,7 +115,7 @@ function displayRecipes(meals) {
       saveRecipe(name, image, instructions);
     });
   });
-
+ 
   document.querySelectorAll(".log-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const name = btn.dataset.name;
@@ -412,6 +412,13 @@ async function showRecommendedRecipes(uid) {
     console.error("❌ AI recommender error:", err);
   }
 }
+
+// Add this after the loadSavedRecipes function
+window.getSavedRecipes = async (userId) => {
+  const savedRecipesQuery = query(collection(db, "users", userId, "savedRecipes"), orderBy("timestamp", "desc"));
+  const snap = await getDocs(savedRecipesQuery);
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
 
 
 
