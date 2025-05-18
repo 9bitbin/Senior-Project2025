@@ -1,8 +1,3 @@
-// ✅ Import Firebase
-import { db, auth } from "./firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
-import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
-
 // ✅ DOM Elements
 const exerciseTypeEl = document.getElementById("exercise-type");
 const muscleGroupEl = document.getElementById("muscle-group");

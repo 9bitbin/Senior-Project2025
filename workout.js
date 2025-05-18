@@ -84,6 +84,8 @@ async function saveWorkoutToFirestore(workout) {
     }
 }
 
+export { fetchLoggedWorkouts };
+
 async function fetchLoggedWorkouts(startDate = null, endDate = null) {
     const user = auth.currentUser;
     if (!user || !workoutListEl || !totalCaloriesEl) return;

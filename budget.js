@@ -36,9 +36,19 @@ function toggleButtons(state) {
 
 function getPeriodDates(period) {
     const start = new Date();
-    const end = new Date();
-    if (period === "Weekly") end.setDate(start.getDate() + 6);
-    else if (period === "Monthly") end.setDate(start.getDate() + 30);
+    start.setHours(0, 0, 0, 0); // Set to start of day
+    const end = new Date(start);
+    
+    if (period === "Daily") {
+        end.setHours(23, 59, 59, 999); // End of same day
+    } else if (period === "Weekly") {
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+    } else if (period === "Monthly") {
+        end.setDate(start.getDate() + 29); // Changed from 30 to 29 to make it a 30-day period
+        end.setHours(23, 59, 59, 999);
+    }
+    
     return { startDate: start.toISOString(), endDate: end.toISOString() };
 }
 
@@ -58,6 +68,7 @@ async function setBudget() {
     const userDocRef = doc(db, "users", user.uid);
 
     try {
+        // Remove the duplicate declaration
         await updateDoc(userDocRef, {
             mealBudget: {
                 amount: budgetAmount,
@@ -68,6 +79,7 @@ async function setBudget() {
                 endDate
             }
         }, { merge: true });
+        updateDateTimeConstraints(); // This is correct
         fetchBudgetData();
     } catch (error) {
         console.error("❌ ERROR setting budget:", error);
@@ -93,38 +105,99 @@ async function logMealCost() {
     const userDocRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userDocRef);
 
-    if (userDoc.exists()) {
-        let budgetData = userDoc.data().mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
-        let allExpenses = userDoc.data().allMealExpenses || [];
+    if (!userDoc.exists()) return;
 
-        const expense = {
-            id: Date.now().toString(),
-            cost: mealCost,
-            category,
-            timestamp: customDateTime ? new Date(customDateTime).toISOString() : new Date().toISOString()
-        };
+    const budgetData = userDoc.data()?.mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
+    let allExpenses = userDoc.data().allMealExpenses || [];
 
-        budgetData.expenses.push(expense);
-        budgetData.totalSpent += mealCost;
-        allExpenses.push(expense);
+    // Validate if selected date is within budget period
+    if (!budgetData.startDate || !budgetData.endDate) {
+        alert("❌ Please set a budget first.");
+        return;
+    }
 
-        try {
-            await updateDoc(userDocRef, {
-                mealBudget: budgetData,
-                allMealExpenses: allExpenses
-            });
-            fetchBudgetData();
-        } catch (error) {
-            console.error("❌ ERROR logging meal cost:", error);
-        } finally {
-            toggleButtons(true);
+    const selectedDate = customDateTime ? new Date(customDateTime) : new Date();
+    const budgetStart = new Date(budgetData.startDate);
+    const budgetEnd = new Date(budgetData.endDate);
+    
+    // Set both dates to start/end of their respective days for accurate comparison
+    budgetStart.setHours(0, 0, 0, 0);
+    budgetEnd.setHours(23, 59, 59, 999);
+
+    // Get just the date part for comparison
+    const selectedDateOnly = new Date(selectedDate);
+    selectedDateOnly.setHours(0, 0, 0, 0);
+
+    if (selectedDateOnly < budgetStart || selectedDateOnly > budgetEnd) {
+        alert(`❌ Please select a date within your current ${budgetData.period.toLowerCase()} budget period (${budgetStart.toLocaleDateString()} - ${budgetEnd.toLocaleDateString()}).`);
+        return;
+    }
+
+    // In the logMealCost function, update the expense timestamp creation:
+    const expense = {
+        id: Date.now().toString(),
+        cost: mealCost,
+        category,
+        timestamp: customDateTime ? new Date(customDateTime).toLocaleString() : new Date().toLocaleString()
+    };
+
+    budgetData.expenses.push(expense);
+    budgetData.totalSpent += mealCost;
+    allExpenses.push(expense);
+
+    try {
+        await updateDoc(userDocRef, {
+            mealBudget: budgetData,
+            allMealExpenses: allExpenses
+        });
+        
+        // Reset form and update constraints
+        mealCostInput.value = '';
+        mealDateTimeInput.value = '';
+        updateDateTimeConstraints();
+        fetchBudgetData();
+    } catch (error) {
+        console.error("❌ ERROR logging meal cost:", error);
+    } finally {
+        toggleButtons(true);
+    }
+}
+
+// Add null checks to updateDateTimeConstraints
+function updateDateTimeConstraints() {
+    if (!budgetPeriodSelect) return; // Add guard clause
+    const period = budgetPeriodSelect.value;
+    if (!period) return; // Add guard clause
+    
+    const { startDate, endDate } = getPeriodDates(period);
+    
+    if (mealDateTimeInput) {
+        const minDate = new Date(startDate);
+        const maxDate = new Date(endDate);
+        mealDateTimeInput.min = minDate.toISOString().slice(0, 16);
+        mealDateTimeInput.max = maxDate.toISOString().slice(0, 16);
+        
+        if (!mealDateTimeInput.value) {
+            mealDateTimeInput.value = new Date().toISOString().slice(0, 16);
         }
     }
 }
 
+// Update event listeners
+if (budgetPeriodSelect) {
+    budgetPeriodSelect.addEventListener('change', updateDateTimeConstraints);
+}
+
+
 async function fetchBudgetData(startDateFilter = null, endDateFilter = null) {
     const user = auth.currentUser;
     if (!user) return;
+
+    // Check if required elements exist
+    if (!budgetValueEl || !totalSpentEl || !remainingBudgetEl) {
+        console.warn("Required budget elements not found - this is expected on non-budget pages");
+        return;
+    }
 
     const userDocRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userDocRef);
@@ -152,54 +225,19 @@ async function fetchBudgetData(startDateFilter = null, endDateFilter = null) {
         remainingBudgetEl.innerText = `$${remainingBudget.toFixed(2)}`;
         budgetAlertEl.innerText = remainingBudget < 0 ? "⚠️ Warning: You have exceeded your budget!" : "";
         budgetAlertEl.style.color = remainingBudget < 0 ? "red" : "black";
-
+    
+       
         if (budgetRangeDisplay && budgetData.startDate && budgetData.endDate) {
             const formattedStart = new Date(budgetData.startDate).toLocaleDateString();
             const formattedEnd = new Date(budgetData.endDate).toLocaleDateString();
-            budgetRangeDisplay.innerText = `From ${formattedStart} to ${formattedEnd}`;
+            budgetRangeDisplay.innerText = `Budget Period: ${formattedStart} to ${formattedEnd}`;
         }
-
+    
         generateBudgetChart(expenses);
         renderBudgetHistoryList(expenses);
         renderBudgetDoughnutChart(budgetData.totalSpent, budgetData.amount);
         updateSmartInsight(budgetData.totalSpent, budgetData.amount);
     }
-}
-
-function generateBudgetChart(expenses) {
-    const canvas = document.getElementById("budgetChart");
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    const dailyTotals = {};
-    expenses.forEach(exp => {
-        const date = new Date(exp.timestamp).toISOString().split("T")[0];
-        dailyTotals[date] = (dailyTotals[date] || 0) + exp.cost;
-    });
-
-    const labels = Object.keys(dailyTotals).sort();
-    const data = labels.map(d => dailyTotals[d]);
-
-    if (budgetChartInstance) budgetChartInstance.destroy();
-
-    budgetChartInstance = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels,
-            datasets: [{
-                label: "Meal Expenses",
-                data,
-                borderColor: "#10b981",
-                backgroundColor: "#a7f3d0",
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: { y: { beginAtZero: true } }
-        }
-    });
 }
 
 function renderBudgetDoughnutChart(spent, budget) {
@@ -241,6 +279,61 @@ function updateSmartInsight(spent, budget) {
     box.textContent = msg;
 }
 
+function generateBudgetChart(expenses) {
+    const canvas = document.getElementById("budgetChart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    const dailyTotals = {};
+    let runningTotal = 0;
+    
+    // Sort expenses by date first
+    const sortedExpenses = [...expenses].sort((a, b) => 
+        new Date(a.timestamp) - new Date(b.timestamp)
+    );
+    
+    // Calculate daily totals and running cumulative total
+    sortedExpenses.forEach(exp => {
+        const expDate = new Date(exp.timestamp);
+        const dateKey = expDate.toLocaleDateString();
+        const cost = parseFloat(exp.cost);
+        
+        if (!dailyTotals[dateKey]) {
+            dailyTotals[dateKey] = 0;
+        }
+        
+        runningTotal += cost;
+        dailyTotals[dateKey] = runningTotal;
+    });
+
+    // Sort dates chronologically
+    const labels = Object.keys(dailyTotals).sort((a, b) => 
+        new Date(a) - new Date(b)
+    );
+    const data = labels.map(date => dailyTotals[date]);
+
+    if (budgetChartInstance) budgetChartInstance.destroy();
+
+    budgetChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels,
+            datasets: [{
+                label: "Cumulative Spending",
+                data,
+                borderColor: "#10b981",
+                backgroundColor: "#a7f3d0",
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
 function renderBudgetHistoryList(expenses) {
     if (!budgetHistoryList) return;
 
@@ -249,7 +342,12 @@ function renderBudgetHistoryList(expenses) {
         return;
     }
 
-    budgetHistoryList.innerHTML = expenses.map(exp => {
+    // Sort expenses chronologically
+    const sortedExpenses = [...expenses].sort((a, b) => 
+        new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    budgetHistoryList.innerHTML = sortedExpenses.map(exp => {
         const date = new Date(exp.timestamp).toLocaleString();
         const cat = exp.category || "Uncategorized";
         return `<li>$${exp.cost.toFixed(2)} on ${date} — <strong>${cat}</strong></li>`;
@@ -271,7 +369,10 @@ if (showAllHistoryToggle) showAllHistoryToggle.addEventListener("change", () => 
 });
 
 auth.onAuthStateChanged(user => {
-    if (user) fetchBudgetData();
+    if (user) {
+        fetchBudgetData();
+        updateDateTimeConstraints(); // Add this line
+    }
     else window.location.href = "index.html";
 });
 

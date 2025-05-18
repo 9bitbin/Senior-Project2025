@@ -18,18 +18,48 @@ const summaryWeight = document.getElementById("summary-weight");
 const aiSummaryText = document.getElementById("ai-summary-text");
 
 // 🔹 Initialize Charts
+// In initializeCharts function, update the calories chart labels
 function initializeCharts() {
   caloriesChart = new Chart(caloriesChartEl, {
     type: "bar",
     data: {
-      labels: ["Calories Consumed", "Calories Burned"],
+      labels: ["Total Calories Consumed (kcal)", "Total Calories Burned (kcal)"],
       datasets: [{
-        label: "Calories (kcal)",
+        label: "",  // Remove the redundant label
         data: [0, 0],
-        backgroundColor: ["#ff9800", "#4caf50"]
+        backgroundColor: ["#ff9800", "#4caf50"],
+        // Add individual labels for each bar
+        labels: ["🔸 Total Calories Consumed (kcal)", "🔸 Total Calories Burned (kcal)"]
       }]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            generateLabels: function(chart) {
+              return [{
+                text: '🔸 Total Calories Consumed (kcal)',
+                fillStyle: '#ff9800',
+                strokeStyle: '#ff9800',
+                lineWidth: 0,
+                hidden: false,
+                index: 0
+              }, {
+                text: '🔸 Total Calories Burned (kcal)',
+                fillStyle: '#4caf50',
+                strokeStyle: '#4caf50',
+                lineWidth: 0,
+                hidden: false,
+                index: 1
+              }];
+            }
+          }
+        }
+      }
+    }
   });
 
   macroChart = new Chart(macroChartEl, {
@@ -85,14 +115,28 @@ function initializeCharts() {
 }
 
 // 🔹 Smart Summary Computation
+// Update computeSmartSummary function
 async function computeSmartSummary(userData) {
-  const today = new Date().toISOString().split("T")[0];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+    
+    // Filter meals for today using proper date comparison
+    const mealsToday = (userData.mealLogs || []).filter(m => {
+        const mealDate = new Date(m.timestamp || m.date);
+        mealDate.setHours(0, 0, 0, 0);
+        return mealDate.toISOString().split('T')[0] === todayStr;
+    });
+    
+    // Filter workouts for today using proper date comparison
+    const workoutsToday = (userData.workoutLogs || []).filter(w => {
+        const workoutDate = new Date(w.date || w.timestamp);
+        workoutDate.setHours(0, 0, 0, 0);
+        return workoutDate.toISOString().split('T')[0] === todayStr;
+    });
 
-  const mealsToday = (userData.mealLogs || []).filter(m => m.timestamp?.startsWith(today));
-  const caloriesToday = mealsToday.reduce((sum, m) => sum + (m.calories || 0), 0);
-
-  const workoutsToday = (userData.workoutLogs || []).filter(w => w.timestamp?.startsWith(today));
-  const burnedToday = workoutsToday.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0);
+    const caloriesToday = mealsToday.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+    const burnedToday = workoutsToday.reduce((sum, w) => sum + (Number(w.caloriesBurned) || 0), 0);
 
   const activeFasting = userData.activeFasting;
   const fastingText = activeFasting
@@ -143,52 +187,98 @@ Provide a brief AI health insight based on the above.
 }
 
 // 🔹 Render Unified Daily Timeline
+// In renderDailyTimeline function, update the time formatting
+// Update renderDailyTimeline function
 function renderDailyTimeline(userData) {
   const timelineEl = document.getElementById("timeline-list");
   if (!timelineEl) return;
   timelineEl.innerHTML = "";
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split('T')[0];
   let events = [];
 
+  // Filter meals for today
   (userData.mealLogs || []).forEach(meal => {
-    if (meal.timestamp?.startsWith(today)) {
+    const mealDate = new Date(meal.timestamp || meal.date);
+    mealDate.setHours(0, 0, 0, 0);
+    if (mealDate.toISOString().split('T')[0] === todayStr) {
+      const mealTime = new Date(meal.timestamp || meal.date);
       events.push({
-        time: meal.timestamp.slice(11, 16),
+        time: mealTime.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false
+        }),
         icon: "🥣",
         text: `Meal: ${meal.name || "Unnamed"} (${meal.calories} kcal)`
       });
     }
   });
 
+  // Filter workouts for today
   (userData.workoutLogs || []).forEach(workout => {
-    if (workout.timestamp?.startsWith(today)) {
+    const workoutDate = new Date(workout.date || workout.timestamp);
+    workoutDate.setHours(0, 0, 0, 0);
+    if (workoutDate.toISOString().split('T')[0] === todayStr) {
+      const workoutTime = new Date(workout.date || workout.timestamp);
       events.push({
-        time: workout.timestamp.slice(11, 16),
+        time: workoutTime.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false
+        }),
         icon: "🏃",
-        text: `Workout: ${workout.name || "Exercise"} (${workout.caloriesBurned} kcal burned)`
+        text: `Workout: ${workout.type || "Exercise"} (${workout.caloriesBurned} kcal burned)`
       });
     }
   });
 
-  (userData.weightLogs || []).forEach(entry => {
-    if (entry.date?.startsWith(today)) {
-      events.push({
-        time: entry.date.slice(11, 16),
-        icon: "⚖️",
-        text: `Weight Logged: ${entry.weight} lbs`
-      });
-    }
-  });
+  // Update updateCharts function
+  function updateCharts(userData) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
 
-  if (userData.activeFasting?.startTime?.startsWith(today)) {
-    events.push({
-      time: new Date(userData.activeFasting.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      icon: "⏳",
-      text: "Fasting Started"
+    // Filter today's workouts
+    const todayWorkouts = (userData.workoutLogs || []).filter(workout => {
+      const workoutDate = new Date(workout.date || workout.timestamp);
+      workoutDate.setHours(0, 0, 0, 0);
+      return workoutDate.toISOString().split('T')[0] === todayStr;
     });
+
+    // Calculate today's burned calories
+    const burnedToday = todayWorkouts.reduce((sum, w) => sum + (Number(w.caloriesBurned) || 0), 0);
+
+    // Get all unique workout dates for the workout chart
+    const uniqueWorkouts = new Map();
+    (userData.workoutLogs || []).forEach(workout => {
+      const date = new Date(workout.date || workout.timestamp);
+      date.setHours(0, 0, 0, 0);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      if (!uniqueWorkouts.has(dateStr)) {
+        uniqueWorkouts.set(dateStr, workout.caloriesBurned || 0);
+      }
+    });
+
+    // Sort workout dates
+    const sortedDates = Array.from(uniqueWorkouts.keys()).sort();
+    
+    // Update workout chart
+    workoutChart.data.labels = sortedDates.map(date => 
+      new Date(date).toLocaleDateString()
+    );
+    workoutChart.data.datasets[0].data = sortedDates.map(date => 
+      uniqueWorkouts.get(date)
+    );
+    workoutChart.update();
+
+    // Rest of your chart updates...
   }
 
+  // Sort and render events
   events.sort((a, b) => a.time.localeCompare(b.time));
 
   if (events.length === 0) {
@@ -205,41 +295,129 @@ function renderDailyTimeline(userData) {
 }
 
 // 🔹 Combined Chart + Summary Updater
-function updateCharts(userData) {
-  const mealLogs = userData.mealLogs || [];
-  const totalCalories = mealLogs.reduce((sum, meal) => sum + (meal.calories || 0), 0);
-  const totalCarbs = mealLogs.reduce((sum, meal) => sum + (meal.carbs || 0), 0);
-  const totalProtein = mealLogs.reduce((sum, meal) => sum + (meal.protein || 0), 0);
-  const totalFat = mealLogs.reduce((sum, meal) => sum + (meal.fat || 0), 0);
+// Add this function to fetch and update BMI
+async function updateBMI() {
+  const user = auth.currentUser;
+  if (!user) return;
 
-  const workoutLogs = userData.workoutLogs || [];
-  const workoutDates = workoutLogs.map(workout => new Date(workout.timestamp).toLocaleDateString());
-  const workoutCaloriesData = workoutLogs.map(workout => workout.caloriesBurned || 0);
-
-  const mealBudget = userData.mealBudget || { expenses: [], totalSpent: 0, amount: 0 };
-  const budgetExpenses = mealBudget.expenses || [];
-  const budgetDates = budgetExpenses.map(entry => new Date(entry.timestamp).toLocaleDateString());
-  const budgetSpent = budgetExpenses.map(entry => entry.cost || 0);
-  const budgetAllocated = mealBudget.amount;
-
-  caloriesChart.data.datasets[0].data = [totalCalories, workoutCaloriesData.reduce((a, b) => a + b, 0)];
-  caloriesChart.update();
-
-  macroChart.data.datasets[0].data = [totalCarbs, totalProtein, totalFat];
-  macroChart.update();
-
-  workoutChart.data.labels = workoutDates;
-  workoutChart.data.datasets[0].data = workoutCaloriesData;
-  workoutChart.update();
-
-  budgetChart.data.labels = budgetDates;
-  budgetChart.data.datasets[0].data = budgetSpent;
-  budgetChart.data.datasets[1].data = new Array(budgetDates.length).fill(budgetAllocated);
-  budgetChart.update();
-
-  computeSmartSummary(userData);
-  renderDailyTimeline(userData); // 🆕 Timeline feature
+  const userDocRef = doc(db, "users", user.uid);
+  const userDoc = await getDoc(userDocRef);
+  
+  if (userDoc.exists()) {
+    const data = userDoc.data();
+    const height = data.height;
+    const weight = data.weight || (data.weightLogs && data.weightLogs.length > 0 ? data.weightLogs[data.weightLogs.length - 1].weight : null);
+    
+    if (height && weight) {
+      const bmi = (weight * 703) / (height * height);
+      document.querySelector('#bmi-value').textContent = bmi.toFixed(1);
+      document.querySelector('#bmi-category').textContent = getBMICategory(bmi);
+      
+      // Update BMI pointer position
+      const bmiPointer = document.querySelector('#bmi-pointer');
+      if (bmiPointer) {
+        const position = ((bmi - 15) / (40 - 15)) * 100;
+        bmiPointer.style.left = `${Math.min(Math.max(position, 0), 100)}%`;
+      }
+    }
+  }
 }
+
+function getBMICategory(bmi) {
+  if (bmi < 18.5) return 'Under';
+  if (bmi < 25) return 'Normal';
+  if (bmi < 30) return 'Over';
+  return 'Obese';
+}
+
+// Add this to your existing updateCharts function
+// Update the updateCharts function to properly filter workouts by date
+function updateCharts(userData) {
+    const today = new Date().toISOString().split('T')[0];
+    const mealLogs = userData.mealLogs || [];
+    const workoutLogs = userData.workoutLogs || [];
+
+    // Filter today's meals and workouts
+    const todayMeals = mealLogs.filter(meal => {
+        const mealDate = new Date(meal.timestamp || meal.date).toISOString().split('T')[0];
+        return mealDate === today;
+    });
+
+    const todayWorkouts = workoutLogs.filter(workout => {
+        const workoutDate = new Date(workout.date || workout.timestamp).toISOString().split('T')[0];
+        return workoutDate === today;
+    });
+
+    // Calculate totals for today only
+    const totalCalories = todayMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+    const totalCarbs = todayMeals.reduce((sum, meal) => sum + (meal.carbs || 0), 0);
+    const totalProtein = todayMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0);
+    const totalFat = todayMeals.reduce((sum, meal) => sum + (meal.fat || 0), 0);
+
+    // Get workout data - sort by date
+    const sortedWorkouts = [...workoutLogs].sort((a, b) => {
+        const dateA = new Date(a.date || a.timestamp);
+        const dateB = new Date(b.date || b.timestamp);
+        return dateA - dateB;
+    });
+
+    const workoutDates = sortedWorkouts.map(workout => 
+        new Date(workout.date || workout.timestamp).toLocaleDateString()
+    );
+    const workoutCaloriesData = sortedWorkouts.map(workout => workout.caloriesBurned || 0);
+
+    // Update charts with today's data
+    caloriesChart.data.datasets[0].data = [
+        totalCalories, 
+        todayWorkouts.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0)
+    ];
+    caloriesChart.update();
+
+    // Macro Chart Update
+    macroChart.data.datasets[0].data = [totalCarbs, totalProtein, totalFat];
+    macroChart.update();
+
+    // Workout Chart Update
+    workoutChart.data.labels = workoutDates;
+    workoutChart.data.datasets[0].data = workoutCaloriesData;
+    workoutChart.update();
+
+    // Budget chart data processing
+    const mealBudget = userData.mealBudget || { expenses: [], totalSpent: 0, amount: 0 };
+    const budgetExpenses = mealBudget.expenses || [];
+    
+    const sortedExpenses = [...budgetExpenses].sort((a, b) => 
+        new Date(a.timestamp) - new Date(b.timestamp)
+    );
+    
+    const dailyTotals = {};
+    let runningTotal = 0;
+    
+    sortedExpenses.forEach(exp => {
+        const expDate = new Date(exp.timestamp);
+        const dateKey = expDate.toLocaleDateString();
+        const cost = parseFloat(exp.cost);
+        
+        runningTotal += cost;
+        dailyTotals[dateKey] = runningTotal;
+    });
+    
+    const budgetDates = Object.keys(dailyTotals).sort((a, b) => 
+        new Date(a) - new Date(b)
+    );
+    const budgetSpent = budgetDates.map(date => dailyTotals[date]);
+    
+    // Update budget chart
+    budgetChart.data.labels = budgetDates;
+    budgetChart.data.datasets[0].data = budgetSpent;
+    budgetChart.data.datasets[1].data = new Array(budgetDates.length).fill(mealBudget.amount);
+    budgetChart.update();
+
+    // Update summary and timeline
+    computeSmartSummary(userData);
+    renderDailyTimeline(userData);
+    updateBMI(); // Call updateBMI here
+} 
 
 // 🔹 Real-Time Listener
 auth.onAuthStateChanged(user => {
