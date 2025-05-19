@@ -71,7 +71,7 @@ const chartCtx = document.getElementById("calorieChart")?.getContext("2d");
 let calorieChart = null;
 
 // ✅ Ensure elements exist before adding event listeners
-
+// This section uses optional chaining to prevent errors when elements don't exist
 
 // const mealDateInput = document.getElementById("meal-date");
 
