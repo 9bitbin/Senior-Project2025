@@ -125,7 +125,7 @@
 
       <input type="number" id="goal-target" placeholder="Enter target value" />
       <p id="goal-warning" style="color: red; display: none;">Please enter a valid goal.</p>
-      <input type="text" id="goal-deadline" value="Daily" readonly />
+      <input type="date" id="goal-deadline" min="" />
       <input type="text" id="weekly-timeframe" value="Current Week" style="color: black; display: none;" readonly>
       <button id="save-goal">Save Goal</button>
     </div>
@@ -204,5 +204,26 @@
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module" src="goalsweight.js" defer></script>
+  <script>
+  // Set min date to today for goal deadline
+  const deadlineInput = document.getElementById("goal-deadline");
+  const today = new Date().toISOString().split("T")[0];
+  deadlineInput.setAttribute("min", today);
+
+  document.getElementById("save-goal").addEventListener("click", () => {
+    const selectedDate = deadlineInput.value;
+    const todayDate = new Date().setHours(0, 0, 0, 0);
+    const inputDate = new Date(selectedDate).setHours(0, 0, 0, 0);
+
+    if (!selectedDate || inputDate < todayDate) {
+      alert("Please select a valid deadline that is not in the past.");
+      return;
+    }
+
+    // Continue with saving the goal...
+    console.log("Goal saved with deadline:", selectedDate);
+  });
+</script>
+
 </body>
 </html>
