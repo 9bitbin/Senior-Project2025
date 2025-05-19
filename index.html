@@ -147,12 +147,17 @@
     <div class="switch-auth" id="toggle-section">
       Don’t have an account? <a href="#" id="toggle-auth">Sign Up</a>
     </div>
+    <p class="switch-auth">
+  <a href="#" id="reset-password">Forgot Password?</a>
+</p>
+
   </div>
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module">
     import { auth } from './firebase-config.js';
     import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
+import { sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
 
     const emailEl = document.getElementById("email");
     const passwordEl = document.getElementById("password");
@@ -215,6 +220,27 @@
     });
 
     toggleLink.addEventListener("click", toggleAuthMode);
+//setnewis
+
+    const resetPasswordLink = document.getElementById("reset-password");
+
+resetPasswordLink.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = emailEl.value.trim();
+
+  if (!email) {
+    showToast("⚠️ Enter your email to reset password", true);
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showToast("📧 Reset link sent to your email!");
+  } catch (error) {
+    showToast(`❌ ${error.message}`, true);
+  }
+});
+
   </script>
 
 
