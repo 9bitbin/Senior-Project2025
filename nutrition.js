@@ -20,34 +20,36 @@ const dailyBreakdownEl = document.getElementById("daily-calorie-breakdown");
 const mealDateInput = document.getElementById("meal-date"); 
 
 // ✅ Set max date for meal date input to today
-// Add this after setting the max date for meal date input
 if (mealDateInput) {
-  const today = new Date().toISOString().split('T')[0];
-  mealDateInput.setAttribute('max', today);
-  mealDateInput.value = today;
+  const now = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  mealDateInput.setAttribute('max', today.toISOString().split('T')[0]);
+  mealDateInput.value = today.toISOString().split('T')[0];
   
-  // Add event listener to show/hide time input based on selected date
   mealDateInput.addEventListener('change', () => {
-    const mealTimeInput = document.getElementById("meal-time");
+    const mealTimeInput = document.getElementById('meal-time');
     if (!mealTimeInput) return;
     
-    const selectedDate = mealDateInput.value;
-    const isToday = selectedDate === today;
-    
-    // Show time input only for past dates
-    if (isToday) {
-      mealTimeInput.style.display = 'none';
-      document.querySelector('label[for="meal-time"]').style.display = 'none';
-    } else {
+    const selectedDate = new Date(mealDateInput.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    // Compare only year, month, day for strict past date
+    // The time input should only be visible for dates strictly before today.
+    const selectedDateISO = selectedDate.toISOString().split('T')[0];
+    const todayISO = today.toISOString().split('T')[0];
+    const isStrictlyPast = selectedDateISO < todayISO;
+    if (isStrictlyPast) {
       mealTimeInput.style.display = 'block';
       document.querySelector('label[for="meal-time"]').style.display = 'block';
-      
-      // Default to noon
       mealTimeInput.value = '12:00';
+    } else {
+      mealTimeInput.style.display = 'none';
+      document.querySelector('label[for="meal-time"]').style.display = 'none';
+      mealTimeInput.value = '';
     }
   });
   
-  // Trigger the change event to set initial state
   mealDateInput.dispatchEvent(new Event('change'));
 }
 
@@ -79,35 +81,26 @@ if (fetchNutritionBtn) {
   
     // Get the selected date or default to today
     let mealDate;
-    const now = new Date();
     
     if (mealDateInput && mealDateInput.value) {
-      // Get today's date in YYYY-MM-DD format for comparison
-      const todayStr = new Date().toISOString().split('T')[0];
       const selectedDateStr = mealDateInput.value;
+      const mealTimeInput = document.getElementById("meal-time");
       
-      // Check if selected date is today
-      if (selectedDateStr === todayStr) {
-        // For today, use current time
-        mealDate = now;
-        console.log("Using current time for today:", mealDate);
+      // Create date object from selected date
+      mealDate = new Date(selectedDateStr);
+      
+      // If time input is visible and has a value, use it
+      if (mealTimeInput && mealTimeInput.style.display !== 'none' && mealTimeInput.value) {
+        const [hours, minutes] = mealTimeInput.value.split(':').map(Number);
+        mealDate.setHours(hours, minutes, 0, 0);
       } else {
-        // For past dates, use the selected time or default to noon
-        const mealTimeInput = document.getElementById("meal-time");
-        if (mealTimeInput && mealTimeInput.value) {
-          const [hours, minutes] = mealTimeInput.value.split(':').map(Number);
-          mealDate = new Date(selectedDateStr + "T00:00:00"); // Create date with midnight time
-          mealDate.setHours(hours, minutes, 0, 0);
-          console.log("Using selected time for past date:", mealDate);
-        } else {
-          // Default to noon if no time selected
-          mealDate = new Date(selectedDateStr + "T12:00:00");
-          console.log("Using default noon time for past date:", mealDate);
-        }
+        // If no time input or hidden (today's date), use current time
+        const now = new Date();
+        mealDate.setHours(now.getHours(), now.getMinutes(), 0, 0);
       }
     } else {
-      mealDate = now; // Use current date and time
-      console.log("No date selected, using current time:", mealDate);
+      mealDate = new Date();
+      mealDate.setSeconds(0, 0); // Reset seconds and milliseconds
     }
     
     const foodItem = data.items[0];
@@ -118,7 +111,11 @@ if (fetchNutritionBtn) {
       carbs: foodItem.carbohydrates_total_g || 0,
       fat: foodItem.fat_total_g || 0,
       timestamp: mealDate.toISOString(),
-      localDate: mealDate.toLocaleDateString('en-US')
+      localDate: mealDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
     };
   
     saveMealToFirestore(meal);
@@ -151,6 +148,12 @@ async function saveMealToFirestore(meal) {
   const userDoc = await getDoc(userDocRef);
   let meals = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
 
+  // Create a new Date object from the meal's timestamp
+  const mealDate = new Date(meal.timestamp);
+  
+  // Format the local date string consistently
+  meal.localDate = mealDate.toLocaleDateString('en-US');
+  
   meals.push(meal);
 
   try {
@@ -160,16 +163,16 @@ async function saveMealToFirestore(meal) {
       lastMealUpdate: new Date().toISOString()
     });
 
-    // Calculate total calories for today
-    const today = new Date().toISOString().split('T')[0];
-    const todayMeals = meals.filter(m => 
-      new Date(m.timestamp).toISOString().split('T')[0] === today
+    // Calculate total calories for the meal's actual date
+    const mealDateStr = mealDate.toISOString().split('T')[0];
+    const dayMeals = meals.filter(m => 
+      new Date(m.timestamp).toISOString().split('T')[0] === mealDateStr
     );
-    const todayCalories = todayMeals.reduce((sum, m) => sum + Number(m.calories || 0), 0);
+    const dayCalories = dayMeals.reduce((sum, m) => sum + Number(m.calories || 0), 0);
 
     // Update both displays with accurate total
     await updateDoc(userDocRef, {
-      todayTotalCalories: todayCalories
+      todayTotalCalories: dayCalories
     });
 
     fetchLoggedMeals();
@@ -456,7 +459,6 @@ if (aiBtn) {
     }
   });
 }
-
 
 
 

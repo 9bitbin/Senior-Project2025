@@ -40,12 +40,17 @@ function getPeriodDates(period) {
     const end = new Date(start);
     
     if (period === "Daily") {
-        end.setHours(23, 59, 59, 999); // End of same day
+        // For daily, end at 11:59 PM of the same day
+        end.setHours(23, 59, 59, 999);
     } else if (period === "Weekly") {
+        // For weekly, end at 11:59 PM of the 6th day after start
         end.setDate(start.getDate() + 6);
         end.setHours(23, 59, 59, 999);
     } else if (period === "Monthly") {
-        end.setDate(start.getDate() + 29); // Changed from 30 to 29 to make it a 30-day period
+        // For monthly, end at 11:59 PM of the day before the same date next month
+        const nextMonth = new Date(start);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        end.setTime(nextMonth.getTime() - 86400000); // Subtract one day (in milliseconds)
         end.setHours(23, 59, 59, 999);
     }
     
@@ -201,44 +206,73 @@ async function fetchBudgetData(startDateFilter = null, endDateFilter = null) {
 
     const userDocRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userDocRef);
+    if (!userDoc.exists()) return;
 
-    if (userDoc.exists()) {
-        const showAll = showAllHistoryToggle?.checked;
-        const data = userDoc.data();
-        const budgetData = data.mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
-        const allExpenses = data.allMealExpenses || [];
+    const data = userDoc.data();
+    const budgetData = data?.mealBudget || { amount: 0, totalSpent: 0, expenses: [] };
+    const allExpenses = data?.allMealExpenses || [];
 
-        let expenses = showAll ? allExpenses : budgetData.expenses;
-        let remainingBudget = budgetData.amount - budgetData.totalSpent;
-
-        if (startDateFilter && endDateFilter) {
-            const start = new Date(startDateFilter);
-            const end = new Date(endDateFilter);
-            expenses = expenses.filter(exp => {
-                const date = new Date(exp.timestamp);
-                return date >= start && date <= end;
-            });
+    if (!budgetData.startDate || !budgetData.endDate) {
+        if (budgetRangeDisplay) {
+            budgetRangeDisplay.textContent = "Please set a budget to get started";
         }
-
-        budgetValueEl.innerText = `$${budgetData.amount.toFixed(2)}`;
-        totalSpentEl.innerText = `$${budgetData.totalSpent.toFixed(2)}`;
-        remainingBudgetEl.innerText = `$${remainingBudget.toFixed(2)}`;
-        budgetAlertEl.innerText = remainingBudget < 0 ? "⚠️ Warning: You have exceeded your budget!" : "";
-        budgetAlertEl.style.color = remainingBudget < 0 ? "red" : "black";
-    
-       
-        if (budgetRangeDisplay && budgetData.startDate && budgetData.endDate) {
-            const formattedStart = new Date(budgetData.startDate).toLocaleDateString();
-            const formattedEnd = new Date(budgetData.endDate).toLocaleDateString();
-            budgetRangeDisplay.innerText = `Budget Period: ${formattedStart} to ${formattedEnd}`;
-        }
-    
-        generateBudgetChart(expenses);
-        renderBudgetHistoryList(expenses);
-        renderBudgetDoughnutChart(budgetData.totalSpent, budgetData.amount);
-        updateSmartInsight(budgetData.totalSpent, budgetData.amount);
+        return;
     }
+
+    // Update budget period display
+    if (budgetRangeDisplay) {
+        const startDate = new Date(budgetData.startDate);
+        const endDate = new Date(budgetData.endDate);
+        budgetRangeDisplay.textContent = `Current ${budgetData.period} Budget Period: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+    }
+
+    // Prepopulate budget fields if they exist
+    if (budgetAmountInput && budgetPeriodSelect) {
+        budgetAmountInput.value = budgetData.amount;
+        budgetPeriodSelect.value = budgetData.period;
+    }
+
+    // Update datetime constraints
+    updateDateTimeConstraints();
+
+    // Process expenses based on filters
+    let expenses = showAllHistoryToggle?.checked ? allExpenses : budgetData.expenses;
+    if (startDateFilter && endDateFilter) {
+        const start = new Date(startDateFilter);
+        const end = new Date(endDateFilter);
+        expenses = expenses.filter(exp => {
+            const date = new Date(exp.timestamp);
+            return date >= start && date <= end;
+        });
+    }
+
+    // Update budget overview display
+    const remaining = budgetData.amount - budgetData.totalSpent;
+    budgetValueEl.textContent = `$${budgetData.amount.toFixed(2)}`;
+    totalSpentEl.textContent = `$${budgetData.totalSpent.toFixed(2)}`;
+    remainingBudgetEl.textContent = `$${remaining.toFixed(2)}`;
+
+    // Update budget alert
+    if (budgetAlertEl) {
+        if (remaining < 0) {
+            budgetAlertEl.textContent = "⚠️ You've exceeded your budget!";
+            budgetAlertEl.style.color = "red";
+        } else if (remaining < budgetData.amount * 0.2) {
+            budgetAlertEl.textContent = "⚠️ You're close to your budget limit!";
+            budgetAlertEl.style.color = "orange";
+        } else {
+            budgetAlertEl.textContent = "";
+            budgetAlertEl.style.color = "black";
+        }
+    }
+
+    // Generate visualizations
+    generateBudgetChart(expenses);
+    renderBudgetHistoryList(expenses);
+    renderBudgetDoughnutChart(budgetData.totalSpent, budgetData.amount);
+    updateSmartInsight(budgetData.totalSpent, budgetData.amount);
 }
+
 
 function renderBudgetDoughnutChart(spent, budget) {
     const canvas = document.getElementById("budgetDoughnutChart");

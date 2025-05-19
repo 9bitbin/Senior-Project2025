@@ -143,19 +143,26 @@ async function computeSmartSummary(userData) {
     ? `Started at ${new Date(activeFasting.startTime).toLocaleTimeString()}`
     : "No active fast";
 
-  const lastWeight = (userData.weightLogs || []).sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+  // Get weight directly from user data or from weight logs if available
+  const currentWeight = userData.weight || ((userData.weightLogs || []).sort((a, b) => new Date(b.date) - new Date(a.date))[0]?.weight);
 
   summaryCalories.innerText = `Calories Eaten Today: ${caloriesToday.toFixed(0)} kcal`;
   summaryWorkout.innerText = `Calories Burned Today: ${burnedToday} kcal`;
   summaryFasting.innerText = `Fasting: ${fastingText}`;
-  summaryWeight.innerText = `Latest Weight: ${lastWeight ? lastWeight.weight + " lbs" : "Not Logged"}`;
+  summaryWeight.innerText = `Latest Weight: ${currentWeight ? currentWeight + " lbs" : "Not Logged"}`;
+
+  // Update the calories chart data and refresh
+  if (caloriesChart) {
+    caloriesChart.data.datasets[0].data = [caloriesToday, burnedToday];
+    caloriesChart.update();
+  }
 
   const prompt = `
 User Summary:
 - Calories: ${caloriesToday} kcal
 - Burned: ${burnedToday} kcal
 - Fasting: ${fastingText}
-- Weight: ${lastWeight?.weight || "N/A"} lbs
+- Weight: ${currentWeight || "N/A"} lbs
 
 Provide a brief AI health insight based on the above.
   `.trim();
@@ -356,22 +363,26 @@ function updateCharts(userData) {
 
     // Get workout data - sort by date
     const sortedWorkouts = [...workoutLogs].sort((a, b) => {
-        const dateA = new Date(a.date || a.timestamp);
-        const dateB = new Date(b.date || b.timestamp);
+        const dateA = new Date(a.timestamp);
+        const dateB = new Date(b.timestamp);
         return dateA - dateB;
     });
 
     const workoutDates = sortedWorkouts.map(workout => 
-        new Date(workout.date || workout.timestamp).toLocaleDateString()
+        new Date(workout.timestamp).toLocaleDateString()
     );
     const workoutCaloriesData = sortedWorkouts.map(workout => workout.caloriesBurned || 0);
 
     // Update charts with today's data
-    caloriesChart.data.datasets[0].data = [
-        totalCalories, 
-        todayWorkouts.reduce((sum, w) => sum + (w.caloriesBurned || 0), 0)
-    ];
+    const totalCaloriesConsumed = todayMeals.reduce((sum, meal) => sum + (Number(meal.calories) || 0), 0);
+    const totalCaloriesBurned = todayWorkouts.reduce((sum, w) => sum + (Number(w.caloriesBurned) || 0), 0);
+    
+    caloriesChart.data.datasets[0].data = [totalCaloriesConsumed, totalCaloriesBurned];
     caloriesChart.update();
+    
+    // Update summary elements if they exist
+    if (summaryCalories) summaryCalories.innerText = `Calories Eaten Today: ${totalCaloriesConsumed.toFixed(0)} kcal`;
+    if (summaryWorkout) summaryWorkout.innerText = `Calories Burned Today: ${totalCaloriesBurned.toFixed(0)} kcal`;
 
     // Macro Chart Update
     macroChart.data.datasets[0].data = [totalCarbs, totalProtein, totalFat];
