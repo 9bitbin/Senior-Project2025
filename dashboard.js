@@ -230,6 +230,13 @@ function renderDailyTimeline(userData) {
     workoutDate.setHours(0, 0, 0, 0);
     if (workoutDate.toISOString().split('T')[0] === todayStr) {
       const workoutTime = new Date(workout.date || workout.timestamp);
+      // Function to convert string to title case (first letter of each word capitalized)
+      function toTitleCase(str) {
+        return str.replace(/\w\S*/g, function(txt) {
+          return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        });
+      }
+      
       events.push({
         time: workoutTime.toLocaleTimeString('en-US', { 
           hour: '2-digit', 
@@ -237,7 +244,7 @@ function renderDailyTimeline(userData) {
           hour12: false
         }),
         icon: "🏃",
-        text: `Workout: ${workout.type || "Exercise"} (${workout.caloriesBurned} kcal burned)`
+        text: `Workout: ${toTitleCase(workout.type || "Exercise")} (${workout.caloriesBurned} kcal burned)`
       });
     }
   });

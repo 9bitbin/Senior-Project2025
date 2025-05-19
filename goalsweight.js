@@ -228,7 +228,8 @@ document.getElementById('goal-type').addEventListener('change', async function (
   } else if (this.value === 'workoutsPerWeek') {
     // For workout goals
     weightSection.style.display = 'none';
-    calorieGoalSection.style.display = 'none';
+    // Keep calorie goal section visible
+    calorieGoalSection.style.display = 'block';
     weeklyTimeframe.style.display = 'block';
     goalDeadline.style.display = 'none';
     
@@ -237,7 +238,8 @@ document.getElementById('goal-type').addEventListener('change', async function (
   } else {
     // For weight goals
     weightSection.style.display = 'block';
-    calorieGoalSection.style.display = 'none';
+    // Keep calorie goal section visible
+    calorieGoalSection.style.display = 'block';
     weeklyTimeframe.style.display = 'none';
 
     goalDeadline.type = 'date';

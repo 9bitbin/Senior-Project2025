@@ -30,7 +30,28 @@ let userWeightLbs = 150; // default fallback
 
 document.addEventListener('DOMContentLoaded', async () => {
 
+  // Clear the estimated calories field when the page loads
+  if (estimatedCaloriesEl) {
+    estimatedCaloriesEl.textContent = '';
+  }
   
+  // Pre-populate date and time fields with current date and time
+  const now = new Date();
+  const localISOString = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+  
+  // Get references to date inputs
+  const workoutDateInput = document.getElementById('workout-date');
+  const exerciseDateInput = document.getElementById('exercise-date');
+  
+  // Set workout date and time for workout tracking section
+  if (workoutDateInput) {
+    workoutDateInput.value = localISOString;
+  }
+  
+  // Set exercise date and time for exercise recommendation section
+  if (exerciseDateInput) {
+    exerciseDateInput.value = localISOString;
+  }
 
   // Add event listeners for date filtering
   if (filterWorkoutsBtn) {
@@ -47,8 +68,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Assuming there's a workoutDateInput element for logging workouts
-  const workoutDateInput = document.getElementById('workout-date');
+  // Clear estimated calories when workout parameters change
+  if (estimatedCaloriesEl) {
+    // Clear when date changes
+    if (workoutDateInput) {
+      workoutDateInput.addEventListener('change', () => {
+        estimatedCaloriesEl.textContent = '';
+      });
+    }
+    
+    // Clear when workout type changes
+    if (workoutTypeEl) {
+      workoutTypeEl.addEventListener('change', () => {
+        estimatedCaloriesEl.textContent = '';
+      });
+    }
+    
+    // Clear when duration changes
+    if (durationEl) {
+      durationEl.addEventListener('input', () => {
+        estimatedCaloriesEl.textContent = '';
+      });
+    }
+  }
 
   if (getCaloriesBtn) {
     getCaloriesBtn.addEventListener('click', async () => {
@@ -224,10 +266,17 @@ if (fetchExerciseBtn) {
       exerciseListEl.innerHTML = exercises.map((ex, index) => {
         const calories = Math.round(met * userWeightLbs * 0.453592 * 3.5 / 200 * duration);
         const formattedDate = selectedDate ? new Date(selectedDate).toLocaleString() : 'Please select a date';
+        // Function to convert string to title case (first letter of each word capitalized)
+        function toTitleCase(str) {
+          return str.replace(/\w\S*/g, function(txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+          });
+        }
+        
         return `
           <li class='exercise-item'>
-            <strong>${ex.name || 'Unknown Exercise'}</strong><br>
-            Muscle Group: ${ex.target || 'Not specified'}<br>
+            <strong>${toTitleCase(ex.name || 'Unknown Exercise')}</strong><br>
+            Muscle Group: ${toTitleCase(ex.target || 'Not specified')}<br>
             <img src='${ex.gifUrl || 'https://via.placeholder.com/150'}' alt='${ex.name}' width='150'><br>
             <strong>Estimated Calories:</strong> ${calories} kcal (10 min)<br>
             <strong>Selected Date:</strong> ${formattedDate}<br>

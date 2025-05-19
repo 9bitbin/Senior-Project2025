@@ -16,6 +16,7 @@ const logWorkoutBtn = document.getElementById("log-workout");
 const estimatedCaloriesEl = document.getElementById("estimated-calories");
 const workoutListEl = document.getElementById("workout-list");
 const totalCaloriesEl = document.getElementById("total-workout-calories");
+const averageCaloriesEl = document.getElementById("average-workout-calories");
 const startDateInput = document.getElementById("workout-start-date");
 const endDateInput = document.getElementById("workout-end-date");
 const filterWorkoutsBtn = document.getElementById("filter-workouts");
@@ -158,8 +159,8 @@ async function fetchLoggedWorkouts(startDate = null, endDate = null) {
             });
         }
 
-        // Sort workouts by timestamp in ascending order (oldest first)
-        filteredWorkouts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        // Sort workouts by timestamp in descending order (newest first)
+        filteredWorkouts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
         workoutListEl.innerHTML = filteredWorkouts.length > 0
             ? filteredWorkouts.map(workout => {
@@ -173,16 +174,29 @@ async function fetchLoggedWorkouts(startDate = null, endDate = null) {
                 totalCaloriesBurned += workout.caloriesBurned || 0;
                 dailyCalories[date] = (dailyCalories[date] || 0) + (workout.caloriesBurned || 0);
 
+                // Function to convert string to title case (first letter of each word capitalized)
+                function toTitleCase(str) {
+                    return str.replace(/\w\S*/g, function(txt) {
+                        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                    });
+                }
+                
                 return `
-                    <li>
+                    <li style="background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); text-align: center;">
                         ${workout.name
-                            ? `<strong>Exercise Session:</strong> ${workout.type} <br> <strong>Exercises:</strong> ${workout.name}`
-                            : `<strong>General Workout:</strong> ${workout.type}`
-                        } <br>
-                        <strong>Duration:</strong> ${duration} <br>
-                        <strong>Calories Burned:</strong> ${calories} <br>
-                        <em>Logged on: ${timestamp}</em>
-                        <button class="delete-workout-btn" data-id="${workout.id}">Delete</button>
+                            ? `<div style="font-weight: bold;">Exercise Session: ${toTitleCase(workout.type)}</div>
+                               <div>Duration: ${duration}</div>
+                               <div>Calories: ${calories}</div>
+                               <div>Exercises:</div>
+                               <ul style="list-style-type: disc; padding-left: 20px; text-align: center;">
+                                 <li>${toTitleCase(workout.name)} - ${workout.type === 'cardio' ? 'Cardiovascular System (Cardio)' : toTitleCase(workout.type)}</li>
+                               </ul>`
+                            : `<div style="font-weight: bold;">General Workout: ${toTitleCase(workout.type)}</div>
+                               <div>Duration: ${duration}</div>
+                               <div>Calories: ${calories}</div>`
+                        }
+                        <div style="font-style: italic; margin-top: 10px;">Logged for: ${dateObj.toLocaleDateString('en-US', {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true})}</div>
+                        <button class="delete-workout-btn" data-id="${workout.id}" style="background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Delete</button>
                     </li>`;
             }).join("")
             : "<li>No workouts logged for this date range.</li>";
@@ -197,11 +211,21 @@ async function fetchLoggedWorkouts(startDate = null, endDate = null) {
             });
         });
 
-        totalCaloriesEl.innerText = isNaN(totalCaloriesBurned) ? "0 kcal" : `${totalCaloriesBurned}`;
+        // Update total calories display
+        totalCaloriesEl.innerText = isNaN(totalCaloriesBurned) ? "0 kcal" : `${Math.round(totalCaloriesBurned)}`;        
+        
+        // Calculate and display average daily calories burned
+        const numDays = Object.keys(dailyCalories).length;
+        if (numDays > 0 && averageCaloriesEl) {
+            const avgDailyCalories = totalCaloriesBurned / numDays;
+            averageCaloriesEl.innerText = Math.round(avgDailyCalories);
+        } else if (averageCaloriesEl) {
+            averageCaloriesEl.innerText = "0";
+        }
 
         if (dailyBurnSummaryEl) {
             const summaryHtml = Object.entries(dailyCalories)
-                .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB)) // Sort daily entries by date
+                .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA)) // Sort daily entries by date (newest first)
                 .map(([date, cals]) => {
                     return `<div><strong>${new Date(date).toLocaleDateString()}:</strong> ${Math.round(cals)} kcal</div>`;
                 }).join("");
