@@ -11,6 +11,16 @@ import {
   getDocs
 } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
 
+function getApiKey() {
+  let key = localStorage.getItem("openrouter_api_key");
+  if (!key) {
+    key = prompt("Enter your OpenRouter API Key:");
+    if (key) localStorage.setItem("openrouter_api_key", key);
+  }
+  return key;
+}
+
+
 // ---- Shared State ----
 let currentUser = null;
 let cachedLogs = [];
@@ -128,7 +138,6 @@ function downloadCSV() {
   link.click();
 }
 
-// ---- AI Weight Insight ----
 async function getAIInsight(logs) {
   const profileSnap = await getDoc(doc(db, "users", currentUser.uid));
   const profile = profileSnap.data();
@@ -137,12 +146,18 @@ async function getAIInsight(logs) {
 
   aiResponseEl.textContent = "🧠 Thinking...";
 
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    aiResponseEl.textContent = "⚠️ API key not available.";
+    return;
+  }
+
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"
+        "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: "mistralai/mistral-small-3.1-24b-instruct:free",
@@ -152,6 +167,7 @@ async function getAIInsight(logs) {
         ]
       })
     });
+
     const data = await res.json();
     aiResponseEl.textContent = data.choices?.[0]?.message?.content || "⚠️ No AI response.";
   } catch (err) {
@@ -159,6 +175,7 @@ async function getAIInsight(logs) {
     aiResponseEl.textContent = "⚠️ Failed to get AI insight.";
   }
 }
+
 
 function setFutureDateOnly(inputId) {
   const input = document.getElementById(inputId);
@@ -627,7 +644,6 @@ goalType.addEventListener("change", () => {
 });
 // WEEKLY WORKOUT
 
-// ---- AI Goal Insight ----
 async function fetchAIInsight() {
   const ref = doc(db, "users", currentUser.uid);
   const snap = await getDoc(ref);
@@ -644,12 +660,18 @@ Workouts:\n${workouts.slice(-3).map(w => `${w.type} - ${w.caloriesBurned} kcal`)
 
   aiGoalResponse.textContent = "🧠 Thinking...";
 
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    aiGoalResponse.textContent = "⚠️ API key not available.";
+    return;
+  }
+
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"
+        "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: "mistralai/mistral-small-3.1-24b-instruct:free",
@@ -659,6 +681,7 @@ Workouts:\n${workouts.slice(-3).map(w => `${w.type} - ${w.caloriesBurned} kcal`)
         ]
       })
     });
+
     const result = await res.json();
     aiGoalResponse.textContent = result.choices?.[0]?.message?.content || "⚠️ No response.";
   } catch (err) {
@@ -666,6 +689,7 @@ Workouts:\n${workouts.slice(-3).map(w => `${w.type} - ${w.caloriesBurned} kcal`)
     aiGoalResponse.textContent = "⚠️ Failed to get AI goal insight.";
   }
 }
+
 
 // ---- Event Listeners ----
 logBtn?.addEventListener("click", logWeight);

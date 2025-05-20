@@ -9,9 +9,19 @@ const userInput = document.getElementById("user-input");
 const chatOutput = document.getElementById("chat-output");
 const voiceStatus = document.getElementById("voice-status");
 
-const API_KEY = "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";
-
 let userContext = "User profile not available yet.";
+
+// ✅ Securely Load API Key from localStorage
+function getApiKey() {
+  let key = localStorage.getItem("openrouter_api_key");
+  if (!key) {
+    key = prompt("Enter your OpenRouter API Key:");
+    if (key) {
+      localStorage.setItem("openrouter_api_key", key);
+    }
+  }
+  return key;
+}
 
 // 🔹 Load User Profile
 onAuthStateChanged(auth, async (user) => {
@@ -19,8 +29,6 @@ onAuthStateChanged(auth, async (user) => {
     const docSnap = await getDoc(doc(db, "users", user.uid));
     if (docSnap.exists()) {
       const data = docSnap.data();
-
-      // Include all basic + smart fields
       userContext = `
 Name: ${data.name || "N/A"}
 Age: ${data.age || "N/A"}
@@ -75,6 +83,12 @@ function speak(text) {
 
 // 🔹 Ask AI
 async function askAI(prompt) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    createMessage("⚠️ API key is missing. Please refresh and try again.", true);
+    return;
+  }
+
   createMessage(prompt, false);
   createMessage("🧠 Typing...", true);
 
@@ -83,7 +97,7 @@ async function askAI(prompt) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": `Bearer ${apiKey}`,
         "HTTP-Referer": "http://localhost:5500",
         "X-Title": "VIDIA AI Health Advisor"
       },

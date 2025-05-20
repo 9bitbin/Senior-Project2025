@@ -6,6 +6,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
 
+function getApiKey() {
+  let key = localStorage.getItem("openrouter_api_key");
+  if (!key) {
+    key = prompt("Enter your OpenRouter API Key:");
+    if (key) localStorage.setItem("openrouter_api_key", key);
+  }
+  return key;
+}
+
+
 const getRecipeBtn = document.getElementById("getRecipeBtn");
 const getRandomRecipeBtn = document.getElementById("getRandomRecipeBtn");
 const recipeInput = document.getElementById("recipeInput");
@@ -38,12 +48,19 @@ function appendAIChat(cardEl, recipeName, instructions) {
     const question = input.value.trim();
     if (!question) return;
     output.innerText = "🧠 Thinking...";
+
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      output.innerText = "⚠️ API key not available.";
+      return;
+    }
+
     try {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer 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",
+          "Authorization": `Bearer ${apiKey}`,
           "HTTP-Referer": "http://localhost:5500",
           "X-Title": "VIDIA AI Recipe Insight"
         },
@@ -61,6 +78,7 @@ function appendAIChat(cardEl, recipeName, instructions) {
           ]
         })
       });
+
       const data = await res.json();
       output.innerText = data.choices?.[0]?.message?.content || "No answer.";
     } catch (error) {
@@ -69,6 +87,7 @@ function appendAIChat(cardEl, recipeName, instructions) {
     }
   });
 }
+
 
 function displayRecipes(meals) {
   if (!recipeResults) return;
@@ -191,13 +210,19 @@ async function generateMealPlan(uid) {
 
   const prompt = `Create a ${days}-day meal plan for someone focused on ${goal} with about ${calorieGoal} calories/day. Return in format Day 1: Breakfast, Lunch, Dinner.`;
 
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    mealPlanOutput.innerHTML = "⚠️ API key not available.";
+    return;
+  }
+
   try {
     mealPlanOutput.innerHTML = "<p>⏳ Generating your plan...</p>";
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "mistralai/mistral-small-3.1-24b-instruct:free",
@@ -207,6 +232,7 @@ async function generateMealPlan(uid) {
         ]
       })
     });
+
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content;
     if (reply) {
@@ -397,12 +423,16 @@ async function showRecommendedRecipes(uid) {
   const mealLogs = profile.mealLogs || [];
   const recentMeals = mealLogs.slice(-5).map(m => `${m.name}: ${m.calories} kcal`).join("\n");
   const prompt = `Suggest 3 meal ideas that are healthy, budget-friendly, and easy to make. Recent meals: \n${recentMeals}\n\nUser Goal: ${profile.healthGoals || "none"}`;
+
+  const apiKey = getApiKey();
+  if (!apiKey) return;
+
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
+        "Authorization": `Bearer ${apiKey}`,
         "HTTP-Referer": "http://localhost:5500",
         "X-Title": "VIDIA AI Meal Recommender"
       },
@@ -414,6 +444,7 @@ async function showRecommendedRecipes(uid) {
         ]
       })
     });
+
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content;
     if (reply && recipeResults) {
@@ -426,6 +457,7 @@ async function showRecommendedRecipes(uid) {
     console.error("❌ AI recommender error:", err);
   }
 }
+
 
 // Add this after the loadSavedRecipes function
 window.getSavedRecipes = async (userId) => {
