@@ -93,8 +93,18 @@ async function startFasting() {
         alert("❌ Please log in to start fasting.");
         return;
     }
+    
+    // Wait for initial data load if it hasn't completed yet
+    if (!initialDataLoaded) {
+        console.log("Waiting for initial data load...");
+        await checkIfUserFastedToday();
+    }
 
-    // Check if user has fasted today (either from local state or database)
+    // Double-check if user has fasted today (either from local state or database)
+    // This ensures we have the latest data even if the page was just loaded
+    await checkIfUserFastedToday();
+    
+    // Check if user has fasted today
     if (hasFastedToday) {
         if (dailyFastMessage) {
             dailyFastMessage.textContent = "You've already completed a fast today. Please wait until tomorrow to start a new fast.";
@@ -143,8 +153,9 @@ function stopTimer() {
 }
 
 // Simplified endFasting function (now acts as stopFasting)
-// Add this variable at the top of the file with other variables
+// Add these variables at the top of the file with other variables
 let hasFastedToday = false;
+let initialDataLoaded = false; // Track if we've loaded the initial data
 
 // Update the endFasting function
 async function endFasting(isAutomatic = false, isCompleted = false) {
@@ -182,9 +193,13 @@ async function endFasting(isAutomatic = false, isCompleted = false) {
             // Set hasFastedToday to true when a fast ends
             hasFastedToday = true;
             
+            // Store the current date as the last fast date
+            const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            
             await updateDoc(userDocRef, {
                 fastingHistory: fastingHistory,
-                activeFasting: null
+                activeFasting: null,
+                lastFastDate: today // Store the date of the last fast
             });
             
             const statusMessage = isCompleted ? 
@@ -457,12 +472,54 @@ document.addEventListener("DOMContentLoaded", () => {
     // Handle auth state changes
     auth.onAuthStateChanged(user => {
         if (user) {
-            restoreActiveFasting();
-            loadFastingHistory();
+            // Load data and mark as initialized when complete
+            Promise.all([
+                restoreActiveFasting(),
+                loadFastingHistory(),
+                checkIfUserFastedToday()
+            ]).then(() => {
+                initialDataLoaded = true;
+                console.log("Initial data loaded, hasFastedToday:", hasFastedToday);
+                
+                // Make sure the start button is disabled if user has already fasted today
+                if (startFastingBtn) {
+                    startFastingBtn.disabled = hasFastedToday;
+                }
+            });
         }
     });
 });
 
+
+// Add a new function to check if the user has fasted today
+async function checkIfUserFastedToday() {
+    const user = auth.currentUser;
+    if (!user) return false;
+
+    try {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const lastFastDate = userData.lastFastDate;
+            const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            
+            // Set hasFastedToday based on whether the last fast was today
+            hasFastedToday = (lastFastDate === today);
+            
+            if (hasFastedToday && dailyFastMessage) {
+                dailyFastMessage.textContent = "You've already completed a fast today. Please wait until tomorrow to start a new fast.";
+            }
+            
+            return hasFastedToday;
+        }
+        return false;
+    } catch (error) {
+        console.error("Error checking if user fasted today:", error);
+        return false;
+    }
+}
 
 async function restoreActiveFasting() {
     // Add null checks for DOM elements
@@ -481,7 +538,11 @@ async function restoreActiveFasting() {
         const userDoc = await getDoc(userDocRef);
     
         if (userDoc.exists()) {
-            const activeFasting = userDoc.data().activeFasting;
+            const userData = userDoc.data();
+            const activeFasting = userData.activeFasting;
+            
+            // Check if user has already fasted today
+            await checkIfUserFastedToday();
     
             if (activeFasting) {
                 const endTime = new Date(activeFasting.endTime);
@@ -496,8 +557,12 @@ async function restoreActiveFasting() {
             } else {
                 // No active fasting session
                 fastingStatusEl.innerText = "";
-                startFastingBtn.disabled = false;
-                endFastingBtn.disabled = true;
+                if (startFastingBtn) {
+                    startFastingBtn.disabled = hasFastedToday; // Disable start button if already fasted today
+                }
+                if (endFastingBtn) {
+                    endFastingBtn.disabled = true;
+                }
             }
         }
     } catch (error) {
