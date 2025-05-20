@@ -167,30 +167,37 @@ User Summary:
 Provide a brief AI health insight based on the above.
   `.trim();
 
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer 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",
-        "HTTP-Referer": "http://localhost:5500",
-        "X-Title": "VIDIA Smart Summary"
-      },
-      body: JSON.stringify({
-        model: "mistralai/mistral-small-3.1-24b-instruct:free",
-        messages: [
-          { role: "system", content: "You are a motivational health assistant." },
-          { role: "user", content: prompt }
-        ]
-      })
-    });
+  const apiKey = getApiKey();
+if (!apiKey) {
+  aiSummaryText.innerText = "⚠️ API key not available.";
+  return;
+}
 
-    const data = await res.json();
-    aiSummaryText.innerText = data.choices?.[0]?.message?.content || "⚠️ No AI response.";
-  } catch (error) {
-    console.error("AI Insight Error:", error);
-    aiSummaryText.innerText = "⚠️ Failed to generate AI insight.";
-  }
+try {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+      "HTTP-Referer": "http://localhost:5500",
+      "X-Title": "VIDIA Smart Summary"
+    },
+    body: JSON.stringify({
+      model: "mistralai/mistral-small-3.1-24b-instruct:free",
+      messages: [
+        { role: "system", content: "You are a motivational health assistant." },
+        { role: "user", content: prompt }
+      ]
+    })
+  });
+
+  const data = await res.json();
+  aiSummaryText.innerText = data.choices?.[0]?.message?.content || "⚠️ No AI response.";
+} catch (error) {
+  console.error("AI Insight Error:", error);
+  aiSummaryText.innerText = "⚠️ Failed to generate AI insight.";
+}
+
 }
 
 // 🔹 Render Unified Daily Timeline

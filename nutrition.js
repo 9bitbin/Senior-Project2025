@@ -2,9 +2,23 @@
 import { db, auth } from "./firebase-config.js";
 import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
+function getApiKey() {
+  let key = localStorage.getItem("openrouter_api_key");
+  if (!key) {
+    key = prompt("Enter your OpenRouter API Key:");
+    if (key) {
+      localStorage.setItem("openrouter_api_key", key);
+    }
+  }
+  return key;
+}
+
+
 // ✅ API Configuration (Calorieninjas API)
 const API_KEY = "l4ioC02Ockzgjkietj6YgQ==wWJ0gnTd3hZmLFuz";
 const API_URL = "https://api.calorieninjas.com/v1/nutrition?query=";
+
+
 
 // ✅ Select Elements
 const foodInput = document.getElementById("food-input");
@@ -18,6 +32,8 @@ const filterMealsBtn = document.getElementById("filter-meals");
 const resetMealsBtn = document.getElementById("reset-meals");
 const dailyBreakdownEl = document.getElementById("daily-calorie-breakdown");
 const mealDateInput = document.getElementById("meal-date"); 
+
+
 
 // Run the fix function when the page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -560,14 +576,21 @@ if (aiBtn) {
     }).join("\n");
 
     const overDays = Object.values(dayMap).filter(cal => cal > calorieGoal).length;
-    const prompt = `You are a health coach. Analyze the user's daily calorie intake:\n\n${trend}\n\nCalorie Goal: ${calorieGoal} kcal\nThey went over goal on ${overDays} day(s).\n\nProvide a short summary and suggest 2 personalized improvements.`
+    const prompt = `You are a health coach. Analyze the user's daily calorie intake:\n\n${trend}\n\nCalorie Goal: ${calorieGoal} kcal\nThey went over goal on ${overDays} day(s).\n\nProvide a short summary and suggest 2 personalized improvements.`;
 
     aiOutput.innerText = "🧠 Thinking...";
+
+    const aiKey = getApiKey();
+    if (!aiKey) {
+      aiOutput.innerText = "⚠️ API key not available.";
+      return;
+    }
+
     try {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": "Bearer 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",
+          "Authorization": `Bearer ${aiKey}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
