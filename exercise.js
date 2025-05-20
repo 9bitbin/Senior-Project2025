@@ -1,38 +1,183 @@
 // ✅ Import Firebase
-import { db, auth } from "./firebase-config.js";
+import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
-import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+import { saveWorkoutToFirestore, fetchLoggedWorkouts } from "./workout.js";
 
 // ✅ DOM Elements
-const exerciseTypeEl = document.getElementById("exercise-type");
-const muscleGroupEl = document.getElementById("muscle-group");
-const equipmentTypeEl = document.getElementById("equipment-type");
-const fetchExerciseBtn = document.getElementById("fetch-exercise");
+// ✅ DOM Elements
 const exerciseListEl = document.getElementById("exercise-list");
+const exerciseTypeEl = document.getElementById('exercise-type');
+const muscleGroupEl = document.getElementById('muscle-group');
+const equipmentTypeEl = document.getElementById('equipment-type');
+const fetchExerciseBtn = document.getElementById('fetch-exercise');
+
+// ✅ DOM Elements for Workout Tracking
+const workoutTypeEl = document.getElementById('workout-type');
+const durationEl = document.getElementById('workout-duration');
+const getCaloriesBtn = document.getElementById('get-calories');
+const logWorkoutBtn = document.getElementById('log-workout');
+const estimatedCaloriesEl = document.getElementById('estimated-calories');
 const workoutListEl = document.getElementById("workout-list");
-const aiInput = document.getElementById("ai-prompt");
-const askAiBtn = document.getElementById("ask-ai-btn");
-const aiResponseBox = document.getElementById("ai-response");
-const workoutDate = document.getElementById("workout-date");
-
-function setSelectedDate(inputId) {
-    const input = document.getElementById(inputId);
-
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const formattedToday = `${yyyy}-${mm}-${dd}`;
-
-    input.value = formattedToday;
-    input.max = formattedToday;
-  }
-
-  // Call the function for the workout-date input
-  setSelectedDate("workout-date");
+const totalCaloriesEl = document.getElementById("total-workout-calories");
+const startDateInput = document.getElementById("workout-start-date");
+const endDateInput = document.getElementById("workout-end-date");
+const filterWorkoutsBtn = document.getElementById("filter-workouts");
+const resetWorkoutsBtn = document.getElementById("reset-workouts");
+const dailyBurnSummaryEl = document.getElementById("daily-burn-summary");
 
 let userWeightLbs = 150; // default fallback
-let userProfile = "User profile not loaded yet.";
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+  // Clear the estimated calories field when the page loads
+  if (estimatedCaloriesEl) {
+    estimatedCaloriesEl.textContent = '';
+  }
+  
+  // Pre-populate date and time fields with current date and time
+  const now = new Date();
+  const localISOString = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+  
+  // Get references to date inputs
+  const workoutDateInput = document.getElementById('workout-date');
+  const exerciseDateInput = document.getElementById('exercise-date');
+  
+  // Set workout date and time for workout tracking section
+  if (workoutDateInput) {
+    workoutDateInput.value = localISOString;
+  }
+  
+  // Set exercise date and time for exercise recommendation section
+  if (exerciseDateInput) {
+    exerciseDateInput.value = localISOString;
+  }
+
+  // Add event listeners for date filtering
+  if (filterWorkoutsBtn) {
+    filterWorkoutsBtn.addEventListener("click", () => {
+        fetchLoggedWorkouts(startDateInput.value, endDateInput.value);
+    });
+  }
+
+  if (resetWorkoutsBtn) {
+    resetWorkoutsBtn.addEventListener("click", () => {
+        startDateInput.value = "";
+        endDateInput.value = "";
+        fetchLoggedWorkouts(); // Fetch all workouts
+    });
+  }
+
+  // Clear estimated calories when workout parameters change
+  if (estimatedCaloriesEl) {
+    // Clear when date changes
+    if (workoutDateInput) {
+      workoutDateInput.addEventListener('change', () => {
+        estimatedCaloriesEl.textContent = '';
+      });
+    }
+    
+    // Clear when workout type changes
+    if (workoutTypeEl) {
+      workoutTypeEl.addEventListener('change', () => {
+        estimatedCaloriesEl.textContent = '';
+      });
+    }
+    
+    // Clear when duration changes
+    if (durationEl) {
+      durationEl.addEventListener('input', () => {
+        estimatedCaloriesEl.textContent = '';
+      });
+    }
+  }
+
+  if (getCaloriesBtn) {
+    getCaloriesBtn.addEventListener('click', async () => {
+      const type = workoutTypeEl?.value || 'cardio';
+      const duration = parseInt(durationEl?.value || '0');
+      const selectedDate = workoutDateInput?.value; // Get selected date
+
+      if (isNaN(duration) || duration <= 0) {
+        alert('Please enter a valid duration in minutes.');
+        return;
+      }
+
+      if (!selectedDate) {
+        alert('Please select a date for the workout');
+        return;
+      }
+
+      const met = MET_VALUES[type] || 5;
+      const calories = Math.round(met * userWeightLbs * 0.453592 * 3.5 / 200 * duration);
+
+      // Display the estimated calories
+      if (estimatedCaloriesEl) estimatedCaloriesEl.textContent = `${calories} kcal`;
+
+    
+    });
+  }
+
+  if (logWorkoutBtn) {
+    logWorkoutBtn.addEventListener('click', async () => {
+      const type = workoutTypeEl?.value || 'cardio';
+      const duration = parseInt(durationEl?.value || '0');
+      const selectedDate = workoutDateInput?.value; // Get selected date
+
+      if (isNaN(duration) || duration <= 0) {
+        alert('Please enter a valid duration in minutes.');
+        return;
+      }
+
+      if (!selectedDate) {
+        alert('Please select a date for the workout');
+        return;
+      }
+
+      const met = MET_VALUES[type] || 5;
+      const calories = Math.round(met * userWeightLbs * 0.453592 * 3.5 / 200 * duration);
+
+      // Add workout saving logic and confirmation
+      const workout = {
+        id: `workout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: type,
+        duration: duration,
+        caloriesBurned: calories,
+        timestamp: new Date(selectedDate).toISOString()
+      };
+
+      await saveWorkoutToFirestore(workout);
+      alert('Workout logged successfully!');
+
+      // Reset form
+      if (durationEl) durationEl.value = '';
+      if (estimatedCaloriesEl) estimatedCaloriesEl.textContent = '0';
+    });
+  }
+
+  // Add auth state change listener to fetch user data and workouts
+  onAuthStateChanged(auth, async (user) => {
+      if (user) {
+          // Fetch user profile to get weight
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+              const userData = userDoc.data();
+              userWeightLbs = userData.weight || 150; // Use fetched weight or default
+              // userProfile = userData; // Populate userProfile if needed elsewhere
+          }
+          fetchLoggedWorkouts(); // Fetch and display workouts for the logged-in user
+      } else {
+          // User is signed out
+          // Optionally clear workout list or redirect
+          if (workoutListEl) workoutListEl.innerHTML = '';
+          if (totalCaloriesEl) totalCaloriesEl.textContent = '0';
+          if (dailyBurnSummaryEl) dailyBurnSummaryEl([]);
+          // Redirect to login page if necessary
+          // window.location.href = "index.html";
+      }
+  }); // Close DOMContentLoaded
+});
 
 const MET_VALUES = {
   cardio: 8,
@@ -58,6 +203,7 @@ const yogaExercises = [
 // ✅ General API Fetcher
 async function fetchFromExerciseDB(path) {
   const url = `https://exercisedb.p.rapidapi.com/exercises/${path}?limit=10`;
+  console.log(`Attempting to fetch from ExerciseDB: ${url}`); // Added log
   try {
     const res = await fetch(url, {
       method: "GET",
@@ -66,7 +212,11 @@ async function fetchFromExerciseDB(path) {
         "X-RapidAPI-Host": "exercisedb.p.rapidapi.com"
       }
     });
-    return await res.json();
+    console.log(`ExerciseDB API Response Status: ${res.status}`); // Added log
+    if (!res.ok) throw new Error(`API request failed with status ${res.status}`);
+    const data = await res.json();
+    console.log('ExerciseDB API Response Data:', data); // Added log
+    return data;
   } catch (err) {
     console.error("❌ API Fetch Error:", err);
     return [];
@@ -76,197 +226,89 @@ async function fetchFromExerciseDB(path) {
 // ✅ Handle Get Exercises
 let currentExercises = [];
 
-fetchExerciseBtn.addEventListener("click", async () => {
-  const type = exerciseTypeEl.value;
-  const target = muscleGroupEl.value;
-  const equipment = equipmentTypeEl.value;
+// Update the fetchExerciseBtn event listener to include calorie estimation
+if (fetchExerciseBtn) {
+  fetchExerciseBtn.addEventListener('click', async () => {
+    console.log('Fetch Exercise button clicked!'); // Added log
+    const type = exerciseTypeEl.value;
+    const target = muscleGroupEl.value;
+    const equipment = equipmentTypeEl.value;
+    const selectedDate = document.getElementById('exercise-date')?.value;
 
-  let exercises = [];
-  if (type === "yoga") {
-    exercises = yogaExercises;
-  } else if (target) {
-    exercises = await fetchFromExerciseDB(`target/${target}`);
-  } else if (equipment) {
-    exercises = await fetchFromExerciseDB(`equipment/${equipment}`);
-  } else {
-    const category = exerciseCategories[type] || type;
-    exercises = await fetchFromExerciseDB(`bodyPart/${category}`);
-  }
+    console.log('Selected values:', { type, target, equipment, selectedDate }); // Added log
 
-  if (!exercises.length) {
-    exerciseListEl.innerHTML = "<li>No exercises found.</li>";
-    return;
-  }
+    let exercises = [];
+    if (type === 'yoga') {
+      exercises = yogaExercises;
+    } else if (target) {
+      exercises = await fetchFromExerciseDB(`target/${target}`);
+    } else if (equipment) {
+      exercises = await fetchFromExerciseDB(`equipment/${equipment}`);
+    } else {
+      const category = exerciseCategories[type] || type;
+      exercises = await fetchFromExerciseDB(`bodyPart/${category}`);
+    }
 
-  const met = MET_VALUES[type] || 5;
-  const duration = 10; // default 10 mins
+    console.log('Fetched exercises:', exercises); // Added log
 
-  currentExercises = exercises;
+    if (!exercises.length) {
+      exerciseListEl.innerHTML = '<li>No exercises found.</li>';
+      console.log('No exercises found.'); // Added log
+      return;
+    }
 
-  exerciseListEl.innerHTML = exercises.map(ex => {
-    const calories = Math.round(met * userWeightLbs * 0.453592 * 3.5 / 200 * duration);
-    return `
-      <li>
-        <strong>${ex.name}</strong><br>
-        Muscle Group: ${ex.target}<br>
-        <img src="${ex.gifUrl || 'https://via.placeholder.com/150'}" alt="${ex.name}" width="150"><br>
-        <strong>Estimated Calories:</strong> ${calories} kcal (10 min)
-      </li>
-    `;
-  }) .join("") + `<br><button id="log-workout-confirm" class="log-btn"></button>`;
+    const met = MET_VALUES[type] || 5;
+    const duration = 10; // default 10 mins
 
-  document.getElementById("log-workout-confirm").addEventListener("click", () => {
-    saveWorkoutToFirestore(type, currentExercises);
-  });
-});
+    currentExercises = exercises.filter(ex => ex.name && ex.name.trim() !== '');
 
-// ✅ Save Workout
-async function saveWorkoutToFirestore(type, exercises) {
-  const user = auth.currentUser;
-  if (!user) return;
-  
-  const workoutDateValue = document.getElementById("workout-date").value;
-  const userDocRef = doc(db, "users", user.uid);
-  const userDoc = await getDoc(userDocRef);
-  const logs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
+    if (exerciseListEl) {
+      exerciseListEl.innerHTML = exercises.map((ex, index) => {
+        const calories = Math.round(met * userWeightLbs * 0.453592 * 3.5 / 200 * duration);
+        const formattedDate = selectedDate ? new Date(selectedDate).toLocaleString() : 'Please select a date';
+        // Function to convert string to title case (first letter of each word capitalized)
+        function toTitleCase(str) {
+          return str.replace(/\w\S*/g, function(txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+          });
+        }
+        
+        return `
+          <li class='exercise-item'>
+            <strong>${toTitleCase(ex.name || 'Unknown Exercise')}</strong><br>
+            Muscle Group: ${toTitleCase(ex.target || 'Not specified')}<br>
+            <img src='${ex.gifUrl || 'https://via.placeholder.com/150'}' alt='${ex.name}' width='150'><br>
+            <strong>Estimated Calories:</strong> ${calories} kcal (10 min)<br>
+            <strong>Selected Date:</strong> ${formattedDate}<br>
+            <button class='log-btn' data-index='${index}'>Log This Exercise</button>
+          </li>
+        `;
+      }).join('');
+    }
 
-  const workout = {
-    id: Date.now().toString(),
-    type,
-    date: workoutDateValue,
-    // timestamp: new Date().toISOString(),
-    exercises: exercises.map(e => ({
-      name: e.name,
-      muscleGroup: e.target,
-      gif: e.gifUrl || 'https://via.placeholder.com/150'
-    }))
-  };
+  // Add event listeners to new log buttons
+  document.querySelectorAll('.log-btn').forEach((btn, index) => {
+    btn.addEventListener('click', async () => {
+      if (!selectedDate) {
+        alert('Please select a date for the workout');
+        return;
+      }
+      // Pass the exercise object directly, not in an array
+      const exerciseToLog = currentExercises[index];
+      const workout = {
+        id: `workout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: type, // Use the workout type from the dropdown
+        name: exerciseToLog.name, // Use the exercise name
+        duration: 10, // Default duration for exercise logging
+        caloriesBurned: Math.round(met * userWeightLbs * 0.453592 * 3.5 / 200 * 10), // Recalculate calories for 10 mins
+        timestamp: new Date(selectedDate).toISOString()
+      };
+      console.log('Attempting to log workout:', workout); // Added log
+      await saveWorkoutToFirestore(workout);
+      alert('Workout logged successfully!');
 
-  logs.push(workout);
-  await updateDoc(userDocRef, { workoutLogs: logs });
-  fetchLoggedWorkouts();
-}
-
-// ✅ Load Logs
-async function fetchLoggedWorkouts() {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-  const logs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
-
-  if (!workoutListEl) return;
-
-  if (!logs.length) {
-    workoutListEl.innerHTML = "<li>No workouts logged yet.</li>";
-    return;
-  }
-
-  workoutListEl.innerHTML = "";
-  workoutListEl.innerHTML = "";
-logs.forEach((log, i) => {
-  const li = document.createElement("li");
-  li.innerHTML = `
-    <strong>Workout Type:</strong> ${log.type}<br>
-    ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
-    ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
-    ${log.exercises ? `
-      <ul>${log.exercises.map(ex => `
-        <li>${ex.name} - ${ex.muscleGroup}<br>
-          <img src="${ex.gif}" width="100">
-        </li>`).join("")}</ul>
-    ` : ""}
-    <em>Logged on: ${log.date || new Date(log.timestamp).toLocaleDateString()}</em>
-    <button class="delete-workout" data-index="${i}">Delete</button>
-  `;
-  workoutListEl.appendChild(li);
-});
-
-  // logs.forEach((log, i) => {
-  //   const li = document.createElement("li");
-  //   li.innerHTML = `
-  //     <strong>Workout Type:</strong> ${log.type}<br>
-  //     ${log.duration ? `<strong>Duration:</strong> ${log.duration} min<br>` : ""}
-  //     ${log.caloriesBurned ? `<strong>Calories:</strong> ${log.caloriesBurned} kcal<br>` : ""}
-  //     ${log.exercises ? `
-  //       <ul>${log.exercises.map(ex => `
-  //         <li>${ex.name} - ${ex.muscleGroup}<br>
-  //           <img src="${ex.gif}" width="100">
-  //         </li>`).join("")}</ul>
-  //     ` : ""}
-  //     <em>Logged on: ${new Date(log.timestamp).toLocaleString()}</em><br>
-  //     <button class="delete-workout" data-index="${i}">Delete</button>
-  //   `;
-  //   workoutListEl.appendChild(li);
-  // });
-
-  document.querySelectorAll(".delete-workout").forEach(btn => {
-    btn.addEventListener("click", async (e) => {
-      await deleteWorkout(parseInt(e.target.dataset.index));
+      // Reset form
     });
   });
-}
-
-async function deleteWorkout(index) {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const userDocRef = doc(db, "users", user.uid);
-  const userDoc = await getDoc(userDocRef);
-  const logs = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
-
-  logs.splice(index, 1);
-  await updateDoc(userDocRef, { workoutLogs: logs });
-  fetchLoggedWorkouts();
-}
-
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    if (userDoc.exists()) {
-      const data = userDoc.data();
-      if (data.weight) userWeightLbs = data.weight;
-      userProfile = `Age: ${data.age || "N/A"}\nWeight: ${data.weight} lbs\nSex: ${data.sex}\nGoal: ${data.healthGoals || "N/A"}\nPreferred Exercise: ${data.exerciseType || "N/A"}`;
-    }
-    fetchLoggedWorkouts();
-  } else {
-    window.location.href = "index.html";
-  }
 });
-
-// ✅ AI Workout Suggestion
-if (askAiBtn) {
-  askAiBtn.addEventListener("click", async () => {
-    const prompt = aiInput.value.trim();
-    if (!prompt) return;
-
-    aiResponseBox.innerText = "🧠 Thinking...";
-
-    try {
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer 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",
-          "HTTP-Referer": "http://localhost:5500",
-          "X-Title": "VIDIA AI Workout Advisor"
-        },
-        body: JSON.stringify({
-          model: "mistralai/mistral-small-3.1-24b-instruct:free",
-          messages: [
-            { role: "system", content: `You are a fitness expert. Use this user profile if helpful:\n\n${userProfile}` },
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.7
-        })
-      });
-
-      const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content || "⚠️ No response received.";
-      aiResponseBox.innerText = reply;
-    } catch (err) {
-      console.error("❌ AI Error:", err);
-      aiResponseBox.innerText = "⚠️ Failed to fetch response.";
-    }
-  });
 }

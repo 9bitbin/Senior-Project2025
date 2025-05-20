@@ -103,6 +103,34 @@
       border-radius: 8px;
       width: 100%;
     }
+    
+    .delete-workout-btn {
+        background-color: #dc2626;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 8px;
+        width: 100%;
+        font-weight: bold;
+    }
+    
+    .delete-workout-btn:hover {
+        background-color: #b91c1c;
+    }
+    .workout-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .workout-item {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
@@ -144,6 +172,10 @@
         <option value="resistance band">Resistance Band</option>
         <option value="machine">Machine</option>
       </select>
+      
+      <label for="exercise-date">Exercise Date and Time:</label>
+      <input type="datetime-local" id="exercise-date" />
+      
       <button id="fetch-exercise">Get Exercises</button>
       <div id="exercise-results">
         <h3>💡 Suggested Workouts</h3>
@@ -163,10 +195,12 @@
       </select>
       <label for="workout-duration">Duration (minutes):</label>
       <input type="number" id="workout-duration" min="1" />
-      <label for="workout-date">Workout Date</label>
-      <input type="date" id="workout-date" />
+      
+      <label for="workout-date">Workout Date and Time:</label>
+      <input type="datetime-local" id="workout-date" />
+      
       <button id="get-calories">Get Estimated Calories</button>
-      <p><strong>Estimated Calories Burned:</strong> <span id="estimated-calories">--</span> kcal</p>
+      <p>Estimated Calories Burned: <span id="estimated-calories"></span></p>
       <button id="log-workout">Log Workout</button>
     </div>
     <div class="card">
@@ -180,8 +214,9 @@
       <button id="download-workouts">📥 Download Workout Data (CSV)</button>
       <h3>📅 Workout Logs</h3>
       <p><strong>Total Calories Burned:</strong> <span id="total-workout-calories">0</span> kcal</p>
+      <p><strong>Average Daily Calories Burned:</strong> <span id="average-workout-calories">0</span> kcal</p>
       <div id="daily-burn-summary"></div>
-      <ul id="workout-list"><li>Loading...</li></ul>
+      <ul id="workout-list" class="workout-list"><li>Loading...</li></ul>
     </div>
     <div class="card">
       <h2>🤖 Ask AI for a Workout</h2>

@@ -16,6 +16,7 @@ const logWorkoutBtn = document.getElementById("log-workout");
 const estimatedCaloriesEl = document.getElementById("estimated-calories");
 const workoutListEl = document.getElementById("workout-list");
 const totalCaloriesEl = document.getElementById("total-workout-calories");
+const averageCaloriesEl = document.getElementById("average-workout-calories");
 const startDateInput = document.getElementById("workout-start-date");
 const endDateInput = document.getElementById("workout-end-date");
 const filterWorkoutsBtn = document.getElementById("filter-workouts");
@@ -62,6 +63,9 @@ if (logWorkoutBtn && workoutTypeEl && durationEl) {
             timestamp
         };
 
+        // Add a unique ID to the workout object
+        workout.id = `workout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
         await saveWorkoutToFirestore(workout);
     });
 }
@@ -74,6 +78,14 @@ async function saveWorkoutToFirestore(workout) {
     const userDoc = await getDoc(userDocRef);
     let workouts = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
 
+    // Ensure existing workouts have IDs if they don't already (for backward compatibility)
+    workouts = workouts.map(w => {
+        if (!w.id) {
+            w.id = `workout_${new Date(w.timestamp).getTime()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        return w;
+    });
+
     workouts.push(workout);
 
     try {
@@ -83,6 +95,29 @@ async function saveWorkoutToFirestore(workout) {
         console.error("❌ Error saving workout:", error);
     }
 }
+
+async function deleteWorkout(workoutId) {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    let workouts = userDoc.exists() ? userDoc.data().workoutLogs || [] : [];
+
+    const updatedWorkouts = workouts.filter(workout => workout.id !== workoutId);
+
+    try {
+        await updateDoc(userDocRef, { workoutLogs: updatedWorkouts });
+        fetchLoggedWorkouts(); // Refresh the list after deletion
+    } catch (error) {
+        console.error("❌ Error deleting workout:", error);
+    }
+}
+
+export { fetchLoggedWorkouts, saveWorkoutToFirestore, deleteWorkout };
+
+// Make deleteWorkout globally accessible for event listeners attached via innerHTML
+window.deleteWorkout = deleteWorkout;
 
 async function fetchLoggedWorkouts(startDate = null, endDate = null) {
     const user = auth.currentUser;
@@ -96,43 +131,110 @@ async function fetchLoggedWorkouts(startDate = null, endDate = null) {
         let totalCaloriesBurned = 0;
         let dailyCalories = {};
 
-        if (startDate && endDate) {
-            const start = new Date(startDate).toISOString().split("T")[0];
-            const end = new Date(endDate).toISOString().split("T")[0];
+        // Filter out logs with invalid timestamps first
+        const validWorkouts = workouts.filter(workout => {
+            try {
+                // Attempt to create a Date object to check validity
+                const dateObj = new Date(workout.timestamp);
+                // Check if the date is valid (not 'Invalid Date')
+                return !isNaN(dateObj.getTime());
+            } catch (e) {
+                // If parsing fails, it's invalid
+                console.error("Invalid workout timestamp found:", workout.timestamp, e);
+                return false;
+            }
+        });
 
-            workouts = workouts.filter(workout => {
-                const workoutDate = new Date(workout.timestamp).toISOString().split("T")[0];
+        let filteredWorkouts = [...validWorkouts];
+
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            // Set end date to end of day for inclusive filtering
+            end.setHours(23, 59, 59, 999);
+
+            filteredWorkouts = filteredWorkouts.filter(workout => {
+                const workoutDate = new Date(workout.timestamp);
                 return workoutDate >= start && workoutDate <= end;
             });
         }
 
-        workoutListEl.innerHTML = workouts.length > 0
-            ? workouts.map(workout => {
-                const date = new Date(workout.timestamp).toISOString().split("T")[0];
+        // Sort workouts by timestamp in descending order (newest first)
+        filteredWorkouts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        workoutListEl.innerHTML = filteredWorkouts.length > 0
+            ? filteredWorkouts.map(workout => {
+                const dateObj = new Date(workout.timestamp);
+                // Use local date for the daily summary key
+                const date = dateObj.toLocaleDateString('en-US'); // Use local date string
                 const duration = workout.duration ? `${workout.duration} mins` : "Unknown mins";
                 const calories = workout.caloriesBurned ? `${workout.caloriesBurned} kcal` : "Unknown kcal";
-                const timestamp = new Date(workout.timestamp).toLocaleString();
+                const timestamp = dateObj.toLocaleString();
 
                 totalCaloriesBurned += workout.caloriesBurned || 0;
                 dailyCalories[date] = (dailyCalories[date] || 0) + (workout.caloriesBurned || 0);
 
+                // Function to convert string to title case (first letter of each word capitalized)
+                function toTitleCase(str) {
+                    return str.replace(/\w\S*/g, function(txt) {
+                        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                    });
+                }
+                
                 return `
-                    <li>
-                        <strong>Workout Type:</strong> ${workout.type} <br>
-                        <strong>Duration:</strong> ${duration} <br>
-                        <strong>Calories Burned:</strong> ${calories} <br>
-                        <em>Logged on: ${timestamp}</em>
+                    <li style="background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); text-align: center;">
+                        ${workout.name
+                            ? `<div style="font-weight: bold;">Exercise Session: ${toTitleCase(workout.type)}</div>
+                               <div>Duration: ${duration}</div>
+                               <div>Calories: ${calories}</div>
+                               <div>Exercises:</div>
+                               <ul style="list-style-type: disc; padding-left: 20px; text-align: center;">
+                                 <li>${toTitleCase(workout.name)} - ${workout.type === 'cardio' ? 'Cardiovascular System (Cardio)' : toTitleCase(workout.type)}</li>
+                               </ul>`
+                            : `<div style="font-weight: bold;">General Workout: ${toTitleCase(workout.type)}</div>
+                               <div>Duration: ${duration}</div>
+                               <div>Calories: ${calories}</div>`
+                        }
+                        <div style="font-style: italic; margin-top: 10px;">Logged for: ${dateObj.toLocaleDateString('en-US', {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true})}</div>
+                        <button class="delete-workout-btn" data-id="${workout.id}" style="background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px;">Delete</button>
                     </li>`;
             }).join("")
             : "<li>No workouts logged for this date range.</li>";
 
-        totalCaloriesEl.innerText = isNaN(totalCaloriesBurned) ? "0 kcal" : `${totalCaloriesBurned} kcal`;
+        // Add event listeners to delete buttons after rendering
+        document.querySelectorAll('.delete-workout-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const workoutId = event.target.getAttribute('data-id');
+                if (workoutId && confirm('Are you sure you want to delete this workout?')) {
+                    deleteWorkout(workoutId);
+                }
+            });
+        });
+
+        // Update total calories display
+        totalCaloriesEl.innerText = isNaN(totalCaloriesBurned) ? "0 kcal" : `${Math.round(totalCaloriesBurned)}`;        
+        
+        // Calculate and display average daily calories burned
+        const numDays = Object.keys(dailyCalories).length;
+        if (numDays > 0 && averageCaloriesEl) {
+            const avgDailyCalories = totalCaloriesBurned / numDays;
+            averageCaloriesEl.innerText = Math.round(avgDailyCalories);
+        } else if (averageCaloriesEl) {
+            averageCaloriesEl.innerText = "0";
+        }
 
         if (dailyBurnSummaryEl) {
-            dailyBurnSummaryEl.innerHTML = `<h4>📆 Daily Burn Summary</h4>` +
-              Object.entries(dailyCalories).map(([date, cals]) => {
-                return `<div><strong>${new Date(date).toLocaleDateString()}:</strong> ${Math.round(cals)} kcal</div>`;
-              }).join("");
+            const summaryHtml = Object.entries(dailyCalories)
+                .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA)) // Sort daily entries by date (newest first)
+                .map(([date, cals]) => {
+                    return `<div><strong>${new Date(date).toLocaleDateString()}:</strong> ${Math.round(cals)} kcal</div>`;
+                }).join("");
+            dailyBurnSummaryEl.innerHTML = `
+                <h4>📆 Daily Burn Summary</h4>
+                <div class="daily-burn-container">
+                    ${summaryHtml}
+                </div>
+            `;
         }
     }
 }
@@ -189,6 +291,9 @@ document.getElementById("download-workouts")?.addEventListener("click", async ()
     link.remove();
     URL.revokeObjectURL(url);
 });
+
+
+
 
 
 

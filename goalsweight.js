@@ -183,6 +183,11 @@ document.getElementById('goal-type').addEventListener('change', async function (
   const calorieGoalSection = document.getElementById('calorie-goal-section');
   const weeklyTimeframe = document.getElementById('weekly-timeframe');
 
+  // Only reset goal target value when not switching to calories
+  if (this.value !== 'calories') {
+    goalTarget.value = '';
+  }
+
   if (this.value === 'calories') {
     // Get calorie target from profile
     const userRef = doc(db, "users", currentUser.uid);
@@ -197,6 +202,24 @@ document.getElementById('goal-type').addEventListener('change', async function (
     weightSection.style.display = 'none';
     calorieGoalSection.style.display = 'block';
     weeklyTimeframe.style.display = 'none';
+    goalDeadline.style.display = 'block';
+    goalDeadline.type = 'text';
+    goalDeadline.value = 'Daily';
+    goalDeadline.readOnly = true;
+    calorieGoalSection.style.display = 'block';
+    weeklyTimeframe.style.display = 'none';
+    goalDeadline.style.display = 'block';
+    goalDeadline.type = 'text';
+    goalDeadline.value = 'Daily';
+    goalDeadline.readOnly = true;
+    calorieGoalSection.style.display = 'block';
+    weeklyTimeframe.style.display = 'none';
+    goalDeadline.style.display = 'block';
+    goalDeadline.type = 'text';
+    goalDeadline.value = 'Daily';
+    goalDeadline.readOnly = true;
+    calorieGoalSection.style.display = 'block';
+    weeklyTimeframe.style.display = 'none';
 
     goalDeadline.type = 'text';
     goalDeadline.value = 'Daily';
@@ -205,19 +228,27 @@ document.getElementById('goal-type').addEventListener('change', async function (
   } else if (this.value === 'workoutsPerWeek') {
     // For workout goals
     weightSection.style.display = 'none';
-    calorieGoalSection.style.display = 'none';
+    // Keep calorie goal section visible
+    calorieGoalSection.style.display = 'block';
     weeklyTimeframe.style.display = 'block';
     goalDeadline.style.display = 'none';
+    
+    // Set placeholder for workout goals
+    goalTarget.placeholder = 'Enter weekly workout target';
   } else {
     // For weight goals
     weightSection.style.display = 'block';
-    calorieGoalSection.style.display = 'none';
+    // Keep calorie goal section visible
+    calorieGoalSection.style.display = 'block';
     weeklyTimeframe.style.display = 'none';
 
     goalDeadline.type = 'date';
     goalDeadline.value = '';
     goalDeadline.readOnly = false;
     goalDeadline.style.display = 'block';
+    
+    // Set placeholder for weight goals
+    goalTarget.placeholder = 'Enter target weight';
     goalTarget.value = '';
   }
 });
@@ -361,16 +392,15 @@ async function renderGoals() {
   const data = docSnap.data() || {};
 
   // Get today's meals and calculate calories
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of day
   const mealLogs = data.mealLogs || [];
 
-  // Improved date comparison for today's meals
+  // Improved date comparison for today's meals using timestamp
   const todayMeals = mealLogs.filter(meal => {
     const mealDate = new Date(meal.timestamp);
-    const mealDateStr = mealDate.toLocaleDateString();
-    const todayStr = new Date().toLocaleDateString();
-    const isToday = mealDateStr === todayStr;
-    return isToday;
+    mealDate.setHours(0, 0, 0, 0); // Set to start of day
+    return mealDate.getTime() === today.getTime();
   });
 
   // Calculate today calories for today 
@@ -522,7 +552,9 @@ async function renderGoals() {
 
     workoutGoals.forEach((goal, index) => {
       const target = goal.target || "—";
-      const count = workouts.filter(w => isThisWeek(w.timestamp)).length;
+      // Get all workouts for this week
+      const thisWeeksWorkouts = workouts.filter(w => isThisWeek(w.timestamp));
+      const count = thisWeeksWorkouts.length;
       const progress = Math.min((count / target) * 100, 100);
       const progressText = `${count}/${target} workouts`;
       const status = progress >= 100 ? "✅ Achieved" : "🟢 In Progress";
@@ -560,9 +592,19 @@ window.deleteGoal = async (index) => {
 function isThisWeek(timestamp) {
   const now = new Date();
   const date = new Date(timestamp);
-  const start = new Date(now.setDate(now.getDate() - now.getDay()));
+  
+  // Reset now to start of current day
+  now.setHours(0, 0, 0, 0);
+  
+  // Get start of week (Sunday)
+  const start = new Date(now);
+  start.setDate(now.getDate() - now.getDay());
+  
+  // Get end of week (Saturday)
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+  
   return date >= start && date <= end;
 }
 

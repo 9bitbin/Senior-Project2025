@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
-import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+import { generateUserAvatar } from './community.js';
 
 let profileForm;
 
@@ -43,22 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const userDocRef = doc(db, "users", user.uid);
 
-      // Add recipes collection reference
-      const recipesRef = collection(db, "recipes");
-      
+      // Inside the profileForm submit handler, update the try block
       try {
           const existingDoc = await getDoc(userDocRef);
           const existingData = existingDoc.exists() ? existingDoc.data() : {};
-          
-          // Ensure recipes are linked to user
-          const userRecipes = await getDocs(query(recipesRef, where("userId", "==", user.uid)));
-          const recipes = [];
-          userRecipes.forEach(doc => {
-              recipes.push({ id: doc.id, ...doc.data() });
-          });
-          
-          // Add recipes to user data
-          updatedData.recipes = recipes.map(recipe => recipe.id);
           
           // Ensure email is always saved
           updatedData.email = user.email || existingData.email || '';
@@ -211,3 +199,78 @@ onAuthStateChanged(auth, async (user) => {
     window.location.href = "index.html";
   }
 }); // End of auth state change listener
+
+
+// Update the profile form handler to include the complete avatar info
+document.addEventListener('DOMContentLoaded', () => {
+  profileForm = document.getElementById("profileForm");
+  
+  if (profileForm) {
+    profileForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+          alert("You must be logged in to save your profile!");
+          return;
+      }
+
+      const name = document.getElementById("name").value;
+      
+      const updatedData = {
+          name: name,
+          age: document.getElementById("age").value,
+          weight: document.getElementById("weight").value,
+          height: document.getElementById("height").value,
+          dob: document.getElementById("dob").value,
+          sex: document.getElementById("sex").value,
+          calorieGoal: Number(document.getElementById("calorieGoal").value), // Convert to number
+          exerciseType: document.getElementById("exerciseType").value,
+          healthGoals: document.getElementById("healthGoals").value,
+          activityLevel: document.getElementById("activityLevel").value,
+          dietType: document.getElementById("dietType").value,
+          allergies: document.getElementById("allergies").value,
+          budgetPreference: document.getElementById("budgetPreference").value,
+          sleepHours: document.getElementById("sleepHours").value,
+          waterIntakeGoal: document.getElementById("waterIntakeGoal").value,
+          preferredWorkoutTime: document.getElementById("preferredWorkoutTime").value,
+          mentalHealthFocus: document.getElementById("mentalHealthFocus").value,
+          avatarInfo: generateUserAvatar(user.uid, name),
+          displayName: name
+      };
+
+      const userDocRef = doc(db, "users", user.uid);
+
+      // Inside the profileForm submit handler, update the try block
+      try {
+          const existingDoc = await getDoc(userDocRef);
+          const existingData = existingDoc.exists() ? existingDoc.data() : {};
+          
+          // Ensure email is always saved
+          updatedData.email = user.email || existingData.email || '';
+          updatedData.name = document.getElementById("name").value;
+          updatedData.displayName = updatedData.name;
+          
+          // Add timestamp for tracking updates
+          const mergedData = {
+              ...existingData,
+              ...updatedData,
+              email: updatedData.email, // Ensure email is not overwritten
+              lastUpdate: new Date().toISOString()
+          };
+      
+          await setDoc(userDocRef, mergedData);
+          
+          // Update email in community data
+          if (window.updateUserEmail) {
+              await window.updateUserEmail(user.uid, updatedData.email);
+          }
+          
+          alert("✅ Profile saved successfully!");
+          window.location.href = "home.html";
+      } catch (error) {
+          alert("❌ Error saving profile: " + error.message);
+      }
+    }); 
+  }
+});

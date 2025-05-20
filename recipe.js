@@ -82,27 +82,36 @@ function displayRecipes(meals) {
     const card = document.createElement("div");
     card.classList.add("recipe-card");
     card.innerHTML = `
-      <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
-      <div class="card-body">
-        <h3>${meal.strMeal}</h3>
-        <p><strong>Category:</strong> ${meal.strCategory}</p>
-        <p><strong>Origin:</strong> ${meal.strArea}</p>
-        <p>${meal.strInstructions.substring(0, 100)}...</p>
-        <div class="card-actions">
-          <button onclick="viewFullRecipe(this)" class="view-recipe-btn" 
-            data-recipe='${JSON.stringify({
-              name: meal.strMeal,
-              category: meal.strCategory,
-              origin: meal.strArea,
-              instructions: meal.strInstructions,
-              ingredients: getIngredientsList(meal)
-            }).replace(/'/g, "&apos;")}'
-          >View Recipe</button>
-          <button class="save-btn" data-name="${meal.strMeal}" data-img="${meal.strMealThumb}" data-inst="${meal.strInstructions.replace(/'/g, "\'")}">💾 Save</button>
-          <button class="log-btn" data-name="${meal.strMeal}">🍽 Log</button>
-        </div>
-      </div>
-    `;
+  <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+  <div class="card-body">
+    <h3>${meal.strMeal}</h3>
+    <p><strong>Category:</strong> ${meal.strCategory}</p>
+    <p><strong>Origin:</strong> ${meal.strArea}</p>
+    <p>${meal.strInstructions.substring(0, 100)}...</p>
+    <div class="card-actions">
+      <button onclick="viewFullRecipe(this)" class="view-recipe-btn" 
+        data-recipe='${JSON.stringify({
+          name: meal.strMeal,
+          category: meal.strCategory,
+          origin: meal.strArea,
+          instructions: meal.strInstructions,
+          ingredients: getIngredientsList(meal)
+        }).replace(/'/g, "&apos;")}' style="background-color: #3b82f6;">
+        👁 View Recipe
+      </button>
+      <button class="save-btn" data-name="${meal.strMeal}" 
+        data-img="${meal.strMealThumb}" 
+        data-inst="${meal.strInstructions.replace(/'/g, "\'")}" 
+        style="background-color: #8b5cf6;">
+        💾 Save
+      </button>
+      <button class="log-btn" data-name="${meal.strMeal}" 
+        style="background-color: #10b981;">
+        🍽 Log
+      </button>
+    </div>
+  </div>
+`;
     recipeResults.appendChild(card);
     appendAIChat(card, meal.strMeal, meal.strInstructions);
   });
@@ -115,7 +124,7 @@ function displayRecipes(meals) {
       saveRecipe(name, image, instructions);
     });
   });
-
+ 
   document.querySelectorAll(".log-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const name = btn.dataset.name;
@@ -295,10 +304,15 @@ async function loadSavedRecipes() {
                 origin: recipe.origin,
                 instructions: recipe.instructions,
                 ingredients: recipe.ingredients
-              }).replace(/'/g, "&apos;")}'
-            >View Recipe</button>
-            <button onclick="deleteRecipe('${docRef.id}')" class="delete-btn">🗑 Delete</button>
-            <button class="log-btn" data-name="${recipe.name}">🍽 Log</button>
+              }).replace(/'/g, "&apos;")}' style="background-color: #3b82f6;">
+              👁 View Recipe
+            </button>
+            <button onclick="deleteRecipe('${docRef.id}')" class="delete-btn" style="background-color: #ef4444;">
+              🗑 Delete
+            </button>
+            <button onclick="logRecipeToNutrition('${recipe.name}')" class="log-btn" style="background-color: #10b981;">
+              🍽 Log Meal
+            </button>
           </div>
         </div>
       `;
@@ -321,7 +335,7 @@ window.deleteRecipe = async (recipeId) => {
   }
 };
 
-async function logRecipeToNutrition(name) {
+window.logRecipeToNutrition = async function (name) {
   const user = auth.currentUser;
   if (!user) return;
   try {
@@ -412,6 +426,13 @@ async function showRecommendedRecipes(uid) {
     console.error("❌ AI recommender error:", err);
   }
 }
+
+// Add this after the loadSavedRecipes function
+window.getSavedRecipes = async (userId) => {
+  const savedRecipesQuery = query(collection(db, "users", userId, "savedRecipes"), orderBy("timestamp", "desc"));
+  const snap = await getDocs(savedRecipesQuery);
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
 
 
 

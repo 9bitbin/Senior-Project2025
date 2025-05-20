@@ -19,35 +19,48 @@ const resetMealsBtn = document.getElementById("reset-meals");
 const dailyBreakdownEl = document.getElementById("daily-calorie-breakdown");
 const mealDateInput = document.getElementById("meal-date"); 
 
+// Run the fix function when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  // Wait for authentication to complete
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      // Try to fix any incorrectly dated meals
+      await fixIncorrectMealDates();
+    }
+  });
+});
+
 // ✅ Set max date for meal date input to today
-// Add this after setting the max date for meal date input
 if (mealDateInput) {
-  const today = new Date().toISOString().split('T')[0];
-  mealDateInput.setAttribute('max', today);
-  mealDateInput.value = today;
+  const now = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  mealDateInput.setAttribute('max', today.toISOString().split('T')[0]);
+  mealDateInput.value = today.toISOString().split('T')[0];
   
-  // Add event listener to show/hide time input based on selected date
   mealDateInput.addEventListener('change', () => {
-    const mealTimeInput = document.getElementById("meal-time");
+    const mealTimeInput = document.getElementById('meal-time');
     if (!mealTimeInput) return;
     
-    const selectedDate = mealDateInput.value;
-    const isToday = selectedDate === today;
-    
-    // Show time input only for past dates
-    if (isToday) {
-      mealTimeInput.style.display = 'none';
-      document.querySelector('label[for="meal-time"]').style.display = 'none';
-    } else {
+    const selectedDate = new Date(mealDateInput.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    // Compare only year, month, day for strict past date
+    // The time input should only be visible for dates strictly before today.
+    const selectedDateISO = selectedDate.toISOString().split('T')[0];
+    const todayISO = today.toISOString().split('T')[0];
+    const isStrictlyPast = selectedDateISO < todayISO;
+    if (isStrictlyPast) {
       mealTimeInput.style.display = 'block';
       document.querySelector('label[for="meal-time"]').style.display = 'block';
-      
-      // Default to noon
       mealTimeInput.value = '12:00';
+    } else {
+      mealTimeInput.style.display = 'none';
+      document.querySelector('label[for="meal-time"]').style.display = 'none';
+      mealTimeInput.value = '';
     }
   });
   
-  // Trigger the change event to set initial state
   mealDateInput.dispatchEvent(new Event('change'));
 }
 
@@ -58,7 +71,7 @@ const chartCtx = document.getElementById("calorieChart")?.getContext("2d");
 let calorieChart = null;
 
 // ✅ Ensure elements exist before adding event listeners
-
+// This section uses optional chaining to prevent errors when elements don't exist
 
 // const mealDateInput = document.getElementById("meal-date");
 
@@ -79,38 +92,46 @@ if (fetchNutritionBtn) {
   
     // Get the selected date or default to today
     let mealDate;
-    const now = new Date();
     
     if (mealDateInput && mealDateInput.value) {
-      // Get today's date in YYYY-MM-DD format for comparison
-      const todayStr = new Date().toISOString().split('T')[0];
       const selectedDateStr = mealDateInput.value;
+      const mealTimeInput = document.getElementById("meal-time");
       
-      // Check if selected date is today
-      if (selectedDateStr === todayStr) {
-        // For today, use current time
-        mealDate = now;
-        console.log("Using current time for today:", mealDate);
+      // Create date object from selected date - ensure it's treated as local time
+      // by explicitly parsing year, month, day, hours, minutes
+      const dateTimeParts = selectedDateStr.split('T');
+      const dateParts = dateTimeParts[0].split('-').map(Number);
+      const year = dateParts[0];
+      const month = dateParts[1] - 1; // JavaScript months are 0-indexed
+      const day = dateParts[2];
+      
+      mealDate = new Date(year, month, day);
+      
+      // If time input is visible and has a value, use it
+      if (mealTimeInput && mealTimeInput.style.display !== 'none' && mealTimeInput.value) {
+        const [hours, minutes] = mealTimeInput.value.split(':').map(Number);
+        mealDate.setHours(hours, minutes, 0, 0);
+      } else if (dateTimeParts.length > 1) {
+        // If datetime-local has time component
+        const timeParts = dateTimeParts[1].split(':').map(Number);
+        mealDate.setHours(timeParts[0], timeParts[1], 0, 0);
       } else {
-        // For past dates, use the selected time or default to noon
-        const mealTimeInput = document.getElementById("meal-time");
-        if (mealTimeInput && mealTimeInput.value) {
-          const [hours, minutes] = mealTimeInput.value.split(':').map(Number);
-          mealDate = new Date(selectedDateStr + "T00:00:00"); // Create date with midnight time
-          mealDate.setHours(hours, minutes, 0, 0);
-          console.log("Using selected time for past date:", mealDate);
-        } else {
-          // Default to noon if no time selected
-          mealDate = new Date(selectedDateStr + "T12:00:00");
-          console.log("Using default noon time for past date:", mealDate);
-        }
+        // If no time input or hidden (today's date), use current time
+        const now = new Date();
+        mealDate.setHours(now.getHours(), now.getMinutes(), 0, 0);
       }
     } else {
-      mealDate = now; // Use current date and time
-      console.log("No date selected, using current time:", mealDate);
+      mealDate = new Date();
+      mealDate.setSeconds(0, 0); // Reset seconds and milliseconds
     }
     
     const foodItem = data.items[0];
+    // Create a consistent date string for display and grouping
+    const year = mealDate.getFullYear();
+    const month = String(mealDate.getMonth() + 1).padStart(2, '0');
+    const day = String(mealDate.getDate()).padStart(2, '0');
+    const dateStr = `${month}/${day}/${year}`;
+    
     const meal = {
       name: query,
       calories: foodItem.calories || 0,
@@ -118,7 +139,12 @@ if (fetchNutritionBtn) {
       carbs: foodItem.carbohydrates_total_g || 0,
       fat: foodItem.fat_total_g || 0,
       timestamp: mealDate.toISOString(),
-      localDate: mealDate.toLocaleDateString('en-US')
+      // Store the formatted date string for consistent display
+      localDate: dateStr,
+      // Store local date components to ensure correct grouping
+      localYear: year,
+      localMonth: month,
+      localDay: day
     };
   
     saveMealToFirestore(meal);
@@ -142,6 +168,74 @@ async function fetchNutritionData(query) {
   }
 }
 
+// ✅ Fix incorrectly dated meals (5/18 -> 5/19)
+async function fixIncorrectMealDates() {
+  const user = auth.currentUser;
+  if (!user) return false;
+
+  const userDocRef = doc(db, "users", user.uid);
+  const userDoc = await getDoc(userDocRef);
+  let meals = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
+  let hasChanges = false;
+
+  // Look for meals logged on 5/18 that should be on 5/19
+  meals = meals.map(meal => {
+    // Check if this is a meal from 5/18 that was logged today (5/19)
+    const mealDate = new Date(meal.timestamp);
+    const today = new Date();
+    
+    // Only process meals from 5/18/2025
+    if (mealDate.getFullYear() === 2025 && 
+        mealDate.getMonth() === 4 && // May is month 4 (0-indexed)
+        mealDate.getDate() === 18) {
+      
+      // Check if this meal was logged recently (in the last 24 hours)
+      const hoursSinceLogged = (today - mealDate) / (1000 * 60 * 60);
+      
+      // If logged in the last 24 hours, it's likely a 5/19 meal incorrectly showing as 5/18
+      if (hoursSinceLogged < 24) {
+        hasChanges = true;
+        
+        // Create a new date object for 5/19 with the same time
+        const correctedDate = new Date(mealDate);
+        correctedDate.setDate(19); // Set to the 19th
+        
+        // Create the correct local date components
+        const year = correctedDate.getFullYear();
+        const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(correctedDate.getDate()).padStart(2, '0');
+        const dateStr = `${month}/${day}/${year}`;
+        
+        return {
+          ...meal,
+          timestamp: correctedDate.toISOString(),
+          localDate: dateStr,
+          localYear: year,
+          localMonth: month,
+          localDay: day
+        };
+      }
+    }
+    return meal;
+  });
+
+  // Save the updated meals if changes were made
+  if (hasChanges) {
+    try {
+      await updateDoc(userDocRef, { 
+        mealLogs: meals,
+        lastMealUpdate: new Date().toISOString()
+      });
+      console.log("✅ Fixed incorrect meal dates");
+      return true;
+    } catch (error) {
+      console.error("Error fixing meal dates:", error);
+      return false;
+    }
+  }
+  return false;
+}
+
 // ✅ Save Meal to Firestore
 async function saveMealToFirestore(meal) {
   const user = auth.currentUser;
@@ -151,6 +245,12 @@ async function saveMealToFirestore(meal) {
   const userDoc = await getDoc(userDocRef);
   let meals = userDoc.exists() ? userDoc.data().mealLogs || [] : [];
 
+  // Create a new Date object from the meal's timestamp
+  const mealDate = new Date(meal.timestamp);
+  
+  // Format the local date string consistently
+  meal.localDate = mealDate.toLocaleDateString('en-US');
+  
   meals.push(meal);
 
   try {
@@ -160,16 +260,16 @@ async function saveMealToFirestore(meal) {
       lastMealUpdate: new Date().toISOString()
     });
 
-    // Calculate total calories for today
-    const today = new Date().toISOString().split('T')[0];
-    const todayMeals = meals.filter(m => 
-      new Date(m.timestamp).toISOString().split('T')[0] === today
+    // Calculate total calories for the meal's actual date
+    const mealDateStr = mealDate.toISOString().split('T')[0];
+    const dayMeals = meals.filter(m => 
+      new Date(m.timestamp).toISOString().split('T')[0] === mealDateStr
     );
-    const todayCalories = todayMeals.reduce((sum, m) => sum + Number(m.calories || 0), 0);
+    const dayCalories = dayMeals.reduce((sum, m) => sum + Number(m.calories || 0), 0);
 
     // Update both displays with accurate total
     await updateDoc(userDocRef, {
-      todayTotalCalories: todayCalories
+      todayTotalCalories: dayCalories
     });
 
     fetchLoggedMeals();
@@ -220,8 +320,17 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
   meals.forEach(meal => {
     const calories = Number(meal.calories) || 0;
     totalCalories += calories;
-    // Use local date string for grouping to avoid UTC/ISO issues
-    const dateKey = new Date(meal.timestamp).toLocaleDateString('en-US');
+    
+    // Create a date object from the timestamp
+    const mealDate = new Date(meal.timestamp);
+    
+    // Get date components in local timezone
+    // Important: Use getDate(), not getUTCDate() to ensure we're using local time
+    const year = mealDate.getFullYear();
+    const month = String(mealDate.getMonth() + 1).padStart(2, '0');
+    const day = String(mealDate.getDate()).padStart(2, '0');
+    const dateKey = `${month}/${day}/${year}`;
+    
     if (!dailyCalories[dateKey]) dailyCalories[dateKey] = 0;
     dailyCalories[dateKey] += calories;
   });
@@ -236,9 +345,21 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
     
     sortedDates.slice().reverse().forEach(dateKey => {
       // Only use filtered meals for this day
-      const dayMeals = meals.filter(m =>
-        new Date(m.timestamp).toLocaleDateString('en-US') === dateKey
-      );
+      const dayMeals = meals.filter(m => {
+        // For older meals that don't have the local components
+        if (!m.localYear || !m.localMonth || !m.localDay) {
+          const mealDate = new Date(m.timestamp);
+          const year = mealDate.getFullYear();
+          const month = String(mealDate.getMonth() + 1).padStart(2, '0');
+          const day = String(mealDate.getDate()).padStart(2, '0');
+          const mealDateKey = `${month}/${day}/${year}`;
+          return mealDateKey === dateKey;
+        }
+        
+        // For newer meals with stored local components
+        const mealDateKey = `${m.localMonth}/${m.localDay}/${m.localYear}`;
+        return mealDateKey === dateKey;
+      });
 
       if (dayMeals.length === 0) return; // Skip days with no meals in filtered range
 
@@ -248,6 +369,13 @@ async function fetchLoggedMeals(startDate = null, endDate = null) {
       const displayDate = dateKey;
       dayBlock.innerHTML = `<h4>📅 ${displayDate} — ${Math.round(dailyCalories[dateKey])} kcal</h4>`;
 
+      // Sort meals chronologically within the day (earliest first)
+      dayMeals.sort((a, b) => {
+        const timeA = new Date(a.timestamp).getTime();
+        const timeB = new Date(b.timestamp).getTime();
+        return timeA - timeB;
+      });
+      
       dayMeals.forEach(meal => {
         const mealEl = document.createElement("div");
         mealEl.className = "meal-entry";
@@ -456,7 +584,6 @@ if (aiBtn) {
     }
   });
 }
-
 
 
 

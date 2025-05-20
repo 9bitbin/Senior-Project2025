@@ -7,199 +7,200 @@
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
-      display: flex;
-    }
-
-    .main-content {
-      margin-left: 220px;
-      padding: 40px;
-      width: calc(100% - 220px);
-    }
-
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.05);
-      margin-bottom: 40px;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-      color: #111;
-      text-align: center;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 12px;
-      font-size: 15px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      resize: vertical;
-      margin-bottom: 15px;
-    }
-
-    /* Update the select and checkbox styles */
-    select, input[type="text"] {
+  
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(to bottom right, #d1fae5, #a7f3d0);
+        display: flex;
+      }
+  
+      .main-content {
+        margin-left: 220px;
+        padding: 40px;
+        width: calc(100% - 220px);
+      }
+  
+      .card {
+        background: white;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+        margin-bottom: 40px;
+      }
+  
+      h2 {
+        margin-bottom: 20px;
+        color: #111;
+        text-align: center;
+      }
+  
+      textarea {
         width: 100%;
         padding: 12px;
         font-size: 15px;
-        border-radius: 8px;
+        border-radius: 10px;
         border: 1px solid #ccc;
+        resize: vertical;
         margin-bottom: 15px;
-    }
-
-    input[type="checkbox"] {
-        width: auto;
-        margin-right: 8px;
-    }
-
-    /* Add styles for the top controls */
-    .top-controls {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .toggle-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    #searchInput {
-        flex: 2;
-    }
-
-    #postFilter {
-        flex: 1;
-    }
-
-    label { font-weight: 600; display: block; margin: 10px 0 5px; }
-
-    button {
-      padding: 12px 20px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      background-color: #10b981;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover { background-color: #059669; }
-
-    .post {
-      background-color: #f9fafb;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
-
-    .post-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .post-header-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .post-header-right {
-        margin-left: auto;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .post-tag {
-        background: #e2e8f0;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 0.9em;
-        color: #475569;
-    }
-
-    .post-visibility {
-        margin-left: auto;
-        color: #64748b;
-    }
-
-    .post-content {
-        position: relative;
-        line-height: 1.5;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        margin-bottom: 20px;
-        overflow: visible;
-        max-height: none;
-        padding-bottom: 25px;
-    }
-
-    .content-text {
-        margin-bottom: 10px;
-        display: block;
-        overflow: visible;
-        white-space: pre-wrap;
-    }
-
-    .content-text.truncated {
-        max-height: 4.5em;
-        overflow: hidden;
-        margin-bottom: 10px;
-    }
-
-    .read-more-btn {
-        display: inline-block;
-        color: #10b981;
-        background: none;
+      }
+  
+      /* Update the select and checkbox styles */
+      select, input[type="text"] {
+          width: 100%;
+          padding: 12px;
+          font-size: 15px;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+          margin-bottom: 15px;
+      }
+  
+      input[type="checkbox"] {
+          width: auto;
+          margin-right: 8px;
+      }
+  
+      /* Add styles for the top controls */
+      .top-controls {
+          display: flex;
+          gap: 15px;
+          margin-bottom: 20px;
+      }
+  
+      .toggle-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+      }
+  
+      #searchInput {
+          flex: 2;
+      }
+  
+      #postFilter {
+          flex: 1;
+      }
+  
+      label { font-weight: 600; display: block; margin: 10px 0 5px; }
+  
+      button {
+        padding: 12px 20px;
+        border-radius: 8px;
         border: none;
+        font-weight: bold;
+        background-color: #10b981;
+        color: white;
         cursor: pointer;
-        padding: 5px 0;
-        font-size: 14px;
-        margin-top: 8px;
-        text-decoration: underline;
-    }
-
-    .full-content {
-        display: none;
-        white-space: pre-wrap;
-    }
-    .read-more-btn.visible {
-        display: block;  /* Only show when needed */
-    }
-
-    .post-tag {
-        background: #e2e8f0;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 0.9em;
-        color: #475569;
-        text-transform: capitalize;
-    }
-</style>
+        transition: background 0.3s;
+      }
+  
+      button:hover { background-color: #059669; }
+  
+      .post {
+        background-color: #f9fafb;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+      }
+  
+      .post-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 15px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #eee;
+      }
+  
+      .post-header-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+  
+      .post-header-right {
+          margin-left: auto;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+  
+      .user-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          object-fit: cover;
+      }
+  
+      .post-tag {
+          background: #e2e8f0;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 0.9em;
+          color: #475569;
+      }
+  
+      .post-visibility {
+          margin-left: auto;
+          color: #64748b;
+      }
+  
+      .post-content {
+          position: relative;
+          line-height: 1.5;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          margin-bottom: 20px;
+          overflow: visible;
+          max-height: none;
+          padding-bottom: 25px;
+      }
+  
+      .content-text {
+          margin-bottom: 10px;
+          display: block;
+          overflow: visible;
+          white-space: pre-wrap;
+      }
+  
+      .content-text.truncated {
+          max-height: 4.5em;
+          overflow: hidden;
+          margin-bottom: 10px;
+      }
+  
+      .read-more-btn {
+          display: inline-block;
+          color: #10b981;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 5px 0;
+          font-size: 14px;
+          margin-top: 8px;
+          text-decoration: underline;
+      }
+  
+      .full-content {
+          display: none;
+          white-space: pre-wrap;
+      }
+      .read-more-btn.visible {
+          display: block;  /* Only show when needed */
+      }
+  
+      .post-tag {
+          background: #e2e8f0;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 0.9em;
+          color: #475569;
+          text-transform: capitalize;
+      }
+    </style>
 
    
 </style>
@@ -212,19 +213,12 @@
 
 <!-- Main Content -->
 <div class="main-content">
-  <!-- Community Header -->
-  <div class="community-header">
-    <h2>Community</h2>
-    <div class="community-header-icons">
-      <!-- Icons will be added by JavaScript -->
-    </div>
-  </div>
 
-  <!-- 🔹 Share Your Progress -->
+  <!-- Share Your Progress section -->
   <div class="card" data-aos="fade-up">
     <h2>📢 Share Your Progress</h2>
     <textarea id="postContent" placeholder="Write about your meal, workout, or achievement..."></textarea>
-
+  
     <label for="postType">Tag Your Post:</label>
     <select id="postType">
       <option value="meal">🍽️ Meal</option>
@@ -239,57 +233,91 @@
       <option value="question">❓ Ask for Help</option>
     </select>
 
-  
-  
+   
 
-    <label>
-      <input type="checkbox" id="anonymousCheck" />
-      Share Anonymously
-    </label>
-
-    <!-- ✅ NEW: Visibility checkbox -->
-    <label>
-      <input type="checkbox" id="visibilityCheck" />
-      Share with Friends Only
-    </label>
-
-    <button id="sharePostBtn">📤 Share</button>
-  </div>
-
-  <!-- 🔹 Community Feed -->
-  <div class="card" data-aos="zoom-in">
-    <h2>🌍 Community Feed</h2>
-
-    <div class="top-controls">
-      <input type="text" id="searchInput" placeholder="Search posts...">
-      <select id="postFilter">
-          <option value="all">All Posts</option>
-          <option value="meal">🍽️ Meal</option>
-          <option value="workout">💪 Workout</option>
-          <option value="mindset">🧠 Mindset</option>
-          <option value="sleep">🛌 Sleep</option>
-          <option value="hydration">💧 Hydration</option>
-          <option value="weight">📉 Weight Loss</option>
-          <option value="health">🩺 Health Update</option>
-          <option value="achievement">🏆 Achievement</option>
-          <option value="motivation">🌟 Motivation</option>
-          <option value="question">❓ Ask for Help</option>
-      </select>
-      <div class="toggle-wrapper">
-          <input type="checkbox" id="friendToggle" />
-          <label for="friendToggle">Only Friends</label>
+    
+    <!-- Recipe toggle section -->
+    
+    <style>
+      .checkbox-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 15px 0;
+        text-align: center;
+      }
+    
+      .checkbox-container label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    </style>
+    
+    <!-- Then update the checkbox container section -->
+    <div style="text-align: center; margin: 15px 0;">
+      <div id="toggleArrow" style="display: none; cursor: pointer; margin: 10px 0;">
+        <span id="arrowIcon">▼</span> Share Saved Recipes
+      </div>
+      <div id="recipe-share-section" style="display: none; margin-top: 15px;">
+        <!-- Recipe content will be loaded here -->
       </div>
   </div>
-
-    <div id="communityFeed">
-      <p>Loading posts...</p>
+    <div class="checkbox-container">
+      <label>
+        <input type="checkbox" id="anonymousCheck">
+        Share Anonymously
+      </label>
+      <label>
+        <input type="checkbox" id="visibilityCheck">
+        Share with Friends Only
+      </label>
     </div>
-  </div>
+
+    <button id="sharePostBtn">📤 Share</button>
+    </div>
+
+    <!-- Update the Community Feed section -->
+    <div class="card" data-aos="zoom-in">
+      <h2>🌍 Community Feed</h2>
+      <div class="top-controls">
+        <input type="text" id="searchInput" placeholder="Search posts...">
+        <select id="postFilter">
+            <option value="all">All Posts</option>
+            <option value="meal">🍽️ Meal</option>
+            <option value="workout">💪 Workout</option>
+            <option value="mindset">🧠 Mindset</option>
+            <option value="sleep">🛌 Sleep</option>
+            <option value="hydration">💧 Hydration</option>
+            <option value="weight">📉 Weight Loss</option>
+            <option value="health">🩺 Health Update</option>
+            <option value="achievement">🏆 Achievement</option>
+            <option value="motivation">🌟 Motivation</option>
+            <option value="question">❓ Ask for Help</option>
+        </select>
+        <div class="toggle-wrapper">
+            <input type="checkbox" id="friendToggle" />
+            <label for="friendToggle">Only Friends</label>
+        </div>
+    </div>
+  
+      <div id="communityFeed">
+        <p>Loading posts...</p>
+      </div>
+    </div>
 
 </div>
 
+
+
+<!-- Keep your existing scripts -->
 <script type="module" src="firebase-config.js"></script>
 <script type="module" src="community.js"></script>
+<script type="module" src="recipe.js"></script>
+
+
+
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script>
   AOS.init({ duration: 800, offset: 100, once: true });
@@ -300,100 +328,183 @@
 </html>
 
 
+
 <style>
-  .community-header {
+  .shared-recipes {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+  }
+
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+  }
+
+  .shared-recipe-card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .recipe-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
-    position: absolute;
-    top: 20px;
-    right: 40px;
     z-index: 1000;
   }
 
-  .community-header-icons {
-    display: flex;
-    gap: 15px;
+  .recipe-popup-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
   }
 
-  .post-content {
-    white-space: pre-wrap;
-    word-break: break-word;
-    margin: 15px 0;
-    max-height: none;
-    overflow: visible;
-  }
-
-  .content-text {
-    margin-bottom: 10px;
-    display: block;
-    -webkit-line-clamp: unset;
-    line-clamp: unset;
-    -webkit-box-orient: unset;
-    overflow: visible;
-  }
-
- 
-    .read-more-btn {
-    color: #10b981;
+  .recipe-popup .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
     background: none;
     border: none;
+    font-size: 24px;
     cursor: pointer;
-    padding: 5px 0;
-    font-size: 14px;
-    display: block;
-    margin-top: 8px;
+    color: #666;
   }
 
-  .post-tag {
-    background: #e2e8f0;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.9em;
-    color: #475569;
-    text-transform: capitalize;
+  .view-recipe-btn {
+    padding: 8px 16px;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+  }
+
+  .view-recipe-btn:hover {
+    background-color: #2563eb;
   }
 </style>
+
 
 <style>
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      margin-top: 30px;
-    }
+      /* Keep only one instance of user-avatar styles */
+      .user-avatar, .user-initial {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 16px;
+        color: white;
+        margin-right: 10px;
+      }
 
-    .recipe-card {
-      background: #fefefe;
-      border-radius: 16px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.06);
-      overflow: hidden;
-      transition: transform 0.2s ease;
-    }
+      .post-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-    .recipe-card:hover {
-      transform: scale(1.02);
-    }
+      .user-info {
+        display: flex;
+        flex-direction: column;
+      }
 
-    .recipe-card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-    }
+      .user-name {
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 4px;
+      }
 
-    .recipe-card .card-body {
-      padding: 16px;
-    }
+      .post-timestamp {
+        font-size: 16px;
+        color: #6b7280;
+        font-weight: 500;
+      }
 
-    .recipe-card .card-body h3 {
-      font-size: 18px;
-      margin-bottom: 10px;
-      color: #111827;
-    }
-
-    .recipe-card .card-body p {
-      font-size: 14px;
-      margin-bottom: 12px;
-      color: #374151;
-    }
-</style>
+      .post-tag {
+        background: #e2e8f0;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 1.2em;
+        color: #475569;
+        text-transform: capitalize;
+        font-weight: 500;
+      }
+      .post-visibility {
+          margin-left: auto;
+          color: #64748b;
+      }
+  
+      .post-content {
+          position: relative;
+          line-height: 1.5;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          margin-bottom: 20px;
+          overflow: visible;
+          max-height: none;
+          padding-bottom: 25px;
+      }
+  
+      .content-text {
+          margin-bottom: 10px;
+          display: block;
+          overflow: visible;
+          white-space: pre-wrap;
+      }
+  
+      .content-text.truncated {
+          max-height: 4.5em;
+          overflow: hidden;
+          margin-bottom: 10px;
+      }
+  
+      .read-more-btn {
+          display: inline-block;
+          color: #10b981;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 5px 0;
+          font-size: 14px;
+          margin-top: 8px;
+          text-decoration: underline;
+      }
+  
+      .full-content {
+          display: none;
+          white-space: pre-wrap;
+      }
+      .read-more-btn.visible {
+          display: block;  /* Only show when needed */
+      }
+  
+      .post-tag {
+          background: #e2e8f0;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 0.9em;
+          color: #475569;
+          text-transform: capitalize;
+      }
+    </style>

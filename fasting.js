@@ -1,6 +1,10 @@
 // ✅ Import Firebase
+// Keep only one set of imports at the top
 import { db, auth } from "./firebase-config.js";
-import { doc, updateDoc, getDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+
+
+
 
 // ✅ Select Elements Safely
 const fastingWindowSelect = document.getElementById("fasting-window");
@@ -8,21 +12,22 @@ const startFastingBtn = document.getElementById("start-fasting");
 const endFastingBtn = document.getElementById("end-fasting"); 
 const fastingStatusEl = document.getElementById("fasting-status");
 const fastingTimerEl = document.getElementById("fasting-timer");
-const fastingHistoryList = document.getElementById("fasting-history");
 const totalFastsEl = document.getElementById('total-fasts');
 const avgDurationEl = document.getElementById('avg-duration');
 const completionRateEl = document.getElementById('completion-rate');
 const ctx = document.getElementById('fastingChart')?.getContext('2d');
 const fastingTypeIndicator = document.querySelector(".fasting-type-indicator");
 const dailyFastMessage = document.getElementById('daily-fast-message');
-const debugControlsDiv = document.createElement('div');
+
 let fastingChart;
 
 let fastingInterval = null; // Store timer interval
 
 // ✅ Start Fasting Function
 
-let totalPlannedDuration = 0;
+// Update imports - remove unused arrayUnion
+
+
 
 
 async function clearActiveFasting() {
@@ -41,10 +46,7 @@ async function clearActiveFasting() {
 }
 
 
-const filterStartDate = document.getElementById('filter-start-date');
-const filterEndDate = document.getElementById('filter-end-date');
-const filterBtn = document.querySelector('.filter-btn');
-const resetFilterBtn = document.querySelector('.reset-filter-btn');
+
 
 
 
@@ -202,14 +204,18 @@ async function endFasting(isAutomatic = false, isCompleted = false) {
 
 // Update the loadFastingHistory function's chart section
 async function loadFastingHistory() {
-    if (!fastingHistoryList) return;
-
     try {
         const user = auth.currentUser;
-        if (!user) {
-            console.error("❌ User not logged in!");
-            return;
-        }
+        if (!user) return;
+
+        // Add safe element access
+        const filterStartEl = document.getElementById("filter-start-date");
+        const filterEndEl = document.getElementById("filter-end-date");
+        const fastingHistoryList = document.getElementById("fasting-history-list");
+
+        // Use optional chaining for value access
+        const filterStartDate = filterStartEl?.value;
+        const filterEndDate = filterEndEl?.value;
 
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
@@ -218,8 +224,19 @@ async function loadFastingHistory() {
             let fastingHistory = userDoc.data().fastingHistory || [];
             // Sort history by start time in descending order
             fastingHistory.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-            
-            let filteredHistory = [...fastingHistory]; // Create a copy for filtering
+
+            // Apply date filtering only if both dates are available
+            let filteredHistory = fastingHistory;
+            if (filterStartDate && filterEndDate) {
+                const startDate = new Date(filterStartDate);
+                const endDate = new Date(filterEndDate);
+                endDate.setHours(23, 59, 59);
+
+                filteredHistory = filteredHistory.filter(fast => {
+                    const fastDate = new Date(fast.startTime);
+                    return fastDate >= startDate && fastDate <= endDate;
+                });
+            }
 
             // Calculate statistics from complete history
             const totalFasts = fastingHistory.length;
@@ -413,13 +430,6 @@ async function loadFastingHistory() {
     }
 }
 
-// Add event listeners for the filter buttons
-filterBtn?.addEventListener('click', loadFastingHistory);
-resetFilterBtn?.addEventListener('click', () => {
-    filterStartDate.value = '';
-    filterEndDate.value = '';
-    loadFastingHistory();
-});
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -455,32 +465,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 async function restoreActiveFasting() {
-    console.log("🔄 Checking for active fasting session...");
-    const user = auth.currentUser;
-    if (!user) return;
+    // Add null checks for DOM elements
+    const fastingStatusEl = document.getElementById("fasting-status");
+    if (!fastingStatusEl) {
+        console.warn("Fasting status element not found");
+        return;
+    }
 
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
-
-    if (userDoc.exists()) {
-        const activeFasting = userDoc.data().activeFasting;
-
-        if (activeFasting) {
-            const endTime = new Date(activeFasting.endTime);
-            if (new Date() < endTime) {
-                fastingStatusEl.innerText = `Fasting in progress! Ends at ${endTime.toLocaleTimeString()}`;
-                startFastingBtn.disabled = true;
-                endFastingBtn.disabled = false;
-                startCountdownTimer(endTime);
+    try {
+        console.log("🔄 Checking for active fasting session...");
+        const user = auth.currentUser;
+        if (!user) return;
+    
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+    
+        if (userDoc.exists()) {
+            const activeFasting = userDoc.data().activeFasting;
+    
+            if (activeFasting) {
+                const endTime = new Date(activeFasting.endTime);
+                if (new Date() < endTime) {
+                    fastingStatusEl.innerText = `Fasting in progress! Ends at ${endTime.toLocaleTimeString()}`;
+                    startFastingBtn.disabled = true;
+                    endFastingBtn.disabled = false;
+                    startCountdownTimer(endTime);
+                } else {
+                    await clearActiveFasting();
+                }
             } else {
-                await clearActiveFasting();
+                // No active fasting session
+                fastingStatusEl.innerText = "";
+                startFastingBtn.disabled = false;
+                endFastingBtn.disabled = true;
             }
-        } else {
-            // No active fasting session
-            fastingStatusEl.innerText = "";
-            startFastingBtn.disabled = false;
-            endFastingBtn.disabled = true;
         }
+    } catch (error) {
+        console.error("Error restoring active fasting:", error);
     }
 }
 
