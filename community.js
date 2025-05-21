@@ -936,6 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUser = user;
     await loadUserNames();
     listenForPosts();
+    listenForUserData(); // Listen for user data changes including friend list
     listenForFriendRequests();
   });
 });
@@ -1591,6 +1592,39 @@ function getAvatarUrl(userId, anonymous = false) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
 }
 
+
+// Function to listen for user data changes (including friend list)
+function listenForUserData() {
+  if (!currentUser) return null;
+  
+  // Listen for changes to the user document
+  const userRef = doc(db, "users", currentUser.uid);
+  return onSnapshot(userRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const userData = docSnap.data();
+      // Update the friend list
+      friendList = userData.friends || [];
+      console.log(`User has ${friendList.length} friends:`, friendList);
+      
+      // Update friend list panel if open
+      const friendListPanel = document.getElementById("friendListPanel");
+      if (friendListPanel) {
+        showFriendList();
+      }
+      
+      // Refresh posts to update friend-only visibility
+      filterPosts();
+    } else {
+      // Create the user document if it doesn't exist
+      setDoc(userRef, {
+        friends: [],
+        displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+        email: currentUser.email,
+        createdAt: serverTimestamp()
+      });
+    }
+  });
+}
 
 // Listen for friend requests from the friendRequests collection
 function listenForFriendRequests() {
