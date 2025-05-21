@@ -121,14 +121,35 @@ async function logMealCost() {
         return;
     }
 
-    const selectedDate = customDateTime ? new Date(customDateTime) : new Date();
+    // Use current date/time if no custom date/time is provided
+    const currentDateTime = new Date();
+    
+    // Check if current date is within budget period
     const budgetStart = new Date(budgetData.startDate);
     const budgetEnd = new Date(budgetData.endDate);
-    
-    // Set both dates to start/end of their respective days for accurate comparison
     budgetStart.setHours(0, 0, 0, 0);
     budgetEnd.setHours(23, 59, 59, 999);
-
+    
+    // If no custom date is provided, use current date if within budget period
+    // otherwise use the budget end date
+    let selectedDate;
+    if (customDateTime) {
+        selectedDate = new Date(customDateTime);
+    } else {
+        // Check if current date is within budget period
+        const now = new Date();
+        const nowDateOnly = new Date(now);
+        nowDateOnly.setHours(0, 0, 0, 0);
+        
+        if (nowDateOnly >= budgetStart && nowDateOnly <= budgetEnd) {
+            selectedDate = now;
+        } else {
+            // If current date is outside budget period, use the budget end date
+            selectedDate = new Date(budgetEnd);
+            selectedDate.setHours(12, 0, 0, 0); // Set to noon on the end date
+        }
+    }
+    
     // Get just the date part for comparison
     const selectedDateOnly = new Date(selectedDate);
     selectedDateOnly.setHours(0, 0, 0, 0);
@@ -138,12 +159,12 @@ async function logMealCost() {
         return;
     }
 
-    // In the logMealCost function, update the expense timestamp creation:
+    // Create expense with selected time
     const expense = {
         id: Date.now().toString(),
         cost: mealCost,
         category,
-        timestamp: customDateTime ? new Date(customDateTime).toLocaleString() : new Date().toLocaleString()
+        timestamp: selectedDate.toISOString()
     };
 
     budgetData.expenses.push(expense);
@@ -174,23 +195,47 @@ function updateDateTimeConstraints() {
     const period = budgetPeriodSelect.value;
     if (!period) return; // Add guard clause
     
-    const { startDate, endDate } = getPeriodDates(period);
-    
-    if (mealDateTimeInput) {
-        const minDate = new Date(startDate);
-        const maxDate = new Date(endDate);
-        mealDateTimeInput.min = minDate.toISOString().slice(0, 16);
-        mealDateTimeInput.max = maxDate.toISOString().slice(0, 16);
-        
-        if (!mealDateTimeInput.value) {
-            mealDateTimeInput.value = new Date().toISOString().slice(0, 16);
+    // Get current active budget period from user data
+    getCurrentBudgetPeriod().then(budgetPeriod => {
+        if (mealDateTimeInput && budgetPeriod) {
+            // Use actual budget period dates from user data instead of calculated ones
+            const minDate = new Date(budgetPeriod.startDate);
+            const maxDate = new Date(budgetPeriod.endDate);
+            
+            // Ensure end date is set to 23:59:59 of the last day (e.g., the 25th)
+            maxDate.setHours(23, 59, 59, 999);
+            
+            // Format dates for HTML date input (YYYY-MM-DDThh:mm)
+            // This ensures the calendar only shows dates within the exact budget period
+            const minDateStr = minDate.toISOString().slice(0, 16);
+            const maxDateStr = maxDate.toISOString().slice(0, 16);
+            
+            // Set min and max to restrict calendar to only budget period dates
+            mealDateTimeInput.min = minDateStr;
+            mealDateTimeInput.max = maxDateStr;
+            
+            // For debugging
+            console.log(`Budget period: ${new Date(minDateStr).toLocaleDateString()} to ${new Date(maxDateStr).toLocaleDateString()}`);
+            
+            // Clear any existing value to ensure field is empty
+            mealDateTimeInput.value = '';
         }
-    }
+    });
 }
 
 // Update event listeners
 if (budgetPeriodSelect) {
     budgetPeriodSelect.addEventListener('change', updateDateTimeConstraints);
+}
+
+// Clear date input field when it's clicked
+if (mealDateTimeInput) {
+    mealDateTimeInput.addEventListener('focus', function() {
+        // Only clear if this is the first time focusing (has default value)
+        if (this.defaultValue === this.value) {
+            this.value = '';
+        }
+    });
 }
 
 
@@ -382,6 +427,7 @@ function renderBudgetHistoryList(expenses) {
     );
 
     budgetHistoryList.innerHTML = sortedExpenses.map(exp => {
+        // Ensure proper date formatting regardless of timestamp format
         const date = new Date(exp.timestamp).toLocaleString();
         const cat = exp.category || "Uncategorized";
         return `<li>$${exp.cost.toFixed(2)} on ${date} — <strong>${cat}</strong></li>`;
@@ -401,6 +447,39 @@ if (resetBudgetBtn) resetBudgetBtn.addEventListener("click", () => {
 if (showAllHistoryToggle) showAllHistoryToggle.addEventListener("change", () => {
     fetchBudgetData();
 });
+
+// Helper function to get current budget period from user data
+async function getCurrentBudgetPeriod() {
+    const user = auth.currentUser;
+    if (!user) return null;
+    
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (!userDoc.exists()) return null;
+    
+    const budgetData = userDoc.data()?.mealBudget;
+    if (!budgetData || !budgetData.startDate || !budgetData.endDate) return null;
+    
+    // Parse dates to ensure they're in the correct format
+    const startDate = new Date(budgetData.startDate);
+    const endDate = new Date(budgetData.endDate);
+    
+    // Set start date to beginning of day and end date to end of day
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+    
+    return {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        period: budgetData.period
+    };
+}
+
+// Clear date input field on page load
+if (mealDateTimeInput) {
+    mealDateTimeInput.value = '';
+}
 
 auth.onAuthStateChanged(user => {
     if (user) {
