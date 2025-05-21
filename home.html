@@ -168,9 +168,9 @@
     <p><strong>Height:</strong> <span id="user-height">Loading...</span> inches</p>
   </div>
 
-  <!-- 2. Daily Health Tip -->
+  <!-- 2. Random Health Tip (changed daily)-->
   <div class="card" id="daily-quote-card" data-aos="fade-up">
-    <h2>💡 Daily Health Tip</h2>
+    <h2>💡 Random Health Tip</h2>
     <p id="quote-text">Loading your tip...</p>
   </div>
 
@@ -319,17 +319,39 @@
     once: true
   });
 </script>
+<script>
+  const healthTips = [
+    "💧 Stay hydrated! Water boosts energy, focus, and digestion.",
+    "🥦 Add color to your plate—diverse veggies = better nutrition.",
+    "💤 Prioritize sleep—7 to 9 hours helps recovery and mood.",
+    "🏃‍♂️ Move your body—even short walks boost heart health.",
+    "🍽️ Practice mindful eating—slow down and listen to your body.",
+    "📱 Take screen breaks—rest your eyes and reset your focus.",
+    "🌞 Get sunlight daily—supports mood and vitamin D levels.",
+    "😌 Deep breaths—inhale calm, exhale stress.",
+    "🪥 Oral health matters—brush and floss daily.",
+    "📅 Plan your meals—preparation helps healthy choices."
+  ];
 
-<script type="module">
-  import { quotes } from './quotes.js';
+  const quoteText = document.getElementById("quote-text");
+  let index = 0;
 
-  const quoteText = document.getElementById('quote-text');
-
-  if (quoteText) {
-    const randomIndex = new Date().getDate() % quotes.length;
-    quoteText.textContent = quotes[randomIndex];
+  function rotateTip() {
+    if (quoteText) {
+      quoteText.textContent = healthTips[index];
+      index = (index + 1) % healthTips.length;
+    }
   }
+
+  // Initial load
+  rotateTip();
+
+  // Change tip every 10 seconds (10,000 milliseconds)
+  setInterval(rotateTip, 10000);
 </script>
+
+
+
 
 <!-- 🔝 Back to Top Button -->
 <button id="backToTopBtn" title="Go to top">⬆️</button>
