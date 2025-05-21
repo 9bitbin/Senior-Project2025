@@ -170,7 +170,7 @@
 
   <!-- 2. Random Health Tip (changed daily)-->
   <div class="card" id="daily-quote-card" data-aos="fade-up">
-    <h2>💡 Random Health Tip</h2>
+    <h1>💡 Random Health Tip</h1>
     <p id="quote-text">Loading your tip...</p>
   </div>
 
@@ -319,6 +319,7 @@
     once: true
   });
 </script>
+<!-- this is a random tip which cycles throught 10 tips each 10 seconds -->
 <script>
   const healthTips = [
     "💧 Stay hydrated! Water boosts energy, focus, and digestion.",
@@ -330,7 +331,97 @@
     "🌞 Get sunlight daily—supports mood and vitamin D levels.",
     "😌 Deep breaths—inhale calm, exhale stress.",
     "🪥 Oral health matters—brush and floss daily.",
-    "📅 Plan your meals—preparation helps healthy choices."
+    "📅 Plan your meals—preparation helps healthy choices.",
+    "🥗 Start meals with veggies to fill up on fiber.",
+    "🚶 Walk after meals to support digestion and blood sugar.",
+    "🥤 Limit sugary drinks—opt for water or herbal teas.",
+    "🧘 Stretch daily to reduce tension and improve mobility.",
+    "🍳 Eat protein with breakfast to boost energy and focus.",
+    "📵 No screens before bed—protect your sleep quality.",
+    "🧠 Learn something new—mental activity keeps the brain sharp.",
+    "💬 Talk to a friend—connection supports emotional health.",
+    "🍌 Choose whole fruits over fruit juices for fiber and nutrients.",
+    "🪑 Take standing breaks—move every 30 minutes at your desk.",
+    "🥒 Snack smart—try nuts, fruit, or yogurt instead of chips.",
+    "🚰 Start your morning with a glass of water.",
+    "😴 Keep a sleep schedule—even on weekends.",
+    "🧂 Watch your salt—high sodium can raise blood pressure.",
+    "🧴 Wear sunscreen—even on cloudy days.",
+    "👟 Wear supportive shoes to protect joints during walks.",
+    "🌬️ Open windows for fresh air and better indoor air quality.",
+    "🥥 Limit processed oils—opt for olive or avocado oil.",
+    "🪙 Set a weekly wellness goal to stay motivated.",
+    "🎧 Listen to calming music to reduce stress.",
+    "📖 Read before bed instead of scrolling on your phone.",
+    "🥛 Get calcium-rich foods—your bones will thank you.",
+    "🍫 Dark chocolate in moderation can be heart-healthy.",
+    "🧼 Wash hands frequently—especially before meals.",
+    "🥬 Leafy greens are nutrient-packed—add them often.",
+    "🍞 Choose whole grains over refined carbs for lasting energy.",
+    "🍠 Sweet potatoes are a great source of vitamins and fiber.",
+    "🎯 Track your wellness habits to stay on course.",
+    "🏞️ Spend time in nature—it boosts mental health.",
+    "👂 Listen to your body—rest when you need it.",
+    "💡 Stay curious—mental stimulation protects brain health.",
+    "🫐 Berries are rich in antioxidants—great for brain and heart.",
+    "🏋️ Lift something—even bodyweight exercises build strength.",
+    "🛏️ Make your bedroom a sleep-only zone.",
+    "☕ Limit caffeine after 2 PM to avoid sleep disruption.",
+    "🫖 Herbal teas like chamomile can help you unwind.",
+    "👃 Breathe through your nose—it filters and humidifies air.",
+    "🎨 Get creative—drawing or journaling supports mental clarity.",
+    "🔄 Add routine to reduce decision fatigue.",
+    "🌱 Grow something—gardening can ease anxiety.",
+    "🦴 Vitamin D is crucial—get sun or supplement wisely.",
+    "🕺 Dance to your favorite song—it counts as cardio!",
+    "⏳ Delay second helpings—give your body time to feel full.",
+    "🍋 Add lemon to water for flavor and a vitamin C boost.",
+    "🧊 Ice baths or cold showers may help with inflammation.",
+    "🧂 Try herbs instead of salt for more flavorful meals.",
+    "🧺 Declutter a small space—it reduces stress.",
+    "🫀 Get your blood pressure checked regularly.",
+    "🍵 Green tea may aid focus and metabolism.",
+    "🧃 Cut down on added sugar—it spikes and crashes energy.",
+    "👨‍👩‍👧‍👦 Prioritize family meals—connection boosts wellbeing.",
+    "🏖️ Take rest days—recovery is part of the plan.",
+    "🧠 Learn to say no—protect your mental bandwidth.",
+    "📝 Journal one thing you’re grateful for every day.",
+    "🦷 Avoid snacking constantly—it protects your teeth.",
+    "🧼 Clean your phone—it’s a germ hotspot.",
+    "🥤 Sip slowly—your stomach needs time to respond.",
+    "🍗 Lean proteins help maintain and build muscle.",
+    "🌍 Volunteer—giving back is great for the soul.",
+    "👁️ Blink often while using screens—prevent eye strain.",
+    "🎒 Carry bags on both shoulders to avoid imbalance.",
+    "🛍️ Choose local produce—often fresher and tastier.",
+    "📦 Meal prep once a week to eat better under stress.",
+    "💬 Express your feelings—don’t bottle them up.",
+    "🧴 Moisturize skin—especially in dry seasons.",
+    "🧘‍♀️ Try 5 minutes of daily mindfulness or meditation.",
+    "🍲 Eat at the table—not in front of a screen.",
+    "🍅 Tomatoes are full of lycopene—a powerful antioxidant.",
+    "🔋 Rest is productivity—burnout helps no one.",
+    "🧃 Avoid “zero-calorie” drinks if they cause cravings.",
+    "🧢 Cover your head in strong sun to prevent heat exhaustion.",
+    "🕒 Eat meals at consistent times to regulate metabolism.",
+    "🪞 Speak kindly to yourself—mental talk matters.",
+    "🍄 Mushrooms are a great source of Vitamin D.",
+    "🧊 Stay cool—heat stress affects your mood and body.",
+    "🌬️ Try box breathing (4 in, 4 hold, 4 out) to calm down.",
+    "🐟 Omega-3s support brain and heart health—try salmon or flax.",
+    "👖 Wear comfortable clothes that allow movement.",
+    "💡 Dim lights in the evening to prepare for sleep.",
+    "📚 Learn about nutrition—it empowers better choices.",
+    "🛌 Sleep in total darkness if possible for deeper rest.",
+    "🔋 Prioritize energy management over time management.",
+    "🧼 Sanitize shared surfaces—especially during flu season.",
+    "🍜 Add veggies to every meal—even breakfast!",
+    "🧂 Watch sauces—they often hide added sugar and salt.",
+    "🍃 Let go of perfection—aim for progress.",
+    "🧠 Use alarms or reminders to stay consistent with habits.",
+    "💬 Don’t compare your health journey to others.",
+    "🚴 Find a fun way to move—it shouldn’t feel like a chore.",
+    "🧃 Hydration isn’t just water—fruit, veggies, and broth count too."
   ];
 
   const quoteText = document.getElementById("quote-text");
@@ -338,17 +429,18 @@
 
   function rotateTip() {
     if (quoteText) {
-      quoteText.textContent = healthTips[index];
+      quoteText.innerHTML = `<h2 style="margin: 0; font-size: 1.5em; color: #166534;">${healthTips[index]}</h2>`;
       index = (index + 1) % healthTips.length;
     }
   }
 
-  // Initial load
+  // Initial tip
   rotateTip();
 
-  // Change tip every 10 seconds (10,000 milliseconds)
+  // Rotate every 10 seconds
   setInterval(rotateTip, 10000);
 </script>
+
 
 
 
