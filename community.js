@@ -1,7 +1,7 @@
 // community.js
 import { db, auth } from "./firebase-config.js";
 import {
-  collection, addDoc, query, orderBy, doc, getDocs,
+  collection, addDoc, query, orderBy, doc, getDocs, where,
   updateDoc, deleteDoc, arrayUnion, arrayRemove, getDoc, onSnapshot, serverTimestamp, setDoc
 } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
@@ -599,9 +599,41 @@ function initializeUI() {
 
 
 
+// Function to create notification badge for friend requests
+function createNotificationBadge() {
+  // Find the existing badge if any
+  let badge = document.querySelector('.notification-badge');
+  
+  // If badge doesn't exist yet, create it
+  if (!badge) {
+    const friendRequestsIcon = document.querySelector('.icon-container:nth-child(2) div');
+    if (!friendRequestsIcon) return null;
+    
+    badge = document.createElement('span');
+    badge.className = 'notification-badge';
+    badge.style.position = 'absolute';
+    badge.style.top = '-8px';
+    badge.style.right = '-8px';
+    badge.style.backgroundColor = '#ef4444';
+    badge.style.color = 'white';
+    badge.style.borderRadius = '50%';
+    badge.style.width = '18px';
+    badge.style.height = '18px';
+    badge.style.fontSize = '12px';
+    badge.style.display = 'none';
+    badge.style.justifyContent = 'center';
+    badge.style.alignItems = 'center';
+    badge.style.border = '2px solid white';
+    
+    friendRequestsIcon.appendChild(badge);
+  }
+  
+  return badge;
+}
+
 // Add missing updateNotificationBadge function
 function updateNotificationBadge() {
-  const badge = document.querySelector('.notification-badge');
+  const badge = document.querySelector('.notification-badge') || createNotificationBadge();
   if (!badge) return;
   
   if (friendRequests && friendRequests.length > 0) {
@@ -1560,39 +1592,44 @@ function getAvatarUrl(userId, anonymous = false) {
 }
 
 
-// Add missing listenForFriendRequests function
+// Listen for friend requests from the friendRequests collection
 function listenForFriendRequests() {
-  if (!currentUser) return;
+  if (!currentUser) return null;
   
-  const userRef = doc(db, "users", currentUser.uid);
+  // Create a query to get all friend requests where the current user is the recipient
+  const friendRequestsQuery = query(
+    collection(db, "friendRequests"),
+    where("to", "==", currentUser.uid),
+    where("status", "==", "pending")
+  );
   
-  onSnapshot(userRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const userData = docSnap.data();
-      friendRequests = userData.friendRequests || [];
-      friendList = userData.friends || [];
-      
-      // Update notification badge
-      updateNotificationBadge();
-      
-      // Update friend list panel if open
-      const friendListPanel = document.getElementById("friendListPanel");
-      if (friendListPanel) {
-        showFriendList();
+  // Set up a real-time listener for friend requests
+  return onSnapshot(friendRequestsQuery, (querySnapshot) => {
+    // Clear the existing friend requests array
+    friendRequests = [];
+    
+    // Process each friend request document
+    querySnapshot.forEach((doc) => {
+      const requestData = doc.data();
+      // Add the sender's ID to the friend requests array
+      if (requestData.from && !friendRequests.includes(requestData.from)) {
+        friendRequests.push(requestData.from);
       }
-      
-      // Update friend requests panel if open
-      const friendRequestsPanel = document.getElementById("friendRequestsPanel");
-      if (friendRequestsPanel) {
-        showFriendRequests();
-      }
-      
-      // Refresh posts to update friend-only visibility
-      filterPosts();
+    });
+    
+    console.log(`Found ${friendRequests.length} pending friend requests`);
+    
+    // Update the notification badge with the count of friend requests
+    updateNotificationBadge();
+    
+    // Update friend requests panel if it's open
+    const friendRequestsPanel = document.getElementById("friendRequestsPanel");
+    if (friendRequestsPanel) {
+      showFriendRequests();
     }
   });
 }
-// Add missing showFriendRequests function
+// Function to show friend requests panel
 function showFriendRequests() {
   if (!currentUser) return;
   
@@ -1604,9 +1641,9 @@ function showFriendRequests() {
   }
   
   // Close friend list panel if open to avoid overlap
-  const friendPanel = document.getElementById("friendListPanel");
-  if (friendPanel) {
-    friendPanel.remove();
+  const listPanel = document.getElementById("friendListPanel");
+  if (listPanel) {
+    listPanel.remove();
   }
   
   panel = document.createElement("div");
@@ -1614,7 +1651,7 @@ function showFriendRequests() {
   panel.className = "friend-requests-panel";
   panel.style.position = "fixed";
   panel.style.top = "140px"; // Below search bar
-  panel.style.right = "20px"; // Same position as friend list to avoid overlap
+  panel.style.right = "20px";
   panel.style.width = "300px";
   panel.style.maxHeight = "calc(100vh - 160px)";
   panel.style.backgroundColor = "white";
@@ -1638,17 +1675,14 @@ function showFriendRequests() {
   
   const closeBtn = document.createElement("button");
   closeBtn.className = "close-panel";
-  closeBtn.innerHTML = "×"; // Changed from &times; to × for better visibility
+  closeBtn.innerHTML = "×";
   closeBtn.style.background = "none";
   closeBtn.style.border = "none";
-  closeBtn.style.fontSize = "28px"; // Increased size
+  closeBtn.style.fontSize = "28px";
   closeBtn.style.cursor = "pointer";
   closeBtn.style.color = "#666";
   closeBtn.style.padding = "0 5px";
   closeBtn.style.lineHeight = "1";
-  closeBtn.style.transition = "color 0.2s";
-  closeBtn.addEventListener("mouseover", () => closeBtn.style.color = "#000");
-  closeBtn.addEventListener("mouseout", () => closeBtn.style.color = "#666");
   closeBtn.addEventListener("click", () => panel.remove());
   
   header.appendChild(title);
@@ -1663,126 +1697,170 @@ function showFriendRequests() {
   if (!friendRequests || friendRequests.length === 0) {
     content.innerHTML = "<p>You don't have any friend requests.</p>";
   } else {
-    const requestsHTML = friendRequests.map(request => {
-      const username = request.username;
-      const usersWithSameName = Object.values(userIdToNameMap).filter(user => 
-        user && user.name === username
-      ).length;
-      
-      const displayUsername = usersWithSameName > 1 ? 
-        `${username} #${request.userId.substring(0, 6)}` : 
-        username;
-  
-      return `
-        <div class="request-item" style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
-          <img src="${getAvatarUrl(request.userId)}" alt="User Avatar" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
-          <div style="flex: 1;">
-            <div style="font-weight: 500;">${displayUsername}</div>
-          </div>
-          <div style="display: flex; gap: 10px;">
-            <button onclick="acceptFriendRequest('${request.userId}')" style="padding: 5px 10px; border: none; border-radius: 4px; background-color: #10b981; color: white; cursor: pointer;">Accept</button>
-            <button onclick="rejectFriendRequest('${request.userId}')" style="padding: 5px 10px; border: none; border-radius: 4px; background-color: #ef4444; color: white; cursor: pointer;">Decline</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-  
-  
+    content.innerHTML = "<p>Loading friend requests...</p>";
     
-    content.innerHTML = requestsHTML;
+    // Load friend request details
+    const loadRequests = async () => {
+      try {
+        const requestsHTML = [];
+        for (const requesterId of friendRequests) {
+          const requesterDoc = await getDoc(doc(db, "users", requesterId));
+          if (requesterDoc.exists()) {
+            const requesterData = requesterDoc.data();
+            const displayName = requesterData.displayName || requesterData.name;
+            const email = requesterData.email;
+            const username = displayName || (email ? email.split('@')[0] : 'User');
+            const avatar = generateUserAvatar(requesterId, username);
+            
+            requestsHTML.push(`
+              <div class="request-item" style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                <div class="user-initial" style="
+                  width: 40px; 
+                  height: 40px; 
+                  background-color: ${avatar.color}; 
+                  color: white; 
+                  border-radius: 50%; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center; 
+                  font-weight: bold; 
+                  font-size: 16px;">
+                  ${avatar.initials}
+                </div>
+                <div style="flex: 1; margin-left: 10px;">
+                  <div style="font-weight: 500; color: #1f2937;">
+                    ${username}
+                  </div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                  <button onclick="acceptFriendRequest('${requesterId}')" style="padding: 5px 10px; border: none; border-radius: 4px; background-color: #10b981; color: white; cursor: pointer;">
+                    Accept
+                  </button>
+                  <button onclick="rejectFriendRequest('${requesterId}')" style="padding: 5px 10px; border: none; border-radius: 4px; background-color: #ef4444; color: white; cursor: pointer;">
+                    Reject
+                  </button>
+                </div>
+              </div>
+            `);
+          }
+        }
+        
+        if (requestsHTML.length > 0) {
+          content.innerHTML = requestsHTML.join('');
+        } else {
+          content.innerHTML = "<p>You don't have any friend requests.</p>";
+        }
+      } catch (error) {
+        console.error("Error loading friend requests:", error);
+        content.innerHTML = "<p>Error loading friend requests. Please try again.</p>";
+      }
+    };
+    
+    loadRequests();
   }
   
   panel.appendChild(content);
   document.body.appendChild(panel);
 }
 
-// Add missing acceptFriendRequest function
+// Function to accept a friend request
 async function acceptFriendRequest(userId) {
   try {
     if (!currentUser) return;
     
-    // Get current user data
-    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    if (!userDoc.exists()) {
-      alert("Your user profile could not be found.");
-      return;
-    }
+    // Create the request ID using the same pattern as in sendFriendRequest
+    const requestId = `${userId}_${currentUser.uid}`;
+    const requestRef = doc(db, "friendRequests", requestId);
     
-    const userData = userDoc.data();
-    const currentFriends = userData.friends || [];
-    const currentRequests = userData.friendRequests || [];
-    
-    // Find the request
-    const requestIndex = currentRequests.findIndex(req => req.userId === userId);
-    if (requestIndex === -1) {
+    // Get the request document
+    const requestDoc = await getDoc(requestRef);
+    if (!requestDoc.exists()) {
+      console.error("Friend request not found in database");
       alert("Friend request not found.");
       return;
     }
     
-    // Add to friends list
-    if (!currentFriends.includes(userId)) {
+    // Update the request status to 'accepted'
+    await updateDoc(requestRef, {
+      status: 'accepted',
+      acceptedAt: serverTimestamp()
+    });
+    
+    // Get current user data to check if friends array exists
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (!userDoc.exists()) {
+      // Create user document if it doesn't exist
+      await setDoc(doc(db, "users", currentUser.uid), {
+        friends: [userId]
+      });
+    } else {
+      // Add to friends list if user document exists
       await updateDoc(doc(db, "users", currentUser.uid), {
         friends: arrayUnion(userId)
       });
     }
     
-    // Remove from friend requests
-    const updatedRequests = [...currentRequests];
-    updatedRequests.splice(requestIndex, 1);
+    // Get requester user data to check if friends array exists
+    const requesterDoc = await getDoc(doc(db, "users", userId));
+    if (!requesterDoc.exists()) {
+      // Create requester document if it doesn't exist
+      await setDoc(doc(db, "users", userId), {
+        friends: [currentUser.uid]
+      });
+    } else {
+      // Add current user to requester's friends list
+      await updateDoc(doc(db, "users", userId), {
+        friends: arrayUnion(currentUser.uid)
+      });
+    }
     
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      friendRequests: updatedRequests
-    });
+    // Remove from local friend requests array
+    friendRequests = friendRequests.filter(id => id !== userId);
     
-    // Add current user to other user's friends list
-    await updateDoc(doc(db, "users", userId), {
-      friends: arrayUnion(currentUser.uid)
-    });
+    // Update UI
+    updateNotificationBadge();
+    showFriendRequests(); // Refresh the friend requests panel
     
+    console.log("Friend request accepted successfully");
     alert("Friend request accepted!");
-    
-    // Refresh the friend requests popup
-    showFriendRequests();
   } catch (error) {
     console.error("Error accepting friend request:", error);
     alert("Error accepting friend request. Please try again.");
   }
 }
 
-// Add missing rejectFriendRequest function
+// Function to reject a friend request
 async function rejectFriendRequest(userId) {
   try {
     if (!currentUser) return;
     
-    // Get current user data
-    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    if (!userDoc.exists()) {
-      alert("Your user profile could not be found.");
-      return;
-    }
+    // Create the request ID using the same pattern as in sendFriendRequest
+    const requestId = `${userId}_${currentUser.uid}`;
+    const requestRef = doc(db, "friendRequests", requestId);
     
-    const userData = userDoc.data();
-    const currentRequests = userData.friendRequests || [];
-    
-    // Find the request
-    const requestIndex = currentRequests.findIndex(req => req.userId === userId);
-    if (requestIndex === -1) {
+    // Get the request document
+    const requestDoc = await getDoc(requestRef);
+    if (!requestDoc.exists()) {
+      console.error("Friend request not found in database");
       alert("Friend request not found.");
       return;
     }
     
-    // Remove from friend requests
-    const updatedRequests = [...currentRequests];
-    updatedRequests.splice(requestIndex, 1);
-    
-    await updateDoc(doc(db, "users", currentUser.uid), {
-      friendRequests: updatedRequests
+    // Update the request status to 'rejected'
+    await updateDoc(requestRef, {
+      status: 'rejected',
+      rejectedAt: serverTimestamp()
     });
     
-    alert("Friend request rejected.");
+    // Remove from local friend requests array
+    friendRequests = friendRequests.filter(id => id !== userId);
     
-    // Refresh the friend requests popup
-    showFriendRequests();
+    // Update UI
+    updateNotificationBadge();
+    showFriendRequests(); // Refresh the friend requests panel
+    
+    console.log("Friend request rejected successfully");
+    alert("Friend request rejected.");
   } catch (error) {
     console.error("Error rejecting friend request:", error);
     alert("Error rejecting friend request. Please try again.");
