@@ -476,7 +476,7 @@ async function getCurrentBudgetPeriod() {
     };
 }
 
-// Clear date input field on page load
+// Clear date input field on page load to ensure clean input
 if (mealDateTimeInput) {
     mealDateTimeInput.value = '';
 }
