@@ -1533,24 +1533,55 @@ console.error("Error searching users:", error);
 content.innerHTML = "<p>Error searching for users. Please try again.</p>";
 }
 } 
-// Add this function to send friend requests
+// Function to send friend requests
 async function sendFriendRequest(userId) {
   if (!currentUser) return;
   
   try {
-    // Create a unique ID for the friend request
-    const requestId = `${currentUser.uid}_${userId}`;
-    const requestRef = doc(db, "friendRequests", requestId);
+    // Check if users are already friends
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const currentFriends = userData.friends || [];
+      if (currentFriends.includes(userId)) {
+        alert('You are already friends with this user!');
+        return;
+      }
+    }
     
-    // Check if request already exists
-    const existingRequest = await getDoc(requestRef);
-    if (existingRequest.exists()) {
+    // Check for existing requests in both directions
+    const outgoingRequestId = `${currentUser.uid}_${userId}`;
+    const incomingRequestId = `${userId}_${currentUser.uid}`;
+    
+    const outgoingRequestRef = doc(db, "friendRequests", outgoingRequestId);
+    const incomingRequestRef = doc(db, "friendRequests", incomingRequestId);
+    
+    // Check if outgoing request exists and is pending
+    const outgoingRequest = await getDoc(outgoingRequestRef);
+    if (outgoingRequest.exists() && outgoingRequest.data().status === 'pending') {
       alert('Friend request already sent!');
       return;
     }
     
-    // Send the friend request
-    await setDoc(requestRef, {
+    // Check if incoming request exists and is pending (you should accept it instead)
+    const incomingRequest = await getDoc(incomingRequestRef);
+    if (incomingRequest.exists() && incomingRequest.data().status === 'pending') {
+      alert('This user has already sent you a friend request. Check your friend requests to accept it.');
+      return;
+    }
+    
+    // If there's an existing request with a status other than pending (accepted/rejected),
+    // delete it to allow a new request
+    if (outgoingRequest.exists()) {
+      await deleteDoc(outgoingRequestRef);
+    }
+    
+    if (incomingRequest.exists()) {
+      await deleteDoc(incomingRequestRef);
+    }
+    
+    // Send the new friend request
+    await setDoc(outgoingRequestRef, {
       from: currentUser.uid,
       to: userId,
       status: 'pending',
@@ -1558,6 +1589,7 @@ async function sendFriendRequest(userId) {
       fromName: currentUser.displayName || currentUser.email
     });
     
+    console.log('Friend request sent successfully');
     alert('Friend request sent!');
   } catch (error) {
     console.error('Error sending friend request:', error);
@@ -1901,7 +1933,7 @@ async function rejectFriendRequest(userId) {
   }
 }
 
-// Add missing removeFriend function
+// Function to remove a friend and clean up related data
 async function removeFriend(friendId) {
   try {
     if (!currentUser) return;
@@ -1923,27 +1955,37 @@ async function removeFriend(friendId) {
     }
     
     // Remove from friends list
-    const updatedFriends = currentFriends.filter(id => id !== friendId);
-    
     await updateDoc(doc(db, "users", currentUser.uid), {
-      friends: updatedFriends
+      friends: arrayRemove(friendId)
     });
     
     // Remove current user from other user's friends list
     const friendDoc = await getDoc(doc(db, "users", friendId));
     if (friendDoc.exists()) {
-      const friendData = friendDoc.data();
-      const friendsFriends = friendData.friends || [];
-      
-      if (friendsFriends.includes(currentUser.uid)) {
-        const updatedFriendsFriends = friendsFriends.filter(id => id !== currentUser.uid);
-        
-        await updateDoc(doc(db, "users", friendId), {
-          friends: updatedFriendsFriends
-        });
-      }
+      await updateDoc(doc(db, "users", friendId), {
+        friends: arrayRemove(currentUser.uid)
+      });
     }
     
+    // Delete any existing friend request documents in both directions
+    const outgoingRequestId = `${currentUser.uid}_${friendId}`;
+    const incomingRequestId = `${friendId}_${currentUser.uid}`;
+    
+    const outgoingRequestRef = doc(db, "friendRequests", outgoingRequestId);
+    const incomingRequestRef = doc(db, "friendRequests", incomingRequestId);
+    
+    // Check if the documents exist before trying to delete them
+    const outgoingRequest = await getDoc(outgoingRequestRef);
+    if (outgoingRequest.exists()) {
+      await deleteDoc(outgoingRequestRef);
+    }
+    
+    const incomingRequest = await getDoc(incomingRequestRef);
+    if (incomingRequest.exists()) {
+      await deleteDoc(incomingRequestRef);
+    }
+    
+    console.log("Friend removed and request documents cleaned up");
     alert("Friend removed successfully.");
     
     // Refresh the friend list popup
